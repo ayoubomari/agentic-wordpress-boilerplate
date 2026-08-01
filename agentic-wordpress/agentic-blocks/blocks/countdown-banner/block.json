@@ -1,0 +1,21 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "agentic/countdown-banner",
+  "title": "Countdown Banner",
+  "category": "agentic",
+  "icon": "clock",
+  "description": "Time-limited promotion with a live countdown.",
+  "attributes": {
+    "heading": { "type": "string", "default": "Sale ends soon" },
+    "text": { "type": "string", "default": "" },
+    "endDate": { "type": "string", "default": "2026-12-31T23:59:59" },
+    "expiredText": { "type": "string", "default": "This offer has ended." },
+    "ctaText": { "type": "string", "default": "Shop the sale" },
+    "ctaUrl": { "type": "string", "default": "/shop/" }
+  },
+  "supports": { "align": ["wide", "full"], "spacing": { "margin": true, "padding": true } },
+  "render": "file:./render.php",
+  "viewScript": "file:./view.js",
+  "style": "file:./style.css"
+}

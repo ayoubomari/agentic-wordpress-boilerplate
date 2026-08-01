@@ -1,0 +1,21 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "agentic/image-with-text",
+  "title": "Image With Text",
+  "category": "agentic",
+  "icon": "align-pull-left",
+  "description": "Split section: image on one side, heading/text/CTA on the other.",
+  "attributes": {
+    "heading": { "type": "string", "default": "Made to be used" },
+    "text": { "type": "string", "default": "" },
+    "imageUrl": { "type": "string", "default": "" },
+    "imageAlt": { "type": "string", "default": "" },
+    "imagePosition": { "type": "string", "default": "left" },
+    "ctaText": { "type": "string", "default": "" },
+    "ctaUrl": { "type": "string", "default": "" }
+  },
+  "supports": { "align": ["wide", "full"], "spacing": { "margin": true, "padding": true } },
+  "render": "file:./render.php",
+  "style": "file:./style.css"
+}

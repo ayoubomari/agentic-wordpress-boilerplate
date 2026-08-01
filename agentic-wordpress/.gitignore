@@ -1,0 +1,9 @@
+node_modules/
+agentic-blocks/build/
+lighthouse-report.json
+*.log
+.wp-env-override.json
+
+.playwright-mcp/
+*.png
+.claude/settings.local.json

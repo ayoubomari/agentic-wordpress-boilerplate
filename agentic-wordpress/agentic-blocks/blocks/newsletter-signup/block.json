@@ -1,0 +1,19 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "agentic/newsletter-signup",
+  "title": "Newsletter Signup",
+  "category": "agentic",
+  "icon": "email",
+  "description": "Email capture block. Markup only — point the action at your provider.",
+  "attributes": {
+    "heading": { "type": "string", "default": "Stay in the loop" },
+    "description": { "type": "string", "default": "" },
+    "buttonText": { "type": "string", "default": "Subscribe" },
+    "action": { "type": "string", "default": "" },
+    "placeholder": { "type": "string", "default": "your@email.com" }
+  },
+  "supports": { "align": ["wide", "full"], "spacing": { "margin": true, "padding": true } },
+  "render": "file:./render.php",
+  "style": "file:./style.css"
+}

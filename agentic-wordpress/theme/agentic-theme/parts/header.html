@@ -1,0 +1,28 @@
+<!-- Configurable in this file, not wp-admin — see agentic-blocks/blocks/announcement-bar. -->
+<!-- wp:agentic/announcement-bar {"text":"Free shipping on orders over $50"} /-->
+
+<!-- wp:group {"tagName":"div","style":{"spacing":{"padding":{"top":"var:preset|spacing|40","bottom":"var:preset|spacing|40"}},"border":{"bottom":{"color":"var:preset|color|border","width":"1px"}}},"layout":{"type":"constrained"}} -->
+<div class="wp-block-group" style="border-bottom-color:var(--wp--preset--color--border);border-bottom-width:1px;padding-top:var(--wp--preset--spacing--40);padding-bottom:var(--wp--preset--spacing--40)">
+
+  <!-- wp:group {"layout":{"type":"flex","justifyContent":"space-between","flexWrap":"wrap"},"style":{"spacing":{"blockGap":"var:preset|spacing|40"}}} -->
+  <div class="wp-block-group">
+
+    <!-- wp:site-title {"level":0} /-->
+
+    <!-- Menu items are editable in Appearance → Editor → Navigation.
+         "header-menu" is a wp_navigation slug, resolved to a ref in
+         functions.php — do not replace it with a hardcoded numeric ref. -->
+    <!-- wp:navigation {"agenticMenu":"header-menu","overlayMenu":"mobile","layout":{"type":"flex","justifyContent":"center","flexWrap":"wrap"},"style":{"spacing":{"blockGap":"var:preset|spacing|40"}}} /-->
+
+    <!-- wp:group {"layout":{"type":"flex","flexWrap":"nowrap"},"style":{"spacing":{"blockGap":"var:preset|spacing|30"}}} -->
+    <div class="wp-block-group">
+      <!-- wp:woocommerce/customer-account {"displayStyle":"icon_only","iconClass":"wc-block-customer-account__account-icon","iconStyle":"line"} /-->
+      <!-- wp:woocommerce/mini-cart /-->
+    </div>
+    <!-- /wp:group -->
+
+  </div>
+  <!-- /wp:group -->
+
+</div>
+<!-- /wp:group -->

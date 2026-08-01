@@ -1,0 +1,19 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "agentic/rich-text",
+  "title": "Rich Text",
+  "category": "agentic",
+  "icon": "text",
+  "description": "Centred heading, paragraph, and optional button — an editorial break between product sections.",
+  "attributes": {
+    "heading": { "type": "string", "default": "" },
+    "text": { "type": "string", "default": "" },
+    "ctaText": { "type": "string", "default": "" },
+    "ctaUrl": { "type": "string", "default": "" },
+    "maxWidth": { "type": "string", "default": "40rem" }
+  },
+  "supports": { "align": ["wide", "full"], "spacing": { "margin": true, "padding": true } },
+  "render": "file:./render.php",
+  "style": "file:./style.css"
+}

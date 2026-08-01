@@ -1,0 +1,64 @@
+.agentic-hero-banner {
+	position: relative;
+	display: flex;
+	align-items: center;
+	background-color: var(--wp--preset--color--subtle);
+	background-size: cover;
+	background-position: center;
+	padding: var(--wp--preset--spacing--70) var(--wp--preset--spacing--40);
+	overflow: hidden;
+}
+
+.agentic-hero-banner--height-small  { min-height: 32vh; }
+.agentic-hero-banner--height-medium { min-height: 52vh; }
+.agentic-hero-banner--height-large  { min-height: 74vh; }
+
+/* Overlay only exists when there is an image to darken. Opacity on the
+   pseudo-element itself (rather than an rgba() background) keeps the darken
+   color tied to the contrast token instead of a hardcoded value. */
+.agentic-hero-banner--has-image::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: var(--wp--preset--color--contrast);
+	opacity: var(--agentic-hero-overlay, 0.35);
+}
+
+.agentic-hero-banner__inner {
+	position: relative;
+	width: 100%;
+	max-width: var(--wp--style--global--content-size);
+	margin-inline: auto;
+	display: flex;
+	flex-direction: column;
+	gap: var(--wp--preset--spacing--30);
+}
+
+.agentic-hero-banner--align-left   .agentic-hero-banner__inner { align-items: flex-start; text-align: left; }
+.agentic-hero-banner--align-center .agentic-hero-banner__inner { align-items: center; text-align: center; }
+.agentic-hero-banner--align-right  .agentic-hero-banner__inner { align-items: flex-end; text-align: right; }
+
+.agentic-hero-banner__heading {
+	margin: 0;
+	font-size: var(--wp--preset--font-size--xx-large);
+	line-height: 1.1;
+	letter-spacing: -0.02em;
+	max-width: 20ch;
+}
+
+.agentic-hero-banner__subheading {
+	margin: 0;
+	font-size: var(--wp--preset--font-size--large);
+	max-width: 46ch;
+}
+
+.agentic-hero-banner__cta {
+	margin-top: var(--wp--preset--spacing--20);
+	text-decoration: none;
+}
+
+/* On an image, force legible light text regardless of the global palette. */
+.agentic-hero-banner--has-image .agentic-hero-banner__heading,
+.agentic-hero-banner--has-image .agentic-hero-banner__subheading {
+	color: var(--wp--preset--color--base);
+}

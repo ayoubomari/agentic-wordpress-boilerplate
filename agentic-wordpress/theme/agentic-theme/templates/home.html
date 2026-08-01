@@ -1,0 +1,42 @@
+<!-- wp:template-part {"slug":"header","tagName":"header"} /-->
+
+<!-- wp:group {"tagName":"main","layout":{"type":"constrained"},"style":{"spacing":{"padding":{"top":"var:preset|spacing|60","bottom":"var:preset|spacing|60"}}}} -->
+<main class="wp-block-group" style="padding-top:var(--wp--preset--spacing--60);padding-bottom:var(--wp--preset--spacing--60)">
+
+  <!-- This is the posts page (Settings → Reading → page_for_posts, set in
+       scripts/setup-site.sh). wp:query-title renders empty here because the
+       posts page is not an archive, so the heading is stated explicitly. -->
+  <!-- wp:heading {"level":1} -->
+  <h1 class="wp-block-heading">Journal</h1>
+  <!-- /wp:heading -->
+
+  <!-- wp:paragraph {"textColor":"muted"} -->
+  <p class="has-muted-color has-text-color">News, notes, and product stories.</p>
+  <!-- /wp:paragraph -->
+
+  <!-- wp:query {"queryId":0,"query":{"perPage":10,"pages":0,"offset":0,"postType":"post","order":"desc","orderBy":"date","inherit":true},"layout":{"type":"constrained"}} -->
+  <div class="wp-block-query">
+    <!-- wp:post-template -->
+      <!-- wp:post-title {"level":2,"isLink":true} /-->
+      <!-- wp:post-date {"fontSize":"small"} /-->
+      <!-- wp:post-excerpt /-->
+    <!-- /wp:post-template -->
+
+    <!-- wp:query-pagination -->
+      <!-- wp:query-pagination-previous /-->
+      <!-- wp:query-pagination-numbers /-->
+      <!-- wp:query-pagination-next /-->
+    <!-- /wp:query-pagination -->
+
+    <!-- wp:query-no-results -->
+      <!-- wp:paragraph -->
+      <p>Nothing published yet.</p>
+      <!-- /wp:paragraph -->
+    <!-- /wp:query-no-results -->
+  </div>
+  <!-- /wp:query -->
+
+</main>
+<!-- /wp:group -->
+
+<!-- wp:template-part {"slug":"footer","tagName":"footer"} /-->

@@ -1,0 +1,60 @@
+.agentic-countdown-banner {
+	background: var(--wp--preset--color--contrast);
+	color: var(--wp--preset--color--base);
+	text-align: center;
+	padding: var(--wp--preset--spacing--60) var(--wp--preset--spacing--40);
+}
+
+.agentic-countdown-banner__inner {
+	max-width: 34rem;
+	margin: 0 auto;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--wp--preset--spacing--30);
+}
+
+.agentic-countdown-banner__heading {
+	margin: 0;
+	color: inherit;
+	font-size: var(--wp--preset--font-size--x-large);
+}
+
+.agentic-countdown-banner__text {
+	margin: 0;
+	opacity: 0.8;
+}
+
+.agentic-countdown-banner__timer {
+	display: flex;
+	gap: var(--wp--preset--spacing--30);
+}
+
+.agentic-countdown-banner__unit {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	min-width: 3rem;
+}
+
+.agentic-countdown-banner__value {
+	font-size: var(--wp--preset--font-size--x-large);
+	font-variant-numeric: tabular-nums;
+	line-height: 1;
+}
+
+.agentic-countdown-banner__label {
+	margin-top: 0.35rem;
+	font-size: var(--wp--preset--font-size--small);
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	opacity: 0.6;
+}
+
+.agentic-countdown-banner__cta {
+	margin-top: var(--wp--preset--spacing--20);
+	text-decoration: none;
+	background: var(--wp--preset--color--base);
+	color: var(--wp--preset--color--contrast);
+	border-color: var(--wp--preset--color--base);
+}

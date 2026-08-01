@@ -1,0 +1,24 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "agentic/collection-list",
+  "title": "Collection List",
+  "category": "agentic",
+  "icon": "grid-view",
+  "description": "Grid of product category cards linking to their archives — the main storefront navigation section.",
+  "attributes": {
+    "heading": { "type": "string", "default": "Shop by category" },
+    "columns": { "type": "number", "default": 4 },
+    "collections": {
+      "type": "array",
+      "default": [
+        { "title": "New arrivals", "imageUrl": "", "url": "/shop/" },
+        { "title": "Best sellers", "imageUrl": "", "url": "/shop/" },
+        { "title": "Sale", "imageUrl": "", "url": "/shop/" }
+      ]
+    }
+  },
+  "supports": { "align": ["wide", "full"], "spacing": { "margin": true, "padding": true } },
+  "render": "file:./render.php",
+  "style": "file:./style.css"
+}

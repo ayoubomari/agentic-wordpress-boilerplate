@@ -1,0 +1,51 @@
+.agentic-collection-list__heading {
+	margin: 0 0 var(--wp--preset--spacing--50);
+	font-size: var(--wp--preset--font-size--x-large);
+	text-align: center;
+}
+
+.agentic-collection-list__grid {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	gap: var(--wp--preset--spacing--40);
+	grid-template-columns: repeat(var(--agentic-columns, 4), minmax(0, 1fr));
+}
+
+.agentic-collection-list__link {
+	display: block;
+	text-decoration: none;
+	color: inherit;
+}
+
+.agentic-collection-list__media {
+	display: block;
+	aspect-ratio: 4 / 5;
+	background: var(--wp--preset--color--subtle);
+	overflow: hidden;
+}
+
+.agentic-collection-list__media img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+	transition: transform 0.4s ease;
+}
+
+.agentic-collection-list__link:hover .agentic-collection-list__media img {
+	transform: scale(1.03);
+}
+
+.agentic-collection-list__title {
+	display: block;
+	margin-top: var(--wp--preset--spacing--20);
+	font-size: var(--wp--preset--font-size--small);
+	font-weight: 500;
+	text-align: center;
+}
+
+@media (max-width: 780px) {
+	.agentic-collection-list__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

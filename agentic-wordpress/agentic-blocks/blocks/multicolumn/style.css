@@ -1,0 +1,40 @@
+.agentic-multicolumn__heading {
+	margin: 0 0 var(--wp--preset--spacing--50);
+	font-size: var(--wp--preset--font-size--x-large);
+	text-align: center;
+}
+
+.agentic-multicolumn__grid {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	gap: var(--wp--preset--spacing--50);
+	grid-template-columns: repeat(var(--agentic-columns, 3), minmax(0, 1fr));
+}
+
+.agentic-multicolumn__item {
+	text-align: center;
+}
+
+.agentic-multicolumn__icon {
+	display: block;
+	font-size: 1.75rem;
+	line-height: 1;
+	margin-bottom: 0.75rem;
+}
+
+.agentic-multicolumn__item-heading {
+	margin: 0 0 0.35rem;
+	font-size: var(--wp--preset--font-size--medium);
+}
+
+.agentic-multicolumn__text {
+	margin: 0;
+	font-size: var(--wp--preset--font-size--small);
+	color: var(--wp--preset--color--muted);
+}
+
+@media (max-width: 780px) {
+	.agentic-multicolumn__grid { grid-template-columns: minmax(0, 1fr); }
+}

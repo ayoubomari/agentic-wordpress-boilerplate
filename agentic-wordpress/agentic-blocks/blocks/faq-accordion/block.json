@@ -1,0 +1,23 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "agentic/faq-accordion",
+  "title": "FAQ Accordion",
+  "category": "agentic",
+  "icon": "editor-help",
+  "description": "Expandable question/answer list. Uses native <details> — no JavaScript.",
+  "attributes": {
+    "heading": { "type": "string", "default": "Frequently asked questions" },
+    "items": {
+      "type": "array",
+      "default": [
+        { "question": "How long does shipping take?", "answer": "Orders ship within one business day and typically arrive in 3–5 days." },
+        { "question": "What is your return policy?", "answer": "Return anything unused within 30 days for a full refund." },
+        { "question": "Do you ship internationally?", "answer": "Yes — rates are calculated at checkout." }
+      ]
+    }
+  },
+  "supports": { "align": ["wide"], "spacing": { "margin": true, "padding": true } },
+  "render": "file:./render.php",
+  "style": "file:./style.css"
+}

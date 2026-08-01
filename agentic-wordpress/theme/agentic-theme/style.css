@@ -1,0 +1,49 @@
+/*
+Theme Name: Agentic Theme
+Description: Minimal block theme boilerplate — Liquid-style templating with pure block markup, no page builder.
+Version: 0.1.0
+Requires at least: 6.9
+Requires PHP: 8.0
+*/
+
+/*
+ * Global, always-enqueued styles (see functions.php) — kept deliberately
+ * tiny. Everything else lives in a block's own style.css, loaded only when
+ * that block is present. This file exists only for markup that isn't tied
+ * to a single registered block instance: the product badge is rendered both
+ * by agentic/product-badge (a real block) and inline inside
+ * agentic/featured-collection's own product-card loop, via the shared
+ * agentic_product_badge_markup() helper in agentic-blocks.php — so its CSS
+ * can't live inside one block's per-block stylesheet.
+ */
+.agentic-product-badge {
+	position: absolute;
+	z-index: 1;
+	top: var(--wp--preset--spacing--20);
+	display: inline-block;
+	padding: 0.3em 0.7em;
+	font-size: var(--wp--preset--font-size--small);
+	font-weight: 500;
+	line-height: 1.2;
+	color: var(--wp--preset--color--base);
+	background: var(--wp--preset--color--contrast);
+	border-radius: 2px;
+}
+
+.agentic-product-badge--top-left {
+	left: var(--wp--preset--spacing--20);
+}
+
+.agentic-product-badge--top-right {
+	right: var(--wp--preset--spacing--20);
+}
+
+.agentic-product-badge--sale {
+	background: var(--wp--preset--color--sale);
+}
+
+/* WooCommerce's Product Template list item — needed so an
+   agentic/product-badge placed inside it has a positioning context. */
+.wc-block-product {
+	position: relative;
+}

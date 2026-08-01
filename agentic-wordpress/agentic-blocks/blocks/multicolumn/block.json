@@ -1,0 +1,24 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "agentic/multicolumn",
+  "title": "Multicolumn",
+  "category": "agentic",
+  "icon": "columns",
+  "description": "Row of icon + heading + text columns. Good for shipping/returns/guarantee.",
+  "attributes": {
+    "heading": { "type": "string", "default": "" },
+    "columns": { "type": "number", "default": 3 },
+    "items": {
+      "type": "array",
+      "default": [
+        { "icon": "🚚", "heading": "Free shipping", "text": "On every order over $50." },
+        { "icon": "↩︎", "heading": "30-day returns", "text": "No questions, no restocking fee." },
+        { "icon": "🔒", "heading": "Secure checkout", "text": "Encrypted payments, always." }
+      ]
+    }
+  },
+  "supports": { "align": ["wide", "full"], "spacing": { "margin": true, "padding": true } },
+  "render": "file:./render.php",
+  "style": "file:./style.css"
+}

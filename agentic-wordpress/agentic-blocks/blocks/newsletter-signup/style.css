@@ -1,0 +1,38 @@
+.agentic-newsletter-signup__heading {
+	font-size: var(--wp--preset--font-size--small);
+	margin: 0 0 0.5rem;
+}
+
+.agentic-newsletter-signup__description {
+	font-size: var(--wp--preset--font-size--small);
+	color: var(--wp--preset--color--muted);
+	margin: 0 0 1rem;
+}
+
+.agentic-newsletter-signup__form {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.agentic-newsletter-signup__input {
+	flex: 1 1 12rem;
+	min-width: 0;
+	padding: 0.8rem 1rem;
+	font: inherit;
+	font-size: var(--wp--preset--font-size--small);
+	color: var(--wp--preset--color--contrast);
+	background: var(--wp--preset--color--base);
+	border: 1px solid var(--wp--preset--color--border);
+	border-radius: 4px;
+}
+
+.agentic-newsletter-signup__input:focus-visible {
+	outline: 2px solid var(--wp--preset--color--contrast);
+	outline-offset: 1px;
+}
+
+.agentic-newsletter-signup__button {
+	flex: 0 0 auto;
+	cursor: pointer;
+}

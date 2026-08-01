@@ -1,0 +1,24 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "agentic/testimonials",
+  "title": "Testimonials",
+  "category": "agentic",
+  "icon": "format-quote",
+  "description": "Customer quotes with attribution.",
+  "attributes": {
+    "heading": { "type": "string", "default": "What customers say" },
+    "columns": { "type": "number", "default": 3 },
+    "items": {
+      "type": "array",
+      "default": [
+        { "quote": "Exactly what I wanted, and it arrived early.", "author": "Amina R.", "role": "Verified buyer" },
+        { "quote": "The quality is well above what I expected at this price.", "author": "Tom D.", "role": "Verified buyer" },
+        { "quote": "Simple ordering, fast delivery, no fuss.", "author": "Priya S.", "role": "Verified buyer" }
+      ]
+    }
+  },
+  "supports": { "align": ["wide", "full"], "spacing": { "margin": true, "padding": true } },
+  "render": "file:./render.php",
+  "style": "file:./style.css"
+}

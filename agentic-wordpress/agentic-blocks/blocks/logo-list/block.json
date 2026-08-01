@@ -1,0 +1,19 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "agentic/logo-list",
+  "title": "Logo List",
+  "category": "agentic",
+  "icon": "share",
+  "description": "\"As seen in\" / brand strip — a muted row of logos.",
+  "attributes": {
+    "heading": { "type": "string", "default": "As seen in" },
+    "logos": {
+      "type": "array",
+      "default": []
+    }
+  },
+  "supports": { "align": ["wide", "full"], "spacing": { "margin": true, "padding": true } },
+  "render": "file:./render.php",
+  "style": "file:./style.css"
+}

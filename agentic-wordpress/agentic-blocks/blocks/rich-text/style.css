@@ -1,0 +1,28 @@
+.agentic-rich-text {
+	display: flex;
+	justify-content: center;
+	text-align: center;
+}
+
+.agentic-rich-text__inner {
+	max-width: var(--agentic-max-width, 40rem);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--wp--preset--spacing--30);
+}
+
+.agentic-rich-text__heading {
+	margin: 0;
+	font-size: var(--wp--preset--font-size--x-large);
+}
+
+.agentic-rich-text__text {
+	margin: 0;
+	color: var(--wp--preset--color--muted);
+}
+
+.agentic-rich-text__cta {
+	margin-top: var(--wp--preset--spacing--20);
+	text-decoration: none;
+}

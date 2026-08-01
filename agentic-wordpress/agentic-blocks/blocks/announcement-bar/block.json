@@ -1,0 +1,16 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "agentic/announcement-bar",
+  "title": "Announcement Bar",
+  "category": "agentic",
+  "icon": "megaphone",
+  "description": "Thin top-of-page bar for shipping/promo messaging. Was hardcoded markup in parts/header.html — now a configurable section.",
+  "attributes": {
+    "text": { "type": "string", "default": "Free shipping on orders over $50" },
+    "url": { "type": "string", "default": "" }
+  },
+  "supports": { "spacing": { "margin": false, "padding": false } },
+  "render": "file:./render.php",
+  "style": "file:./style.css"
+}

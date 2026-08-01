@@ -1,0 +1,32 @@
+.agentic-logo-list__heading {
+	margin: 0 0 var(--wp--preset--spacing--40);
+	font-size: var(--wp--preset--font-size--small);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	text-align: center;
+	color: var(--wp--preset--color--muted);
+}
+
+.agentic-logo-list__row {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: var(--wp--preset--spacing--60);
+}
+
+.agentic-logo-list__item img {
+	display: block;
+	max-height: 1.75rem;
+	width: auto;
+	filter: grayscale(1);
+	opacity: 0.55;
+	transition: opacity 0.2s ease;
+}
+
+.agentic-logo-list__item img:hover {
+	opacity: 0.9;
+}

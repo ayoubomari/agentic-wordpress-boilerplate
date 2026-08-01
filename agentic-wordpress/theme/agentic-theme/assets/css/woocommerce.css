@@ -1,0 +1,201 @@
+/*
+ * Dawn-style overrides for WooCommerce's own block/classic markup.
+ *
+ * Cart, checkout, and mini-cart are React blocks; My Account is still
+ * WooCommerce's classic shortcode template. Neither reads theme.json, so
+ * both ship their own rounded corners, drop shadows, and blue accents by
+ * default. This file re-points their stable class names at the same design
+ * tokens the rest of the theme uses, so these pages read as one system
+ * instead of a bolted-on plugin.
+ *
+ * Loaded only on cart/checkout/account (see functions.php) — never paid for
+ * on pages that don't need it.
+ */
+
+/* ---------- Shared resets ---------- */
+
+/* WooCommerce's own compat stylesheet (woocommerce-blocktheme.css) hardcodes
+   max-width:1000px on cart/checkout/account content, ignoring the theme's
+   --wp--style--global--content-size entirely. Route it back through the same
+   token everything else on the site uses, so these pages stay in sync with
+   it instead of carrying their own separate hardcoded width. */
+.woocommerce-account .wp-block-post-title,
+.woocommerce-account main .woocommerce,
+.woocommerce-cart .wp-block-post-title,
+.woocommerce-cart main .woocommerce,
+.woocommerce-checkout .wp-block-post-title,
+.woocommerce-checkout main .woocommerce {
+	max-width: var(--wp--style--global--content-size);
+}
+
+.wc-block-cart *,
+.wc-block-checkout *,
+.wc-block-mini-cart__drawer *,
+.woocommerce-MyAccount-content * {
+	border-radius: 0 !important;
+	box-shadow: none !important;
+}
+
+.wc-block-components-panel,
+.wc-block-components-order-summary,
+.wc-block-components-totals-wrapper,
+.wc-block-cart-items,
+.wc-block-checkout__form,
+table.shop_table,
+.woocommerce-orders-table {
+	border-color: var(--wp--preset--color--border) !important;
+}
+
+/* ---------- Buttons — match the theme's global button element ---------- */
+
+.wc-block-components-button,
+.wc-block-cart__submit-container .wp-element-button,
+.woocommerce-MyAccount-content .button,
+.woocommerce-MyAccount-content .woocommerce-Button {
+	border: 1px solid var(--wp--preset--color--contrast) !important;
+	background: var(--wp--preset--color--contrast) !important;
+	color: var(--wp--preset--color--base) !important;
+	font-size: var(--wp--preset--font-size--small) !important;
+	font-weight: 500 !important;
+	letter-spacing: 0.02em !important;
+	text-decoration: none !important;
+	padding: 0.9rem 1.75rem !important;
+	transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.wc-block-components-button:hover,
+.wc-block-cart__submit-container .wp-element-button:hover,
+.woocommerce-MyAccount-content .button:hover,
+.woocommerce-MyAccount-content .woocommerce-Button:hover {
+	background: var(--wp--preset--color--base) !important;
+	color: var(--wp--preset--color--contrast) !important;
+}
+
+.wc-block-components-button.wc-block-components-button--outlined,
+.woocommerce-MyAccount-content .button.woocommerce-button--outline {
+	background: transparent !important;
+	color: var(--wp--preset--color--contrast) !important;
+}
+
+/* ---------- Form fields ---------- */
+
+.wc-block-components-text-input input,
+.wc-block-components-text-input textarea,
+.wc-block-components-select select,
+.wc-block-components-combobox-control input,
+.woocommerce-MyAccount-content input.input-text,
+.woocommerce-MyAccount-content select,
+.woocommerce-MyAccount-content textarea {
+	border: 1px solid var(--wp--preset--color--border) !important;
+	background: var(--wp--preset--color--base);
+	font-family: inherit;
+}
+
+.wc-block-components-text-input input:focus,
+.wc-block-components-select select:focus,
+.woocommerce-MyAccount-content input.input-text:focus {
+	outline: 2px solid var(--wp--preset--color--contrast);
+	outline-offset: 1px;
+	border-color: var(--wp--preset--color--contrast) !important;
+}
+
+.wc-block-components-radio-control__option,
+.wc-block-components-radio-control--highlight-checked .wc-block-components-radio-control__option--checked {
+	border-color: var(--wp--preset--color--border) !important;
+}
+
+.wc-block-components-radio-control--highlight-checked .wc-block-components-radio-control__option--checked {
+	box-shadow: inset 0 0 0 1px var(--wp--preset--color--contrast) !important;
+}
+
+/* ---------- Cart ---------- */
+
+.wc-block-cart-item,
+.wc-block-cart-items__header {
+	border-color: var(--wp--preset--color--border) !important;
+}
+
+.wc-block-components-quantity-selector {
+	border: 1px solid var(--wp--preset--color--border) !important;
+}
+
+.wc-block-components-quantity-selector__button {
+	color: var(--wp--preset--color--contrast) !important;
+}
+
+.wc-block-components-totals-item__value,
+.wc-block-components-totals-footer-item .wc-block-components-totals-item__value {
+	font-weight: 500;
+}
+
+/* ---------- Checkout steps ---------- */
+
+.wc-block-components-checkout-step {
+	border-top: 1px solid var(--wp--preset--color--border) !important;
+	padding-top: var(--wp--preset--spacing--40);
+}
+
+.wc-block-components-checkout-step__title {
+	font-size: var(--wp--preset--font-size--medium);
+	font-weight: 600;
+}
+
+.wc-block-components-checkout-step__heading-content .wc-block-components-checkout-step__description {
+	color: var(--wp--preset--color--muted);
+}
+
+/* ---------- Notices — keep functional colour, square the shape ---------- */
+
+.woocommerce-error,
+.woocommerce-message,
+.woocommerce-info,
+.wc-block-components-notice-banner {
+	border-radius: 0 !important;
+	box-shadow: none !important;
+}
+
+/* ---------- Mini-cart drawer ---------- */
+
+.wc-block-mini-cart__drawer .wc-block-mini-cart-items__row {
+	border-color: var(--wp--preset--color--border) !important;
+}
+
+/* ---------- My Account (classic shortcode markup) ---------- */
+
+.woocommerce-MyAccount-navigation ul {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: var(--wp--preset--spacing--20);
+}
+
+.woocommerce-MyAccount-navigation-link a {
+	display: block;
+	padding: 0.6rem 0;
+	color: var(--wp--preset--color--muted);
+	text-decoration: none;
+	font-size: var(--wp--preset--font-size--small);
+	border-bottom: 1px solid var(--wp--preset--color--border);
+}
+
+.woocommerce-MyAccount-navigation-link.is-active a {
+	color: var(--wp--preset--color--contrast);
+	font-weight: 600;
+}
+
+table.shop_table,
+.woocommerce-orders-table {
+	border: 1px solid var(--wp--preset--color--border) !important;
+	border-collapse: collapse;
+	width: 100%;
+}
+
+table.shop_table th,
+table.shop_table td {
+	border-bottom: 1px solid var(--wp--preset--color--border) !important;
+	padding: 0.75rem;
+	text-align: left;
+	font-size: var(--wp--preset--font-size--small);
+}

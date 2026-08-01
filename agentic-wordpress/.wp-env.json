@@ -1,0 +1,19 @@
+{
+  "core": null,
+  "plugins": [
+    "./agentic-blocks"
+  ],
+  "themes": [
+    "./theme/agentic-theme"
+  ],
+  "testsEnvironment": false,
+  "config": {
+    "WP_DEBUG": true,
+    "WP_DEBUG_LOG": true,
+    "WP_DEBUG_DISPLAY": false,
+    "WP_ENVIRONMENT_TYPE": "local"
+  },
+  "lifecycleScripts": {
+    "afterStart": "./scripts/setup-site.sh"
+  }
+}

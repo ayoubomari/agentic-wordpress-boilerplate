@@ -1,0 +1,5 @@
+# system-design/ is deliberately outside the published boilerplate — it
+# holds per-client brand material (identity PDFs, fonts, real copy) and must
+# never land in this repo's history. See agentic-wordpress/CLAUDE.md
+# ("Brand inputs") for why. Kept as a sibling folder on disk, not tracked.
+system-design/

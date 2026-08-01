@@ -1,0 +1,20 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "agentic/video-section",
+  "title": "Video Section",
+  "category": "agentic",
+  "icon": "video-alt3",
+  "description": "Self-hosted or embedded video with a poster image. Lazy-loads so it never costs LCP budget.",
+  "attributes": {
+    "heading": { "type": "string", "default": "" },
+    "text": { "type": "string", "default": "" },
+    "videoUrl": { "type": "string", "default": "" },
+    "embedUrl": { "type": "string", "default": "" },
+    "posterUrl": { "type": "string", "default": "" },
+    "height": { "type": "string", "default": "medium" }
+  },
+  "supports": { "align": ["wide", "full"], "spacing": { "margin": true, "padding": true } },
+  "render": "file:./render.php",
+  "style": "file:./style.css"
+}
