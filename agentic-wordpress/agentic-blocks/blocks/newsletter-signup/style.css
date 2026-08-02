@@ -9,22 +9,24 @@
 	margin: 0 0 1rem;
 }
 
+/* One pill-shaped field with the submit button embedded inside it (a
+   circular arrow icon at the right edge), not a separate button beside the
+   input — the input's own right padding reserves exactly the room the
+   absolutely-positioned button needs. */
 .agentic-newsletter-signup__form {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.5rem;
+	position: relative;
 }
 
 .agentic-newsletter-signup__input {
-	flex: 1 1 12rem;
-	min-width: 0;
-	padding: 0.8rem 1rem;
+	width: 100%;
+	box-sizing: border-box;
+	padding: 0.9rem 3.25rem 0.9rem 1.35rem;
 	font: inherit;
 	font-size: var(--wp--preset--font-size--small);
 	color: var(--wp--preset--color--contrast);
 	background: var(--wp--preset--color--base);
 	border: 1px solid var(--wp--preset--color--border);
-	border-radius: 4px;
+	border-radius: var(--agentic-radius-pill);
 }
 
 .agentic-newsletter-signup__input:focus-visible {
@@ -33,6 +35,34 @@
 }
 
 .agentic-newsletter-signup__button {
-	flex: 0 0 auto;
+	position: absolute;
+	top: 50%;
+	right: 0.35rem;
+	transform: translateY(-50%);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.15rem;
+	height: 2.15rem;
+	padding: 0;
+	color: var(--wp--preset--color--base);
+	background: var(--wp--preset--color--contrast);
+	border: none;
+	border-radius: 50%;
 	cursor: pointer;
+	transition: transform 0.2s ease;
+}
+
+.agentic-newsletter-signup__button:hover {
+	transform: translateY(-50%) scale(1.08);
+}
+
+.agentic-newsletter-signup__consent {
+	margin: 0.75rem 0 0;
+	font-size: var(--wp--preset--font-size--small);
+	color: var(--wp--preset--color--muted);
+}
+
+.agentic-newsletter-signup__consent a {
+	color: inherit;
 }

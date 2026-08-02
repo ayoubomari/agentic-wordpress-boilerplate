@@ -42,8 +42,18 @@ $field_id    = wp_unique_id( 'agentic-newsletter-' );
 			placeholder="<?php echo esc_attr( $placeholder ); ?>"
 			autocomplete="email"
 		/>
-		<button class="agentic-newsletter-signup__button wp-element-button" type="submit">
-			<?php echo esc_html( $button_text ); ?>
+		<button class="agentic-newsletter-signup__button" type="submit">
+			<span class="screen-reader-text"><?php echo esc_html( $button_text ); ?></span>
+			<svg class="agentic-newsletter-signup__button-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+				<path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-6-6 6 6-6 6" />
+			</svg>
 		</button>
 	</form>
+
+	<p class="agentic-newsletter-signup__consent">
+		<?php esc_html_e( 'By subscribing you agree to the', 'agentic' ); ?>
+		<a href="/sample-page/"><?php esc_html_e( 'Terms of Use', 'agentic' ); ?></a>
+		&amp;
+		<a href="/privacy-policy/"><?php esc_html_e( 'Privacy Policy', 'agentic' ); ?></a>.
+	</p>
 </div>

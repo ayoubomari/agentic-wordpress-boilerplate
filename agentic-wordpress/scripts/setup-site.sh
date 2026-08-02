@@ -93,6 +93,12 @@ ensure_menu 'footer-shop' 'Footer — Shop' \
 ensure_menu 'footer-help' 'Footer — Help' \
 '<!-- wp:navigation-link {"label":"Shipping &amp; returns","url":"/sample-page/","kind":"custom","isTopLevelLink":true} /--><!-- wp:navigation-link {"label":"Contact","url":"/sample-page/","kind":"custom","isTopLevelLink":true} /--><!-- wp:navigation-link {"label":"Privacy policy","url":"/privacy-policy/","kind":"custom","isTopLevelLink":true} /-->'
 
+# Small legal-link row in the footer's very bottom bar — separate from the
+# "Footer — Help" column above since it's a distinct placement (bottom bar,
+# not a column), same owner-editable-menu treatment either way.
+ensure_menu 'footer-legal' 'Footer — Legal' \
+'<!-- wp:navigation-link {"label":"Privacy Policy","url":"/privacy-policy/","kind":"custom","isTopLevelLink":true} /--><!-- wp:navigation-link {"label":"Terms of Service","url":"/sample-page/","kind":"custom","isTopLevelLink":true} /-->'
+
 echo "→ [6/11] Completing WooCommerce installation"
 # WooCommerce defers part of its installer to the first request after
 # activation, and that deferred run writes its own defaults. Forcing it to

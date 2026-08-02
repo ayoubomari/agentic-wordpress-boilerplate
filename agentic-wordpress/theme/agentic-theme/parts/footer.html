@@ -51,24 +51,42 @@
   <hr class="wp-block-separator has-alpha-channel-opacity is-style-wide" style="margin-top:var(--wp--preset--spacing--50);margin-bottom:var(--wp--preset--spacing--40)"/>
   <!-- /wp:separator -->
 
-  <!-- wp:group {"layout":{"type":"flex","justifyContent":"space-between","flexWrap":"wrap"}} -->
+  <!-- wp:group {"style":{"spacing":{"blockGap":"var:preset|spacing|20"}},"layout":{"type":"flex","orientation":"vertical"}} -->
   <div class="wp-block-group">
-    <!-- wp:paragraph {"fontSize":"small","textColor":"muted"} -->
-    <p class="has-muted-color has-text-color has-small-font-size">© 2026 — Built with Agentic Theme.</p>
-    <!-- /wp:paragraph -->
 
-    <!-- wp:social-links {"iconColor":"contrast","iconColorValue":"#1a1a1a","size":"has-small-icon-size","style":{"spacing":{"blockGap":{"left":"0.75rem"}}}} -->
-    <ul class="wp-block-social-links has-small-icon-size has-icon-color">
-      <!-- wp:social-link {"url":"#","service":"instagram"} /-->
-      <!-- wp:social-link {"url":"#","service":"facebook"} /-->
-      <!-- wp:social-link {"url":"#","service":"tiktok"} /-->
-      <!-- wp:social-link {"url":"#","service":"pinterest"} /-->
-    </ul>
-    <!-- /wp:social-links -->
+    <!-- wp:group {"layout":{"type":"flex","justifyContent":"space-between","flexWrap":"wrap"}} -->
+    <div class="wp-block-group">
+      <!-- wp:paragraph {"fontSize":"small","textColor":"muted"} -->
+      <p class="has-muted-color has-text-color has-small-font-size">© 2026 — Built with Agentic Theme.</p>
+      <!-- /wp:paragraph -->
 
-    <!-- wp:paragraph {"fontSize":"small","textColor":"muted"} -->
-    <p class="has-muted-color has-text-color has-small-font-size">Visa · Mastercard · Amex · PayPal</p>
-    <!-- /wp:paragraph -->
+      <!-- wp:social-links {"iconColor":"contrast","iconColorValue":"#1a1a1a","className":"is-style-logos-only","size":"has-small-icon-size","style":{"spacing":{"blockGap":{"left":"0.75rem"}}}} -->
+      <ul class="wp-block-social-links has-small-icon-size has-icon-color is-style-logos-only">
+        <!-- wp:social-link {"url":"#","service":"facebook"} /-->
+        <!-- wp:social-link {"url":"#","service":"x"} /-->
+        <!-- wp:social-link {"url":"#","service":"instagram"} /-->
+        <!-- wp:social-link {"url":"#","service":"tiktok"} /-->
+        <!-- wp:social-link {"url":"#","service":"pinterest"} /-->
+        <!-- wp:social-link {"url":"#","service":"youtube"} /-->
+      </ul>
+      <!-- /wp:social-links -->
+    </div>
+    <!-- /wp:group -->
+
+    <!-- wp:group {"layout":{"type":"flex","justifyContent":"space-between","flexWrap":"wrap"}} -->
+    <div class="wp-block-group">
+      <!-- Editable in Appearance → Editor → Navigation ("Footer — Legal"). -->
+      <!-- wp:navigation {"agenticMenu":"footer-legal","overlayMenu":"never","fontSize":"small","layout":{"type":"flex","justifyContent":"left"},"style":{"spacing":{"blockGap":"1.25rem"}}} /-->
+
+      <div class="agentic-payment-badges">
+        <span class="agentic-payment-badge">Visa</span>
+        <span class="agentic-payment-badge">Mastercard</span>
+        <span class="agentic-payment-badge">Amex</span>
+        <span class="agentic-payment-badge">PayPal</span>
+      </div>
+    </div>
+    <!-- /wp:group -->
+
   </div>
   <!-- /wp:group -->
 
