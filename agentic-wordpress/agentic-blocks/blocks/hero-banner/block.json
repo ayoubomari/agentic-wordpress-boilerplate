@@ -5,16 +5,47 @@
   "title": "Hero Banner",
   "category": "agentic",
   "icon": "cover-image",
-  "description": "Full-width image banner with heading, subheading, and CTA.",
+  "description": "Full-width image banner with an optional eyebrow, heading, optional subheading, and CTA. Set `slides` (2+) for a peek carousel; a single slide renders with no carousel chrome. Each slide can set its own `contentAlign` (\"left\"/\"center\"/\"right\") to put its text on either side of the slide — e.g. alternating left/right across slides — falling back to the block-level `contentAlign` when omitted.",
   "attributes": {
+    "eyebrow": { "type": "string", "default": "" },
     "heading": { "type": "string", "default": "New season, new essentials" },
     "subheading": { "type": "string", "default": "Considered pieces, built to last." },
     "ctaText": { "type": "string", "default": "Shop now" },
     "ctaUrl": { "type": "string", "default": "/shop/" },
     "imageUrl": { "type": "string", "default": "" },
+    "backgroundColor": { "type": "string", "default": "blush" },
     "overlayOpacity": { "type": "number", "default": 35 },
-    "contentAlign": { "type": "string", "default": "center" },
-    "height": { "type": "string", "default": "medium" }
+    "contentAlign": { "type": "string", "default": "left" },
+    "height": { "type": "string", "default": "medium" },
+    "slides": {
+      "type": "array",
+      "default": [
+        {
+          "eyebrow": "Blend Beauty In You",
+          "heading": "Get the skin you want to feel",
+          "subheading": "Considered pieces, built to last.",
+          "ctaText": "Shop Now",
+          "ctaUrl": "/shop/",
+          "backgroundColor": "blush"
+        },
+        {
+          "eyebrow": "New Season, New You",
+          "heading": "New season, new essentials",
+          "subheading": "Considered pieces, built to last.",
+          "ctaText": "Shop Now",
+          "ctaUrl": "/shop/",
+          "backgroundColor": "sand"
+        },
+        {
+          "eyebrow": "Clean By Design",
+          "heading": "Made for sensitive skin",
+          "subheading": "100% clean, non-irritating, never tested on animals.",
+          "ctaText": "Shop Now",
+          "ctaUrl": "/shop/",
+          "backgroundColor": "contrast"
+        }
+      ]
+    }
   },
   "supports": {
     "align": ["wide", "full"],

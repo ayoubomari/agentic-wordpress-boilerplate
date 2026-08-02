@@ -129,11 +129,16 @@ add_action(
 add_action(
 	'wp_enqueue_scripts',
 	function () {
+		// filemtime(), not the static theme version header: a version string
+		// that never changes across edits means browsers keep serving a
+		// stale cached copy of this file after every future CSS change —
+		// caught during the Sleek redesign when a fix to this exact file
+		// silently didn't apply in an already-loaded browser tab.
 		wp_enqueue_style(
 			'agentic-theme-style',
 			get_stylesheet_uri(),
 			[],
-			wp_get_theme()->get( 'Version' )
+			(string) filemtime( get_stylesheet_directory() . '/style.css' )
 		);
 
 		// The mini-cart drawer opens from the header on every page, so its
@@ -143,7 +148,7 @@ add_action(
 			wp_add_inline_style(
 				'agentic-theme-style',
 				'.wc-block-mini-cart__drawer .wc-block-mini-cart-items__row{border-color:var(--wp--preset--color--border) !important}
-				.wc-block-mini-cart__drawer .wc-block-components-button{border:1px solid var(--wp--preset--color--contrast) !important;background:var(--wp--preset--color--contrast) !important;color:var(--wp--preset--color--base) !important;border-radius:0 !important;box-shadow:none !important}'
+				.wc-block-mini-cart__drawer .wc-block-components-button{border:1px solid var(--wp--preset--color--contrast) !important;background:var(--wp--preset--color--contrast) !important;color:var(--wp--preset--color--base) !important;border-radius:var(--agentic-radius-pill) !important;box-shadow:none !important}'
 			);
 		}
 	}
@@ -152,7 +157,7 @@ add_action(
 /**
  * Cart, checkout, and My Account render through WooCommerce's own
  * block/classic markup, which ships rounded corners, drop shadows, and blue
- * accents that don't match the Dawn-style token set in theme.json. Re-point
+ * accents that don't match the Sleek-style token set in theme.json. Re-point
  * their class names at our tokens — see assets/css/woocommerce.css — loaded
  * only on the pages that actually render that markup, so it costs nothing
  * elsewhere.
@@ -165,13 +170,46 @@ add_action(
 		}
 
 		if ( is_cart() || is_checkout() || is_account_page() ) {
+			$path = get_theme_file_path( 'assets/css/woocommerce.css' );
 			wp_enqueue_style(
 				'agentic-woocommerce-overrides',
 				get_theme_file_uri( 'assets/css/woocommerce.css' ),
 				[],
-				wp_get_theme()->get( 'Version' )
+				file_exists( $path ) ? (string) filemtime( $path ) : wp_get_theme()->get( 'Version' )
 			);
 		}
+	}
+);
+
+/**
+ * Full-height hero carousels (agentic/hero-banner, "large" + slides) need to
+ * fit within one screen *below* the header — including the announcement bar
+ * above it — so the slide picture and its pagination dots are never pushed
+ * partly under the fold. There is no pure-CSS way to read a sibling's
+ * rendered height, so this sets it once as a CSS custom property (and again
+ * on resize, since the announcement-bar marquee/nav can wrap differently at
+ * different widths). Deferred to wp_footer and a few bytes inline rather
+ * than a queued file, since a render-blocking request for this would cost
+ * more than it's worth.
+ */
+add_action(
+	'wp_footer',
+	function () {
+		?>
+		<script>
+		( function () {
+			var header = document.querySelector( 'header.wp-block-template-part' );
+			if ( ! header ) {
+				return;
+			}
+			function setAgenticHeaderHeight() {
+				document.documentElement.style.setProperty( '--agentic-header-height', header.offsetHeight + 'px' );
+			}
+			setAgenticHeaderHeight();
+			window.addEventListener( 'resize', setAgenticHeaderHeight );
+		} )();
+		</script>
+		<?php
 	}
 );
 

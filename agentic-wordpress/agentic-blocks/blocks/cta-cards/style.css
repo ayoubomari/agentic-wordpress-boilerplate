@@ -1,0 +1,45 @@
+.agentic-cta-cards {
+	display: grid;
+	grid-template-columns: repeat(var(--agentic-columns, 3), minmax(0, 1fr));
+	gap: var(--wp--preset--spacing--40);
+}
+
+.agentic-cta-cards__card {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+	gap: var(--wp--preset--spacing--30);
+	padding: var(--wp--preset--spacing--50) var(--wp--preset--spacing--40);
+	background: var(--agentic-cta-bg, var(--wp--preset--color--subtle));
+	border-radius: var(--agentic-radius-panel);
+}
+
+.agentic-cta-cards__media {
+	width: 100%;
+	aspect-ratio: 16 / 10;
+	border-radius: var(--agentic-radius-card);
+	overflow: hidden;
+}
+
+.agentic-cta-cards__media img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.agentic-cta-cards__heading {
+	margin: 0;
+	font-size: var(--wp--preset--font-size--large);
+}
+
+.agentic-cta-cards__cta {
+	text-decoration: none;
+}
+
+@media (max-width: 780px) {
+	.agentic-cta-cards {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}

@@ -144,38 +144,92 @@ wp option update show_on_front 'page'
 wp option update page_on_front "$HOME_ID"
 wp option update page_for_posts "$JOURNAL_ID"
 
+# Yoast has nothing to auto-generate a homepage meta description from — the
+# front page's post_content is deliberately empty (its sections live in
+# templates/front-page.html, not the database, per "Homepage and Journal"
+# above) — so without this it fails Lighthouse's SEO meta-description check
+# on every fresh install. This must be a POST META field on the front-page
+# post (`_yoast_wpseo_metadesc`), not the `metadesc-home-wpseo` key in the
+# wpseo_titles option: that option only applies when the blog index itself
+# is the homepage. With show_on_front=page (our setup), Yoast treats the
+# front page like any other page and reads its per-page SEO fields instead
+# — confirmed by testing both directly; only the post-meta version actually
+# rendered a <meta name="description"> tag.
+wp eval '
+	if ( ! get_post_meta( (int) get_option( "page_on_front" ), "_yoast_wpseo_metadesc", true ) ) {
+		update_post_meta(
+			(int) get_option( "page_on_front" ),
+			"_yoast_wpseo_metadesc",
+			get_bloginfo( "description" ) ?: "A code-first WooCommerce store."
+		);
+	}
+'
+
 echo "→ [10/11] Seeding sample products (so templates are verifiable)"
 # Four, not one: a single product leaves the product grid and the "related
 # products" collection with nothing to show, which hides real template bugs.
+# Two real categories (not one catch-all) so collection-list and the
+# featured-collection tabs have real taxonomy archives to link to. Two of
+# the four carry real sale pricing so the sale badge, the tabbed "Sale"
+# panel, and the maxPrice-filtered row all have real data to render.
 # Delete these before launching a real store.
 if [ "$(wp post list --post_type=product --format=count | tr -d '\r')" = "0" ]; then
-  wp wc product_cat create --name='Sample Category' --slug='sample-category' --user=admin || true
-
-  seed_product() {
-    wp wc product create \
-      --name="$1" \
-      --slug="$2" \
-      --type=simple \
-      --regular_price="$3" \
-      --description="$4" \
-      --short_description="$5" \
-      --categories='[{"slug":"sample-category"}]' \
-      --status=publish \
-      --user=admin
+  # wp-cli-wc's --categories flag silently no-ops on {"slug":"..."} entries —
+  # only a numeric {"id":N} actually assigns the term (tested directly:
+  # updating by slug alone left the product Uncategorized with no error).
+  # So categories are created (or looked up if already present) first, and
+  # every product below is assigned by the resulting numeric ID.
+  ensure_product_cat() {
+    local name="$1" slug="$2" id
+    id="$( wp wc product_cat list --slug="$slug" --field=id --user=admin | tr -d '\r\n' )"
+    if [ -z "$id" ]; then
+      id="$( wp wc product_cat create --name="$name" --slug="$slug" --user=admin --porcelain )"
+    fi
+    printf '%s' "$id"
   }
 
-  seed_product 'Sample Product' 'sample-product' '29.00' \
-    'A placeholder product so product templates render with real data. Delete it before launch.' \
-    'Placeholder product for template verification.'
-  seed_product 'Everyday Tote' 'everyday-tote' '48.00' \
-    'A placeholder product used to fill the product grid during development.' \
-    'Roomy canvas tote for daily use.'
-  seed_product 'Ceramic Mug' 'ceramic-mug' '18.00' \
-    'A placeholder product used to fill the product grid during development.' \
-    'Stoneware mug, dishwasher safe.'
-  seed_product 'Linen Apron' 'linen-apron' '36.00' \
-    'A placeholder product used to fill the product grid during development.' \
-    'Washed linen apron with adjustable strap.'
+  SKINCARE_CAT_ID="$( ensure_product_cat 'Skincare' 'skincare' )"
+  BATH_BODY_CAT_ID="$( ensure_product_cat 'Bath & Body' 'bath-body' )"
+
+  seed_product() {
+    local name="$1" slug="$2" category_id="$3" regular_price="$4" sale_price="$5" description="$6" short_description="$7" stock_quantity="${8:-}"
+    local args=(
+      wp wc product create
+      --name="$name"
+      --slug="$slug"
+      --type=simple
+      --regular_price="$regular_price"
+      --description="$description"
+      --short_description="$short_description"
+      --categories="[{\"id\":$category_id}]"
+      --status=publish
+      --user=admin
+    )
+    if [ -n "$sale_price" ]; then
+      args+=(--sale_price="$sale_price")
+    fi
+    if [ -n "$stock_quantity" ]; then
+      # Real low-stock data, not an invented badge: agentic/product-badge's
+      # "Selling fast!" type only shows when stock is actually managed and at
+      # or below the low-stock threshold — see agentic_product_is_low_stock()
+      # in agentic-blocks.php.
+      args+=(--manage_stock=true --stock_quantity="$stock_quantity")
+    fi
+    "${args[@]}"
+  }
+
+  seed_product 'Rejuvenating Night Oil' 'rejuvenating-night-oil' "$SKINCARE_CAT_ID" '79.00' '' \
+    'A nourishing night oil formulated with rosehip and squalane to replenish skin while you sleep. Placeholder product — delete before launch.' \
+    'Nourishing night oil with rosehip and squalane.'
+  seed_product 'Rose Quartz Facial Polish' 'rose-quartz-facial-polish' "$SKINCARE_CAT_ID" '79.00' '59.00' \
+    'A gentle exfoliating polish with fine rose quartz powder to reveal smoother, brighter skin. Placeholder product — delete before launch.' \
+    'Gentle exfoliating polish with rose quartz powder.'
+  seed_product 'Hydrating Body Serum' 'hydrating-body-serum' "$BATH_BODY_CAT_ID" '79.00' '' \
+    'A lightweight, fast-absorbing serum that locks in moisture for up to 24 hours. Placeholder product — delete before launch.' \
+    'Lightweight, fast-absorbing hydrating serum.' '2'
+  seed_product 'Gentle Gel Cleanser' 'gentle-gel-cleanser' "$BATH_BODY_CAT_ID" '39.00' '29.00' \
+    'A soap-free gel cleanser that lifts away impurities without stripping the skin. Placeholder product — delete before launch.' \
+    'Soap-free gel cleanser for daily use.'
 else
   echo "   products already exist — skipping"
 fi

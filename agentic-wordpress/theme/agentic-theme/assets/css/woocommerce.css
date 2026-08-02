@@ -1,12 +1,13 @@
 /*
- * Dawn-style overrides for WooCommerce's own block/classic markup.
+ * Sleek-style overrides for WooCommerce's own block/classic markup.
  *
  * Cart, checkout, and mini-cart are React blocks; My Account is still
  * WooCommerce's classic shortcode template. Neither reads theme.json, so
- * both ship their own rounded corners, drop shadows, and blue accents by
- * default. This file re-points their stable class names at the same design
- * tokens the rest of the theme uses, so these pages read as one system
- * instead of a bolted-on plugin.
+ * both ship their own inconsistent corner radii, drop shadows, and blue
+ * accents by default. This file re-points their stable class names at the
+ * same design tokens the rest of the theme uses (including the pill/card/
+ * panel shape scale — see "Design direction" in CLAUDE.md), so these pages
+ * read as one system instead of a bolted-on plugin.
  *
  * Loaded only on cart/checkout/account (see functions.php) — never paid for
  * on pages that don't need it.
@@ -32,7 +33,7 @@
 .wc-block-checkout *,
 .wc-block-mini-cart__drawer *,
 .woocommerce-MyAccount-content * {
-	border-radius: 0 !important;
+	border-radius: var(--agentic-radius-card) !important;
 	box-shadow: none !important;
 }
 
@@ -53,6 +54,7 @@ table.shop_table,
 .woocommerce-MyAccount-content .button,
 .woocommerce-MyAccount-content .woocommerce-Button {
 	border: 1px solid var(--wp--preset--color--contrast) !important;
+	border-radius: var(--agentic-radius-pill) !important;
 	background: var(--wp--preset--color--contrast) !important;
 	color: var(--wp--preset--color--base) !important;
 	font-size: var(--wp--preset--font-size--small) !important;
@@ -144,13 +146,13 @@ table.shop_table,
 	color: var(--wp--preset--color--muted);
 }
 
-/* ---------- Notices — keep functional colour, square the shape ---------- */
+/* ---------- Notices — keep functional colour, match the card shape ---------- */
 
 .woocommerce-error,
 .woocommerce-message,
 .woocommerce-info,
 .wc-block-components-notice-banner {
-	border-radius: 0 !important;
+	border-radius: var(--agentic-radius-card) !important;
 	box-shadow: none !important;
 }
 

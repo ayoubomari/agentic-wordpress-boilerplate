@@ -1,27 +1,113 @@
 .agentic-hero-banner {
 	position: relative;
+}
+
+/* ---------- Slide (shared by single and carousel modes) ---------- */
+
+.agentic-hero-banner__slide {
+	position: relative;
 	display: flex;
 	align-items: center;
-	background-color: var(--wp--preset--color--subtle);
+	background-color: var(--agentic-hero-bg, var(--wp--preset--color--blush));
 	background-size: cover;
 	background-position: center;
 	padding: var(--wp--preset--spacing--70) var(--wp--preset--spacing--40);
 	overflow: hidden;
+	border-radius: var(--agentic-radius-panel);
+}
+
+/* A fixed spacing token reads fine on mobile but leaves text sitting almost
+   flush against the slide edge on a wide desktop hero — inset it
+   proportionally to the slide's own width instead, once there's room for it
+   next to the illustration/side image. */
+@media (min-width: 900px) {
+	.agentic-hero-banner__slide {
+		padding-inline: 9%;
+	}
+}
+
+/* ---------- Default illustration (no imageUrl set) ---------- */
+
+.agentic-hero-banner__illustration {
+	position: absolute;
+	top: 50%;
+	right: 6%;
+	transform: translateY(-50%);
+	width: 30%;
+	max-width: 16rem;
+	height: 70%;
+	pointer-events: none;
+}
+
+/* Right-aligned text puts its content on the right, so the illustration
+   mirrors to the left instead of overlapping it. */
+.agentic-hero-banner--align-right .agentic-hero-banner__illustration {
+	right: auto;
+	left: 6%;
+}
+
+.agentic-hero-banner__illustration-shape {
+	opacity: 0.9;
+}
+
+.agentic-hero-banner__illustration-shape--1 { fill: var(--wp--preset--color--accent); }
+.agentic-hero-banner__illustration-shape--2 { fill: var(--wp--preset--color--sand); }
+.agentic-hero-banner__illustration-shape--3 { fill: var(--wp--preset--color--base); }
+.agentic-hero-banner__illustration-shape--4 { fill: var(--wp--preset--color--contrast); }
+
+@media (max-width: 780px) {
+	.agentic-hero-banner__illustration {
+		display: none;
+	}
 }
 
 .agentic-hero-banner--height-small  { min-height: 32vh; }
 .agentic-hero-banner--height-medium { min-height: 52vh; }
 .agentic-hero-banner--height-large  { min-height: 74vh; }
 
-/* Overlay only exists when there is an image to darken. Opacity on the
-   pseudo-element itself (rather than an rgba() background) keeps the darken
-   color tied to the contrast token instead of a hardcoded value. */
-.agentic-hero-banner--has-image::before {
-	content: "";
-	position: absolute;
-	inset: 0;
-	background: var(--wp--preset--color--contrast);
-	opacity: var(--agentic-hero-overlay, 0.35);
+/* "Large" fills most of the first screen on desktop, matching the reference
+   design — only from this breakpoint up, so mobile never forces a tall
+   banner the user has to scroll past. Deliberately a little short of the
+   full 100vh so a sliver of the next section always peeks up from below,
+   hinting there's more to scroll to. */
+@media (min-width: 900px) {
+	.agentic-hero-banner--height-large {
+		min-height: 90vh;
+	}
+
+	/* In carousel mode the dots render below the slide, inside the same
+	   section — a hardcoded "subtract N rem for the dots" on the slide's own
+	   min-height would drift out of sync with their actual rendered size.
+	   Instead let flexbox measure it: the section becomes a column exactly
+	   one screen tall (below the header — see --agentic-header-height, set
+	   in functions.php since CSS has no way to read a sibling's rendered
+	   height), the dots take whatever height their own content needs, and
+	   the track (row direction) fills whatever is left; the slide then
+	   fills the track's height for free via flex's default
+	   align-items:stretch. So header + slide + dots always add up to one
+	   screen, no matter what the header or the dots row actually measure.
+	   A "large" carousel hero is always this boilerplate's page-top pattern
+	   (see front-page.html), so assuming it sits right below the header is
+	   safe here — unlike the plain (non-carousel) --height-large rule above,
+	   which a "large" hero placed elsewhere on a page also uses. */
+	.agentic-hero-banner.agentic-carousel:has(.agentic-hero-banner--height-large) {
+		display: flex;
+		flex-direction: column;
+		min-height: calc(90vh - var(--agentic-header-height, 0px));
+		/* The section's own bottom padding (below) is outside this min-height
+		   math since box-sizing here is content-box — zero it out so the dots
+		   (already spaced via their own margin-top) don't push past one screen. */
+		padding-bottom: 0;
+	}
+
+	.agentic-hero-banner.agentic-carousel:has(.agentic-hero-banner--height-large) .agentic-carousel__track {
+		flex: 1 1 auto;
+		min-height: 0;
+	}
+
+	.agentic-hero-banner.agentic-carousel:has(.agentic-hero-banner--height-large) .agentic-hero-banner--height-large {
+		min-height: 0;
+	}
 }
 
 .agentic-hero-banner__inner {
@@ -38,11 +124,16 @@
 .agentic-hero-banner--align-center .agentic-hero-banner__inner { align-items: center; text-align: center; }
 .agentic-hero-banner--align-right  .agentic-hero-banner__inner { align-items: flex-end; text-align: right; }
 
+.agentic-hero-banner__eyebrow {
+	margin: 0;
+	font-size: var(--wp--preset--font-size--small);
+	font-weight: 500;
+}
+
 .agentic-hero-banner__heading {
 	margin: 0;
 	font-size: var(--wp--preset--font-size--xx-large);
 	line-height: 1.1;
-	letter-spacing: -0.02em;
 	max-width: 20ch;
 }
 
@@ -52,13 +143,199 @@
 	max-width: 46ch;
 }
 
+/* A `ch` cap scales with font-size, not with the photo next to it — on a
+   wide desktop hero the fluid heading size grows enough that even a "short"
+   line in ch terms is wide in pixels, long enough to sit on top of the
+   product in the photo instead of beside it. Clamp to whichever is smaller
+   so the text column also respects the slide's own width, keeping it inside
+   "its own half" next to a real photo. Mobile never hits this: the slide is
+   narrow enough that ch alone already keeps text clear of the image. */
+@media (min-width: 900px) {
+	.agentic-hero-banner--has-image .agentic-hero-banner__heading {
+		max-width: min(20ch, 50%);
+	}
+
+	.agentic-hero-banner--has-image .agentic-hero-banner__subheading {
+		max-width: min(46ch, 50%);
+	}
+}
+
 .agentic-hero-banner__cta {
 	margin-top: var(--wp--preset--spacing--20);
 	text-decoration: none;
 }
 
-/* On an image, force legible light text regardless of the global palette. */
+/* Product photos are light pastel backdrops, not dark — plain dark text
+   reads fine on them, same as the rest of the site. Only a genuinely dark
+   solid background (no image) still needs forced light text. */
+.agentic-hero-banner--has-image .agentic-hero-banner__eyebrow,
 .agentic-hero-banner--has-image .agentic-hero-banner__heading,
 .agentic-hero-banner--has-image .agentic-hero-banner__subheading {
+	color: var(--wp--preset--color--contrast);
+}
+
+.agentic-hero-banner--force-light-text .agentic-hero-banner__eyebrow,
+.agentic-hero-banner--force-light-text .agentic-hero-banner__heading,
+.agentic-hero-banner--force-light-text .agentic-hero-banner__subheading {
 	color: var(--wp--preset--color--base);
+}
+
+.agentic-hero-banner--force-light-text .agentic-hero-banner__cta {
+	background: var(--wp--preset--color--base);
+	color: var(--wp--preset--color--contrast);
+	border-color: var(--wp--preset--color--base);
+}
+
+.agentic-hero-banner--force-light-text .agentic-hero-banner__cta:hover {
+	background: transparent;
+	color: var(--wp--preset--color--base);
+	border-color: var(--wp--preset--color--base);
+}
+
+/* On a photo, keep the button's normal dark fill (from the global button
+   style) on hover too — no color invert/outline — and scale it up instead
+   for hover feedback. */
+.agentic-hero-banner--has-image .agentic-hero-banner__cta {
+	transition: transform 0.25s ease;
+}
+
+.agentic-hero-banner--has-image .agentic-hero-banner__cta:hover {
+	transform: scale(1.06);
+	background: var(--wp--preset--color--contrast);
+	color: var(--wp--preset--color--base);
+	border-color: var(--wp--preset--color--contrast);
+}
+
+/* ---------- Carousel mode (2+ slides — "peek" layout) ---------- */
+
+.agentic-hero-banner.agentic-carousel {
+	padding: 0 0 var(--wp--preset--spacing--30);
+}
+
+.agentic-hero-banner .agentic-carousel__track {
+	display: flex;
+	gap: var(--wp--preset--spacing--30);
+	overflow-x: auto;
+	scroll-snap-type: x mandatory;
+	padding-inline: 6%;
+	scrollbar-width: none;
+}
+
+.agentic-hero-banner .agentic-carousel__track::-webkit-scrollbar {
+	display: none;
+}
+
+.agentic-hero-banner .agentic-carousel__slide {
+	flex: 0 0 88%;
+	scroll-snap-align: center;
+	border-radius: var(--agentic-radius-panel);
+}
+
+@media (min-width: 900px) {
+	.agentic-hero-banner .agentic-carousel__slide {
+		flex-basis: 78%;
+	}
+}
+
+.agentic-hero-banner__nav {
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	z-index: 2;
+	width: 2.75rem;
+	height: 2.75rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: none;
+	border-radius: var(--agentic-radius-pill);
+	background: var(--wp--preset--color--base);
+	color: var(--wp--preset--color--contrast);
+	font-size: 1.5rem;
+	line-height: 1;
+	cursor: pointer;
+	box-shadow: 0 2px 8px rgba(26, 26, 26, 0.12);
+}
+
+.agentic-hero-banner__nav--prev { left: var(--wp--preset--spacing--30); }
+.agentic-hero-banner__nav--next { right: var(--wp--preset--spacing--30); }
+
+.agentic-hero-banner__dots {
+	display: flex;
+	justify-content: center;
+	gap: 0.5rem;
+	margin-top: var(--wp--preset--spacing--30);
+}
+
+/* The button's actual hit area is 24px (WCAG's minimum touch target size);
+   the visible dot is a smaller centered ::before so the dot row still reads
+   as compact and small like the reference design. */
+.agentic-hero-banner__dot {
+	position: relative;
+	width: 1.5rem;
+	height: 1.5rem;
+	padding: 0;
+	border: none;
+	background: transparent;
+	cursor: pointer;
+}
+
+.agentic-hero-banner__dot::before {
+	content: "";
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: 0.5rem;
+	height: 0.5rem;
+	border-radius: var(--agentic-radius-pill);
+	background: var(--wp--preset--color--border);
+	transition: width 0.2s ease, background-color 0.2s ease;
+}
+
+/* Active dot elongates into a short line/pill instead of just recoloring —
+   the pseudo-element is free to grow past its button's own 24px hit-area
+   box since it's absolutely positioned and centered, not clipped. */
+.agentic-hero-banner__dot.is-active::before {
+	width: 1.5rem;
+	background: var(--wp--preset--color--contrast);
+}
+
+/* Autoplay progress fill — a second layer on top of the ::before pill,
+   growing left-to-right over the autoplay interval (carousel.js toggles
+   "is-filling" on the active dot only, and only when autoplay is enabled;
+   without it this stays invisible and dots behave exactly as before). */
+.agentic-hero-banner__dot::after {
+	content: "";
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	margin-top: -0.25rem;
+	margin-left: -0.75rem;
+	width: 1.5rem;
+	height: 0.5rem;
+	border-radius: var(--agentic-radius-pill);
+	background: var(--wp--preset--color--accent);
+	transform: scaleX(0);
+	transform-origin: left center;
+	opacity: 0;
+}
+
+/* Hardcoded to match $autoplay_delay in render.php — the two must stay in
+   sync since this isn't exposed as a block attribute. */
+.agentic-hero-banner__dot.is-filling::after {
+	opacity: 1;
+	animation: agentic-hero-dot-fill 5000ms linear forwards;
+}
+
+@keyframes agentic-hero-dot-fill {
+	from { transform: scaleX(0); }
+	to   { transform: scaleX(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.agentic-hero-banner__dot.is-filling::after {
+		animation: none;
+		opacity: 0;
+	}
 }

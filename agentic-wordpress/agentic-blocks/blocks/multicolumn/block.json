@@ -5,10 +5,11 @@
   "title": "Multicolumn",
   "category": "agentic",
   "icon": "columns",
-  "description": "Row of icon + heading + text columns. Good for shipping/returns/guarantee.",
+  "description": "Row of icon + heading + text columns, or a compact row of checkmark pills (variant:\"pills\"). Good for shipping/returns/guarantee/trust badges.",
   "attributes": {
     "heading": { "type": "string", "default": "" },
     "columns": { "type": "number", "default": 3 },
+    "variant": { "type": "string", "default": "columns" },
     "items": {
       "type": "array",
       "default": [

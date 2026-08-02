@@ -55,7 +55,7 @@ Header and footer menus are real, editable WordPress menus (`header-menu`,
 the change appears everywhere, no rebuild. `wp-env start` seeds them once and
 never overwrites your edits afterwards.
 
-Delete the seeded "Sample Product" before launching a real store.
+Delete the 4 seeded skincare/bath-body products before launching a real store.
 
 ## Pre-launch checklist (owner steps — not code)
 - Set a real SMTP mailer + credentials under Settings → WP Mail SMTP, so order

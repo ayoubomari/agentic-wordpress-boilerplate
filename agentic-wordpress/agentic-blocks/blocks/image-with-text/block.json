@@ -5,13 +5,15 @@
   "title": "Image With Text",
   "category": "agentic",
   "icon": "align-pull-left",
-  "description": "Split section: image on one side, heading/text/CTA on the other.",
+  "description": "Split section: image on one side, heading/text/CTA on the other. Set backgroundColor + imageStyle:\"inset\" for a colored promo panel with a contained (not edge-bleed) image.",
   "attributes": {
     "heading": { "type": "string", "default": "Made to be used" },
     "text": { "type": "string", "default": "" },
     "imageUrl": { "type": "string", "default": "" },
     "imageAlt": { "type": "string", "default": "" },
     "imagePosition": { "type": "string", "default": "left" },
+    "imageStyle": { "type": "string", "default": "full" },
+    "backgroundColor": { "type": "string", "default": "" },
     "ctaText": { "type": "string", "default": "" },
     "ctaUrl": { "type": "string", "default": "" }
   },

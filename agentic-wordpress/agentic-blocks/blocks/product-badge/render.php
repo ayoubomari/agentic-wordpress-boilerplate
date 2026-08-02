@@ -22,9 +22,11 @@ $product    = $product_id ? wc_get_product( $product_id ) : null;
 echo agentic_product_badge_markup(
 	$product,
 	[
-		'showSale' => ! empty( $attributes['showSale'] ),
-		'showNew'  => ! empty( $attributes['showNew'] ),
-		'newDays'  => $attributes['newDays'] ?? 14,
-		'position' => $attributes['position'] ?? 'top-left',
+		'showSale'        => ! empty( $attributes['showSale'] ),
+		'showNew'         => ! empty( $attributes['showNew'] ),
+		'showSoldOut'     => ! empty( $attributes['showSoldOut'] ),
+		'showSellingFast' => ! empty( $attributes['showSellingFast'] ),
+		'newDays'         => $attributes['newDays'] ?? 14,
+		'position'        => $attributes['position'] ?? 'top-left',
 	]
 );

@@ -326,8 +326,10 @@ When it has content:
 `grep -rE '#[0-9a-fA-F]{6}' theme/agentic-theme/templates agentic-blocks/blocks`
 returns nothing — no hard-coded colours outside the token layer.
 
-> The seeded "Sample Product", "Everyday Tote", "Ceramic Mug", and "Linen
-> Apron" are development fixtures. Delete them before launch. The testimonials
+> The 4 seeded products ("Rejuvenating Night Oil", "Rose Quartz Facial
+> Polish", "Hydrating Body Serum", "Gentle Gel Cleanser" — see
+> `scripts/setup-site.sh`) and their two categories (Skincare, Bath & Body)
+> are development fixtures. Delete them before launch. The testimonials
 > block also ships with placeholder quotes — replace them with real,
 > attributable feedback; never publish invented reviews.
 
@@ -351,36 +353,165 @@ verbatim in a clean session and behaves exactly as documented.
 
 ---
 
-## Phase 6 — Packaging
+## Phase 6 — Packaging — **partially done**
 
 **Goal:** `git clone && wp-env start` works on a machine that has never seen
 this project.
 
-> **Note:** this directory is currently **not a git repository** (`git status`
-> fails). Initialising it and making the first commit is part of this phase.
+> **Update (2026-08-01):** the git repo lives one level up, at
+> `agentic-wordpress-boilerplate/` (this folder plus a sibling
+> `system-design/`, which is `.gitignore`d there on purpose — see "Brand
+> inputs" above). Initial commit is pushed to
+> `git@github.com:ayoubomari/agentic-wordpress-boilerplate.git`. Items 1–3
+> below are done; **4 and 5 (the actual cold-clone test) have not been run
+> yet** — don't assume a clean clone works until that's been verified.
 
-1. `git init`, commit everything, confirm `.gitignore` covers `node_modules/`,
-   `agentic-blocks/build/`, `lighthouse-report.json`, `.playwright-mcp/`, `*.png`.
-2. Verify no absolute paths or machine-specific values are committed.
-3. Confirm `.mcp.json` is committed so Playwright MCP works on clone.
-4. Full cold test:
+1. ~~`git init`, commit everything, confirm `.gitignore` covers `node_modules/`,
+   `agentic-blocks/build/`, `lighthouse-report.json`, `.playwright-mcp/`,
+   `*.png`.~~ Done.
+2. ~~Verify no absolute paths or machine-specific values are committed.~~ Spot-
+   checked during commit — re-verify with a real cold clone (step 4).
+3. ~~Confirm `.mcp.json` is committed so Playwright MCP works on clone.~~ Done.
+4. Full cold test — **not yet run**:
    ```bash
    wp-env destroy                       # in the original checkout
    git clone <repo> /tmp/clone-test && cd /tmp/clone-test
    wp-env start                         # must be the ONLY command needed
-   curl -sf http://localhost:8888/shop/ | grep -q "Sample Product" && echo PASS
+   curl -sf http://localhost:8888/shop/ | grep -q "Rejuvenating Night Oil" && echo PASS
    ```
 5. Confirm zero fatals after the cold start:
    ```bash
    wp-env run cli sh -c 'grep -c "Fatal error" /var/www/html/wp-content/debug.log || echo 0'
    ```
    Must print `0`.
-6. Document the owner-only manual steps (payment keys, live shipping/tax,
+6. ~~Document the owner-only manual steps (payment keys, live shipping/tax,
    Yoast social profiles, domain/SSL) in `README.md` as an explicit
-   pre-launch checklist.
+   pre-launch checklist.~~ Done — see README's "Pre-launch checklist", now
+   also self-checked live in wp-admin by the Dashboard "Store setup
+   checklist" widget (`inc/setup-checklist.php`).
 
 **Done when:** a clone on a clean machine reaches a working storefront with
 `wp-env start` and nothing else, and Phase 4's Lighthouse loop passes there.
+
+---
+
+## Phase 7 — Sleek redesign — **core sections done**
+
+**Goal:** replace the neutral "Dawn" placeholder direction with Shopify's
+**Sleek** theme (https://sleek-theme-demo.myshopify.com/) as the actual
+visual target — full design-token pivot plus the section library it needs.
+See "Design direction" in `CLAUDE.md` for the token details (warm palette,
+pill buttons, rounded-sans headings, the 3-value shape scale) — not repeated
+here.
+
+Done, verified via WP-CLI render checks + curl (2026-08-01):
+- Design tokens: palette, fonts, button/badge/card/panel radius scale.
+- `hero-banner` peek carousel (`slides`), `featured-collection` tabs +
+  `maxPrice` + hover quick-add, `product-badge` percentage-off/sold-out/
+  selling-fast (real low-stock signal, not invented), `image-with-text`
+  colored promo panels, `multicolumn` pill trust badges, `rich-text`
+  underline-link variant, `testimonials` photo carousel, `faq-accordion`
+  intro column, new `cta-cards` block, shared `carousel.js`.
+- `front-page.html` recomposed in Sleek's section order; `parts/footer.html`
+  restructured (newsletter-first, `core/social-links`).
+- Sample data reskinned to skincare/bath-body (`scripts/setup-site.sh`) —
+  real categories (not one catch-all) and real sale pricing on 2 of 4
+  products, so the sale badge, "Sale" tab, and price-filtered row all have
+  genuine data instead of rendering empty.
+
+Two real bugs caught during this pass, worth knowing about if similar work
+comes up again:
+- `wc_get_products()` **silently drops** a raw `meta_query` argument, and its
+  own meta-backed query vars only build exact/IN comparisons — there is no
+  price-range operator exposed at all. `maxPrice` filtering is done in PHP
+  (over-fetch, filter, slice) in `featured-collection/render.php`, not via
+  the query. Same story for `onSale`.
+- WooCommerce's `wc wc product_cat`-assigned-by-slug (`{"slug":"..."}` in
+  `--categories`) silently no-ops — only `{"id": N}` actually works. Verified
+  by testing directly against a real product before trusting it in the seed
+  script.
+
+Five more, all caught by the Playwright + Lighthouse verification pass
+(exactly the "invisible until you run it" pattern this repo's process exists
+to catch) — none of them showed up in code review:
+- Core `woocommerce/product-image` auto-nests its own
+  `woocommerce/product-sale-badge` sub-block whenever a product is on sale —
+  a plain unstyled "Sale" box duplicating our own styled badge in the
+  opposite corner. Only visible once real sale-priced products existed to
+  test with. Suppressed globally via CSS (`theme/agentic-theme/style.css`).
+- `agentic-woocommerce-overrides` and `agentic-theme-style` were both
+  cache-busted with the theme's static version string, which never changes
+  across edits — a real fix to either file could silently not reach an
+  already-loaded browser. Switched both to `filemtime()`-based versioning.
+- Tab labels used `--border` (a hairline color, ~1.3:1 against white) as
+  text color — fails WCAG contrast outright. Switched to `--muted`.
+  `--muted` itself only clears ~3.9:1 against the blush/sand panel colors
+  (fine on white, fails on the new pastel backgrounds) — `image-with-text`
+  panel body copy now uses `--contrast` instead.
+- Hero-banner carousel dots had an 8px hit area — WCAG's minimum touch
+  target is 24px. Kept the visual dot small via a centered `::before`, grew
+  the actual button to 24×24.
+- A hero-banner slide with a dark `backgroundColor` and no image rendered a
+  black button on a black background (the light-text override only touched
+  the heading/subheading, not the CTA) — invisible until an actual dark
+  single-slide banner was screenshotted.
+- Yoast's homepage meta description needs a `_yoast_wpseo_metadesc` **post
+  meta** field on the front-page post, not the `metadesc-home-wpseo` key in
+  the `wpseo_titles` **option** — that option only applies when the blog
+  index itself is the homepage. Confirmed by testing both directly; only the
+  post-meta version rendered a `<meta name="description">` tag. This gap
+  pre-dates the Sleek work (front-page.html never puts real content in
+  `post_content` for Yoast to derive a description from) but only started
+  failing Lighthouse's SEO gate once this pass ran a full audit.
+
+Lighthouse on `/` after all fixes: performance 91, accessibility 96,
+best-practices 100, seo 100 (accessibility isn't 100 because of the
+pre-existing, upstream `aria-hidden-focus` issue on WooCommerce's own
+mini-cart drawer, documented in Phase 4 above — not something this repo's
+code can fix).
+
+**Follow-up round (2026-08-01), matched against real Sleek reference
+screenshots section-by-section:**
+- `hero-banner`: added `eyebrow` (text above the heading, independent of the
+  existing `subheading` below it) and `contentAlign:"left"` on the homepage
+  slides; added a default abstract SVG illustration (token-colored rotated
+  shapes) for slides with no `imageUrl`, so a color-only slide never looks
+  like a bare, unfinished panel.
+- `featured-collection` tabbed mode: the "Shop All Products" CTA now shares
+  the same row as the tab labels (was a separate line above) — required
+  reworking the CSS-only tab-switch selectors, since nesting the labels in a
+  new `.tabs-row` wrapper broke the `~` sibling-combinator chain until the
+  wrapper was added into the selector path. Also added a category label
+  above each product title, colored the sale price with the `sale` token
+  (was unstyled default text), and seeded one product with managed low
+  stock so the `selling-fast` badge type has real data to render — all of
+  it caught a second, unrelated bug: stacking `opacity: 0.8` on top of the
+  already-WCAG-passing `--muted` struck-through price dropped it to ~3.5:1
+  and failed Lighthouse's color-contrast audit. Fixed by dropping the
+  opacity — `--muted` alone was already sufficient.
+- New `search-drawer` block: header search icon + slide-out panel, wired
+  into `parts/header.html`. Real WP search form (verified end-to-end: a
+  single-match query redirects straight to the product, a broader query
+  lands on the real search-results template), curated popular-search links,
+  and real current products — not invented "most searched" analytics.
+
+**Not done — deferred, do not build without discussing scope first:**
+1. Numbered-hotspot shoppable bundle picker (image with clickable pins tied
+   to a product list + "Add all to cart").
+2. Full shoppable masonry photo gallery with an accordion-driven filter
+   ("Customers enjoy their journey everyday" on the live reference).
+3. Marquee text/image ticker band (mid-page decorative scrolling strip,
+   distinct from the top announcement bar, which is unchanged).
+
+These were explicitly scoped out — they need real client-side interactivity
+well beyond the vanilla-JS carousel/CSS-only-tabs patterns used elsewhere in
+this block library, and the user chose "core sections first" over full
+parity when asked. Pick them up only if asked to go deeper on Sleek parity.
+
+**Done when:** the three deferred items above are either built or explicitly
+re-scoped out again, and a full Lighthouse pass (`./scripts/lighthouse-check.sh /`)
+confirms the new carousel JS and imagery-heavy sections don't regress the
+performance/accessibility budget below 90.
 
 ---
 

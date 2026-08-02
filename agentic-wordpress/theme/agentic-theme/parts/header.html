@@ -1,5 +1,7 @@
-<!-- Configurable in this file, not wp-admin — see agentic-blocks/blocks/announcement-bar. -->
-<!-- wp:agentic/announcement-bar {"text":"Free shipping on orders over $50"} /-->
+<!-- Configurable in this file, not wp-admin — see agentic-blocks/blocks/announcement-bar.
+     2+ "messages" render as a continuously scrolling marquee; drop to a
+     single message (or the legacy "text" attribute) for a static bar. -->
+<!-- wp:agentic/announcement-bar {"messages":[{"text":"Free shipping on all U.S. orders $200+","url":""},{"text":"100% clean, non-irritating","url":""},{"text":"No animal testing","url":""}]} /-->
 
 <!-- wp:group {"tagName":"div","style":{"spacing":{"padding":{"top":"var:preset|spacing|40","bottom":"var:preset|spacing|40"}},"border":{"bottom":{"color":"var:preset|color|border","width":"1px"}}},"layout":{"type":"constrained"}} -->
 <div class="wp-block-group" style="border-bottom-color:var(--wp--preset--color--border);border-bottom-width:1px;padding-top:var(--wp--preset--spacing--40);padding-bottom:var(--wp--preset--spacing--40)">
@@ -16,6 +18,7 @@
 
     <!-- wp:group {"layout":{"type":"flex","flexWrap":"nowrap"},"style":{"spacing":{"blockGap":"var:preset|spacing|30"}}} -->
     <div class="wp-block-group">
+      <!-- wp:agentic/search-drawer /-->
       <!-- wp:woocommerce/customer-account {"displayStyle":"icon_only","iconClass":"wc-block-customer-account__account-icon","iconStyle":"line"} /-->
       <!-- wp:woocommerce/mini-cart /-->
     </div>

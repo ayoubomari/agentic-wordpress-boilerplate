@@ -1,0 +1,23 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "agentic/search-drawer",
+  "title": "Search Drawer",
+  "category": "agentic",
+  "icon": "search",
+  "description": "Header search icon that opens a slide-out panel: a real WordPress search form, curated popular-search links, and real popular products (not invented \"most searched\" analytics — this store doesn't track that).",
+  "attributes": {
+    "heading": { "type": "string", "default": "Search" },
+    "placeholder": { "type": "string", "default": "Search" },
+    "popularSearches": {
+      "type": "array",
+      "default": [ "Cleansers", "Eye Care", "Face", "Lip" ]
+    },
+    "popularProductsHeading": { "type": "string", "default": "Popular products" },
+    "popularProductsCount": { "type": "number", "default": 4 }
+  },
+  "supports": { "align": false },
+  "render": "file:./render.php",
+  "viewScript": "file:./view.js",
+  "style": "file:./style.css"
+}

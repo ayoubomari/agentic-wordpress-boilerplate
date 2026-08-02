@@ -2,17 +2,38 @@
 /**
  * Image with text — split editorial section.
  *
+ * With `backgroundColor` set, the whole section becomes a colored promo
+ * panel (Sleek's "dual promo split" look) — combine with
+ * `imageStyle: "inset"` to contain the image within padding rather than
+ * bleeding it to the panel edge. Defaults ('' / "full") reproduce the
+ * original plain edge-bleed layout exactly, so existing usages are
+ * unaffected.
+ *
  * @var array $attributes
  */
-$heading   = $attributes['heading'] ?? '';
-$text      = $attributes['text'] ?? '';
-$image_url = $attributes['imageUrl'] ?? '';
-$image_alt = $attributes['imageAlt'] ?? '';
-$position  = 'right' === ( $attributes['imagePosition'] ?? 'left' ) ? 'right' : 'left';
-$cta_text  = $attributes['ctaText'] ?? '';
-$cta_url   = $attributes['ctaUrl'] ?? '';
+$heading    = $attributes['heading'] ?? '';
+$text       = $attributes['text'] ?? '';
+$image_url  = $attributes['imageUrl'] ?? '';
+$image_alt  = $attributes['imageAlt'] ?? '';
+$position   = 'right' === ( $attributes['imagePosition'] ?? 'left' ) ? 'right' : 'left';
+$image_style = 'inset' === ( $attributes['imageStyle'] ?? 'full' ) ? 'inset' : 'full';
+$bg_color   = trim( (string) ( $attributes['backgroundColor'] ?? '' ) );
+$cta_text   = $attributes['ctaText'] ?? '';
+$cta_url    = $attributes['ctaUrl'] ?? '';
+
+$modifiers = [
+	'agentic-image-with-text--image-' . $position,
+	'agentic-image-with-text--image-style-' . $image_style,
+];
+
+$style = '';
+if ( '' !== $bg_color ) {
+	$modifiers[] = 'agentic-image-with-text--has-background';
+	$style       = sprintf( '--agentic-iwt-bg:var(--wp--preset--color--%s);', esc_attr( preg_replace( '/[^a-z0-9-]/', '', $bg_color ) ) );
+}
 ?>
-<section <?php echo agentic_section_classes( 'image-with-text', [ 'agentic-image-with-text--image-' . $position ] ); ?>>
+<section <?php echo agentic_section_classes( 'image-with-text', $modifiers ); ?>
+	<?php echo $style ? 'style="' . esc_attr( $style ) . '"' : ''; ?>>
 	<div class="agentic-image-with-text__media">
 		<?php if ( $image_url ) : ?>
 			<img src="<?php echo esc_url( $image_url ); ?>" alt="<?php echo esc_attr( $image_alt ); ?>" loading="lazy" decoding="async" />

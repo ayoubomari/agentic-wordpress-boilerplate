@@ -12,9 +12,57 @@
 	font-size: var(--wp--preset--font-size--x-large);
 }
 
+/* Plain text link with a permanent underline bar — on hover it retracts
+   away (right edge eating inward, anchored on the right) then a fresh one
+   grows back in from the left, like stepping through a teleportation gate.
+   Pure scaleX with a hard transform-origin swap at the midpoint, never a
+   translateX, so the bar always stays within the text's own width instead
+   of sliding out past either edge. A keyframe animation instead of a
+   transition since a transition only interpolates between two states; this
+   needs the line to fully vanish before "restarting" from the other side. */
 .agentic-featured-collection__cta {
-	font-size: var(--wp--preset--font-size--small);
+	position: relative;
+	font-size: var(--wp--preset--font-size--medium);
+	font-weight: 600;
+	text-decoration: none;
 	white-space: nowrap;
+	color: var(--wp--preset--color--contrast);
+}
+
+.agentic-featured-collection__cta::after {
+	content: "";
+	position: absolute;
+	left: 0;
+	bottom: -0.15em;
+	width: 100%;
+	height: 1px;
+	background: currentColor;
+	transform: scaleX(1);
+	transform-origin: left;
+}
+
+@keyframes agentic-cta-underline-teleport {
+	0% {
+		transform: scaleX(1);
+		transform-origin: right;
+	}
+	50% {
+		transform: scaleX(0);
+		transform-origin: right;
+	}
+	50.01% {
+		transform: scaleX(0);
+		transform-origin: left;
+	}
+	100% {
+		transform: scaleX(1);
+		transform-origin: left;
+	}
+}
+
+.agentic-featured-collection__cta:hover::after,
+.agentic-featured-collection__cta:focus-visible::after {
+	animation: agentic-cta-underline-teleport 0.6s ease;
 }
 
 .agentic-featured-collection__grid {
@@ -34,8 +82,21 @@
 	.agentic-featured-collection__grid { grid-template-columns: minmax(0, 1fr); }
 }
 
+/* The whole tile — image and text together — sits on one continuous card
+   surface, like the reference design, rather than only the image square
+   having a background and the text floating on white beneath it. */
+.agentic-product-card {
+	display: flex;
+	flex-direction: column;
+	background: var(--wp--preset--color--subtle);
+	border-radius: var(--agentic-radius-card);
+	overflow: hidden;
+}
+
 .agentic-product-card__link {
-	display: block;
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
 	text-decoration: none;
 	color: inherit;
 }
@@ -43,10 +104,11 @@
 .agentic-product-card__media {
 	position: relative;
 	display: block;
-	background: var(--wp--preset--color--subtle);
+	/* No background of its own — the card's --subtle surface shows through
+	   any transparent product image, so image and text read as one card
+	   instead of a seam between a grey square and a white footer. */
 	aspect-ratio: 1 / 1;
 	overflow: hidden;
-	border-radius: 4px;
 }
 
 .agentic-product-card__media img {
@@ -61,15 +123,155 @@
 	transform: scale(1.03);
 }
 
+/* Second (gallery) photo — stacked on top of the first via absolute
+   positioning so both share the same box with no layout shift, then
+   crossfaded in on hover/focus. Products with no gallery image never get
+   this element at all (see render.php), so they just keep the single
+   static photo with its existing zoom-on-hover. */
+.agentic-product-card__media-hover {
+	position: absolute;
+	inset: 0;
+	opacity: 0;
+	transition: opacity 0.4s ease, transform 0.3s ease;
+}
+
+.agentic-product-card__link:hover .agentic-product-card__media-hover,
+.agentic-product-card__link:focus-visible .agentic-product-card__media-hover {
+	opacity: 1;
+}
+
+.agentic-product-card__quick-add {
+	position: absolute;
+	inset-inline: 0.5rem;
+	bottom: 0.5rem;
+	padding: 0.6em 1em;
+	text-align: center;
+	font-size: var(--wp--preset--font-size--small);
+	font-weight: 600;
+	color: var(--wp--preset--color--contrast);
+	background: var(--wp--preset--color--base);
+	border-radius: var(--agentic-radius-pill);
+	opacity: 0;
+	transform: translateY(0.4rem);
+	transition: opacity 0.15s ease, transform 0.15s ease;
+	pointer-events: none;
+}
+
+.agentic-product-card__link:hover .agentic-product-card__quick-add,
+.agentic-product-card__link:focus-visible .agentic-product-card__quick-add {
+	opacity: 1;
+	transform: translateY(0);
+}
+
+.agentic-product-card__category {
+	display: block;
+	margin-top: 1rem;
+	padding-inline: 1.25rem;
+	font-size: var(--wp--preset--font-size--small);
+	color: var(--wp--preset--color--muted);
+}
+
 .agentic-product-card__title {
 	display: block;
-	margin-top: 0.75rem;
-	font-size: var(--wp--preset--font-size--small);
+	margin-top: 0.2rem;
+	padding-inline: 1.25rem;
+	font-size: var(--wp--preset--font-size--medium);
+	font-weight: 700;
+}
+
+/* No category label present (e.g. still "Uncategorized") — the title takes
+   the category label's usual top spacing instead of sitting flush under
+   the image. */
+.agentic-product-card__media + .agentic-product-card__title {
+	margin-top: 1rem;
 }
 
 .agentic-product-card__price {
 	display: block;
-	margin-top: 0.25rem;
-	font-size: var(--wp--preset--font-size--small);
+	margin-top: 0.35rem;
+	padding: 0 1.25rem 1.25rem;
+	font-size: var(--wp--preset--font-size--medium);
+	font-weight: 600;
 	color: var(--wp--preset--color--muted);
+}
+
+/* WooCommerce wraps the sale price in <ins> and the struck-through regular
+   price in <del> — color them like the reference: sale price in the sale
+   token, original price muted rather than plain foreground/underlined. */
+.agentic-product-card__price ins {
+	color: var(--wp--preset--color--sale);
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.agentic-product-card__price del {
+	/* No opacity here — --muted alone is already ~5.3:1 against white
+	   (passes WCAG AA); stacking 80% opacity on top dropped the effective
+	   contrast to ~3.5:1 and failed Lighthouse's color-contrast audit. */
+	color: var(--wp--preset--color--muted);
+	font-weight: 400;
+	text-decoration: line-through;
+}
+
+/* ---------- Tabs — CSS-only switcher, no JS ---------- */
+
+.agentic-featured-collection__tab-radio {
+	position: absolute;
+	opacity: 0;
+	width: 1px;
+	height: 1px;
+}
+
+.agentic-featured-collection__tabs-row {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: var(--wp--preset--spacing--30);
+	flex-wrap: wrap;
+	margin-bottom: var(--wp--preset--spacing--50);
+}
+
+.agentic-featured-collection__tab-labels {
+	display: flex;
+	gap: var(--wp--preset--spacing--40);
+}
+
+.agentic-featured-collection__tab-label {
+	cursor: pointer;
+	font-size: var(--wp--preset--font-size--x-large);
+	font-family: var(--wp--preset--font-family--heading);
+	/* Inactive tabs read as lighter/secondary, not just greyed-out at the
+	   same weight as the active one — the active tab's rule below bumps
+	   this back up to 800. */
+	font-weight: 500;
+	/* Not --border (a hairline color, ~1.3:1 against white — fails WCAG
+	   contrast for text) — --muted is the token meant for readable-but-
+	   secondary text. */
+	color: var(--wp--preset--color--muted);
+	transition: color 0.15s ease, font-weight 0.15s ease;
+}
+
+.agentic-featured-collection__tab-panel {
+	display: none;
+}
+
+/* Repeat per tab position — CSS-only toggling needs one rule per index,
+   no dynamic IDs, so it works the same for every block instance on the
+   page. Five tabs is a generous, deliberate cap (see other "max N" limits
+   in this block library, e.g. columns). */
+.agentic-featured-collection__tab-radio:nth-of-type(1):checked ~ .agentic-featured-collection__tabs-row .agentic-featured-collection__tab-label:nth-of-type(1),
+.agentic-featured-collection__tab-radio:nth-of-type(2):checked ~ .agentic-featured-collection__tabs-row .agentic-featured-collection__tab-label:nth-of-type(2),
+.agentic-featured-collection__tab-radio:nth-of-type(3):checked ~ .agentic-featured-collection__tabs-row .agentic-featured-collection__tab-label:nth-of-type(3),
+.agentic-featured-collection__tab-radio:nth-of-type(4):checked ~ .agentic-featured-collection__tabs-row .agentic-featured-collection__tab-label:nth-of-type(4),
+.agentic-featured-collection__tab-radio:nth-of-type(5):checked ~ .agentic-featured-collection__tabs-row .agentic-featured-collection__tab-label:nth-of-type(5) {
+	color: var(--wp--preset--color--contrast);
+	font-weight: 800;
+}
+
+.agentic-featured-collection__tab-radio:nth-of-type(1):checked ~ .agentic-featured-collection__tab-panels .agentic-featured-collection__tab-panel:nth-of-type(1),
+.agentic-featured-collection__tab-radio:nth-of-type(2):checked ~ .agentic-featured-collection__tab-panels .agentic-featured-collection__tab-panel:nth-of-type(2),
+.agentic-featured-collection__tab-radio:nth-of-type(3):checked ~ .agentic-featured-collection__tab-panels .agentic-featured-collection__tab-panel:nth-of-type(3),
+.agentic-featured-collection__tab-radio:nth-of-type(4):checked ~ .agentic-featured-collection__tab-panels .agentic-featured-collection__tab-panel:nth-of-type(4),
+.agentic-featured-collection__tab-radio:nth-of-type(5):checked ~ .agentic-featured-collection__tab-panels .agentic-featured-collection__tab-panel:nth-of-type(5) {
+	display: block;
 }

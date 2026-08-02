@@ -6,9 +6,10 @@
  */
 $heading   = $attributes['heading'] ?? '';
 $text      = $attributes['text'] ?? '';
-$cta_text  = $attributes['ctaText'] ?? '';
-$cta_url   = $attributes['ctaUrl'] ?? '';
-$max_width = $attributes['maxWidth'] ?? '40rem';
+$cta_text   = $attributes['ctaText'] ?? '';
+$cta_url    = $attributes['ctaUrl'] ?? '';
+$link_style = 'underline' === ( $attributes['linkStyle'] ?? 'button' ) ? 'underline' : 'button';
+$max_width  = $attributes['maxWidth'] ?? '40rem';
 
 if ( ! $heading && ! $text ) {
 	return;
@@ -25,7 +26,7 @@ if ( ! $heading && ! $text ) {
 		<?php endif; ?>
 
 		<?php if ( $cta_text && $cta_url ) : ?>
-			<a class="agentic-rich-text__cta wp-element-button" href="<?php echo esc_url( $cta_url ); ?>">
+			<a class="agentic-rich-text__cta <?php echo 'underline' === $link_style ? 'agentic-rich-text__cta--underline' : 'wp-element-button'; ?>" href="<?php echo esc_url( $cta_url ); ?>">
 				<?php echo esc_html( $cta_text ); ?>
 			</a>
 		<?php endif; ?>

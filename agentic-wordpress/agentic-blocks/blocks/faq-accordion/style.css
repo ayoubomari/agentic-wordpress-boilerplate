@@ -53,3 +53,50 @@
 	margin: 0;
 	max-width: 68ch;
 }
+
+/* ---------- With intro column + image (3-up layout) ---------- */
+
+.agentic-faq-accordion--with-intro {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	gap: var(--wp--preset--spacing--60);
+}
+
+.agentic-faq-accordion__intro {
+	flex: 1 1 260px;
+}
+
+.agentic-faq-accordion__intro-heading {
+	margin: 0 0 var(--wp--preset--spacing--30);
+	font-size: var(--wp--preset--font-size--x-large);
+}
+
+.agentic-faq-accordion__intro-text {
+	margin: 0;
+	color: var(--wp--preset--color--muted);
+	max-width: 32ch;
+}
+
+.agentic-faq-accordion__intro-cta {
+	display: inline-block;
+	margin-top: var(--wp--preset--spacing--40);
+	text-decoration: underline;
+	font-weight: 600;
+}
+
+.agentic-faq-accordion__intro-media {
+	flex: 1 1 260px;
+}
+
+.agentic-faq-accordion__intro-media img {
+	display: block;
+	width: 100%;
+	aspect-ratio: 1 / 1;
+	object-fit: cover;
+	border-radius: var(--agentic-radius-card);
+}
+
+.agentic-faq-accordion--with-intro .agentic-faq-accordion__list {
+	flex: 2 1 340px;
+}

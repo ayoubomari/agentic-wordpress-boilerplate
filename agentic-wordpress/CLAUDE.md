@@ -29,14 +29,20 @@ If a task can be done by writing/editing a file, do that — never simulate a
 user clicking buttons to achieve the same result.
 
 ## Design direction
-The visual target is **Shopify's Dawn theme**: generous whitespace, a near-
-black-on-white monochrome palette with one accent, restrained type, square-ish
-solid buttons, full-width image banners, and clean product grids. When adding
-anything new, match that language rather than inventing a new one.
+The visual target is **Shopify's Sleek theme** (a beauty/DTC storefront —
+reference: https://sleek-theme-demo.myshopify.com/, linked from
+themes.shopify.com/themes/sleek): a warm blush/terracotta palette, fully-
+rounded pill buttons and badges, bold rounded-sans display headings,
+full-bleed hero carousels, tabbed/badged product grids, and colored promo
+panels. This replaced an earlier neutral "Dawn" (monochrome, square-button)
+placeholder direction — if you find old references to Dawn/square buttons/
+serif headings elsewhere, they're stale; Sleek's language below is current.
+When adding anything new, match that language rather than inventing a new one.
 
-Every section's max-width, both font families, and every color are single
-tokens in `theme.json` — change them there and the whole site (including
-cart/checkout/account) follows, never per-block or per-template:
+Every section's max-width, both font families, every color, and the shape
+scale (button/badge/card/panel corner radius) are single tokens in
+`theme.json` — change them there and the whole site (including cart/
+checkout/account) follows, never per-block or per-template:
 - `settings.layout.contentSize` / `wideSize` — both `1400px`. One consistent
   cap everywhere, chosen to make real use of large screens. WooCommerce ships
   its own hardcoded `max-width:1000px` on cart/checkout/account content
@@ -45,15 +51,42 @@ cart/checkout/account) follows, never per-block or per-template:
   `assets/css/woocommerce.css`. If cart/checkout/account content ever looks
   narrower than the rest of the site again, that WooCommerce stylesheet is
   almost certainly why — check it before assuming a regression in ours.
-- `settings.typography.fontFamilies` — two slugs, `body` (sans-serif, used for
-  all running text) and `heading` (serif, applied globally to every `h1`-`h6`
-  via `styles.elements.heading`). Both are system font stacks — no font files,
-  no network request — swap the values to rebrand, or replace with real
-  webfonts via the `../system-design/fonts/` workflow below.
-- `settings.color.palette` — every block and template consumes
-  `var(--wp--preset--color--*)`, never a literal hex/rgb/named color. Verify
-  with `grep -rnE '#[0-9a-fA-F]{3,8}\b' theme/agentic-theme agentic-blocks/blocks`
+- `settings.typography.fontFamilies` — `body` and `heading` both use **DM
+  Sans**, a self-hosted variable webfont (weights 100–1000, upright +
+  italic) checked into `theme/agentic-theme/assets/fonts/` (`DMSans-
+  Variable.woff2` / `DMSans-Variable-Italic.woff2`, SIL Open Font License —
+  see `OFL.txt` in the same folder) and declared via `fontFace` entries on
+  the `body` font-family so WordPress emits the `@font-face` rules and no
+  request ever leaves the theme. `heading` reuses the same family and is
+  styled bold (800 weight, tight letter-spacing) via
+  `styles.elements.heading`. To rebrand: swap the two `.woff2` files and the
+  `fontFamily` name, or follow the `../system-design/fonts/` workflow below
+  for a different typeface.
+- `settings.color.palette` — `blush`/`sand` are the warm promo-panel surfaces,
+  `new-badge`/`selling-fast`/`sale` are the three product badge colors.
+  Every block and template consumes `var(--wp--preset--color--*)`, never a
+  literal hex/rgb/named color. Verify with
+  `grep -rnE '#[0-9a-fA-F]{3,8}\b' theme/agentic-theme agentic-blocks/blocks`
   (3-digit hex included — `#fff` slipped past a 6-digit-only check once).
+- **Shape scale** — three custom properties defined once in `theme.json`'s
+  top-level `styles.css`: `--agentic-radius-pill` (999px — buttons, badges,
+  pill nav), `--agentic-radius-card` (10px — product cards, thumbnails),
+  `--agentic-radius-panel` (20px — hero/promo full-size panels). Every block
+  references one of these three, never a literal `border-radius: Npx`.
+
+### Carousels — shared script, no per-block JS
+`hero-banner` (2+ `slides`) and `testimonials` (`layout: "carousel"`) both
+use one shared vanilla-JS file, `agentic-blocks/assets/carousel.js`,
+registered once as the `agentic-carousel` script **handle** in
+`agentic-blocks.php` (not a per-block `"file:"` path — that would register a
+*different* handle per block and load the identical file twice on any page
+using both). Each block conditionally `wp_enqueue_script('agentic-carousel')`s
+it from `render.php` only when it actually renders carousel markup, rather
+than declaring it in `block.json`'s `viewScript` — block.json is static, so
+that would load the script on every hero-banner instance including
+single-slide ones that need no JS at all. `featured-collection`'s tabs use a
+different, JS-free technique (radio-input + CSS `~` sibling selectors) since
+a plain "show the panel whose radio is checked" toggle doesn't need a script.
 
 ## Brand inputs — `../system-design/`
 Brand material lives in a `system-design/` folder **next to** this repo (it is
@@ -208,7 +241,55 @@ the page record exists only so WordPress routes `/` correctly.
 `hero-banner`, `featured-collection`, `image-with-text`, `multicolumn`,
 `testimonials`, `faq-accordion`, `newsletter-signup`, `collection-list`,
 `rich-text`, `logo-list`, `video-section`, `countdown-banner`,
-`product-badge`, `announcement-bar`.
+`product-badge`, `announcement-bar`, `cta-cards`, `search-drawer`.
+
+`search-drawer` is header chrome, not a page section — a search icon plus a
+slide-out panel (real WP search form, curated `popularSearches` keyword
+links, and real `wc_get_products()`-sourced popular products — never
+invented "most searched" analytics this store doesn't track). Wired into
+`parts/header.html` next to the account/cart icons. Own `view.js` (open/
+close/Escape/focus management), registered per-block via `block.json`'s
+`viewScript` (not the shared `agentic-carousel` handle pattern below — this
+script is only ever used by this one block, so there's no double-load risk
+to avoid).
+
+Several of these carry Sleek-specific attributes on top of their original
+ones, always backward compatible (omit the attribute, get the original
+behavior) — see each block's own `block.json` description, or the "Design
+direction" section above for the shared carousel/tabs mechanics:
+- `hero-banner` — `slides` (array) for a peek carousel; a single slide (or
+  the attribute omitted) renders with no carousel chrome at all. Each slide
+  also takes an `eyebrow` (small text above the heading) independent of the
+  existing `subheading` (larger text below it) — both optional, use
+  whichever the specific slide calls for. When a slide has no `imageUrl`,
+  a brand-neutral abstract illustration (a few rotated rounded shapes, every
+  fill a theme.json palette token) renders on the right instead of a bare
+  color panel — see `agentic_hero_banner_illustration()` in
+  `agentic-blocks.php`.
+- `featured-collection` — `tabs` (array of `{label, category, onSale,
+  maxPrice}`) for a tabbed collection switcher; `maxPrice` also works
+  standalone (no tabs) for a price-filtered row.
+- `product-badge` (and the shared `agentic_product_badge_markup()` helper in
+  `agentic-blocks.php`) — sale badge shows a computed `-X%` instead of the
+  word "Sale"; adds `sold-out` (real stock status) and `selling-fast` (real
+  low-stock threshold, not invented) badge types. Up to two badges can show
+  at once — a status badge (sold-out beats sale beats selling-fast) plus an
+  independent "New" badge.
+- `image-with-text` — `backgroundColor` + `imageStyle` (`"full"` | `"inset"`)
+  for the colored promo-panel look; two instances side by side in a
+  `wp:columns` wrapper make the "dual promo split" pattern.
+- `multicolumn` — `variant` (`"columns"` | `"pills"`) for a compact
+  checkmark trust-badge row. Named `variant`, not `style` — `style` is a
+  reserved key WordPress auto-generates for any block with spacing/border/
+  color supports enabled, so a custom attribute literally named `style`
+  silently collides with it in the block's JSON attributes.
+- `rich-text` — `linkStyle` (`"button"` | `"underline"`).
+- `testimonials` — `layout` (`"grid"` | `"carousel"`) plus per-item
+  `photoUrl`/`productName`/`productPrice`/`productImageUrl` for large
+  photo-testimonial cards with a product chip.
+- `faq-accordion` — `introHeading`/`introText`/`imageUrl`/`ctaText`/`ctaUrl`
+  for a 3-column intro-blurb-plus-image layout instead of a plain centered
+  list.
 
 Sections are **attribute-driven**, like Shopify section settings — they take
 configuration through block attributes rather than requiring nested inner

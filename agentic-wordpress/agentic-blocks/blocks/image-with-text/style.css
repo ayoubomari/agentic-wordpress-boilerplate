@@ -15,7 +15,7 @@
 	width: 100%;
 	aspect-ratio: 4 / 3;
 	object-fit: cover;
-	border-radius: 4px;
+	border-radius: var(--agentic-radius-card);
 	background: var(--wp--preset--color--subtle);
 }
 
@@ -44,4 +44,46 @@
 	.agentic-image-with-text--image-right .agentic-image-with-text__media {
 		order: 0;
 	}
+}
+
+/* ---------- Colored promo panel (dual-split look) ---------- */
+
+.agentic-image-with-text--has-background {
+	background: var(--agentic-iwt-bg, var(--wp--preset--color--blush));
+	border-radius: var(--agentic-radius-panel);
+	padding: var(--wp--preset--spacing--50);
+}
+
+/* --muted (#6b6b6b) only clears ~3.9:1 against the light pastel panel
+   colors (blush/sand) — fails WCAG AA's 4.5:1 for normal body text, even
+   though it passes fine on a plain white/subtle background elsewhere.
+   Use --contrast for text specifically inside a colored panel instead. */
+.agentic-image-with-text--has-background .agentic-image-with-text__text {
+	color: var(--wp--preset--color--contrast);
+}
+
+/* "inset": the image is contained within the panel's padding, not
+   bled to its edge — the panel's own background shows around it. */
+.agentic-image-with-text--image-style-inset.agentic-image-with-text--has-background .agentic-image-with-text__media img,
+.agentic-image-with-text--image-style-inset.agentic-image-with-text--has-background .agentic-image-with-text__placeholder {
+	border-radius: var(--agentic-radius-card);
+}
+
+/* "full" (default) stays edge-to-edge even inside a colored panel — undo
+   the panel's own padding on the media side only, so the image still
+   bleeds to that edge while the text side keeps its padding. */
+.agentic-image-with-text--image-style-full.agentic-image-with-text--has-background {
+	padding: 0;
+}
+
+.agentic-image-with-text--image-style-full.agentic-image-with-text--has-background .agentic-image-with-text__content {
+	padding: var(--wp--preset--spacing--50);
+}
+
+.agentic-image-with-text--image-style-full.agentic-image-with-text--has-background .agentic-image-with-text__media img,
+.agentic-image-with-text--image-style-full.agentic-image-with-text--has-background .agentic-image-with-text__placeholder {
+	aspect-ratio: auto;
+	height: 100%;
+	min-height: 22rem;
+	border-radius: 0;
 }

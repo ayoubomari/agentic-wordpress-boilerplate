@@ -26,3 +26,10 @@
 	margin-top: var(--wp--preset--spacing--20);
 	text-decoration: none;
 }
+
+.agentic-rich-text__cta--underline {
+	font-size: var(--wp--preset--font-size--small);
+	font-weight: 600;
+	color: var(--wp--preset--color--contrast);
+	text-decoration: underline;
+}

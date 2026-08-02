@@ -18,7 +18,7 @@
 	height: 100%;
 	padding: var(--wp--preset--spacing--50);
 	background: var(--wp--preset--color--subtle);
-	border-radius: 4px;
+	border-radius: var(--agentic-radius-card);
 	display: flex;
 	flex-direction: column;
 	gap: var(--wp--preset--spacing--30);
@@ -50,3 +50,135 @@
 @media (max-width: 780px) {
 	.agentic-testimonials__grid { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* ---------- Carousel layout — large photo-testimonial cards ---------- */
+
+.agentic-testimonials.agentic-carousel {
+	position: relative;
+}
+
+.agentic-testimonials__track {
+	display: flex;
+	gap: var(--wp--preset--spacing--40);
+	overflow-x: auto;
+	scroll-snap-type: x mandatory;
+	scrollbar-width: none;
+	padding-bottom: var(--wp--preset--spacing--20);
+}
+
+.agentic-testimonials__track::-webkit-scrollbar {
+	display: none;
+}
+
+.agentic-testimonials__card {
+	position: relative;
+	flex: 0 0 82%;
+	min-height: 26rem;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	padding: var(--wp--preset--spacing--40);
+	background-color: var(--wp--preset--color--subtle);
+	background-size: cover;
+	background-position: center;
+	border-radius: var(--agentic-radius-panel);
+	scroll-snap-align: start;
+	overflow: hidden;
+}
+
+.agentic-testimonials__card::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(to top, rgba(26, 26, 26, 0.75), rgba(26, 26, 26, 0) 55%);
+}
+
+@media (min-width: 700px) {
+	.agentic-testimonials__card { flex-basis: 46%; }
+}
+
+@media (min-width: 1100px) {
+	.agentic-testimonials__card { flex-basis: 29%; }
+}
+
+.agentic-testimonials__card-quote,
+.agentic-testimonials__card-author {
+	position: relative;
+	color: var(--wp--preset--color--base);
+}
+
+.agentic-testimonials__card-quote {
+	margin: 0 0 var(--wp--preset--spacing--20);
+}
+
+.agentic-testimonials__card-quote p {
+	margin: 0;
+}
+
+.agentic-testimonials__card-author {
+	font-size: var(--wp--preset--font-size--small);
+	font-weight: 600;
+	margin-bottom: var(--wp--preset--spacing--30);
+}
+
+.agentic-testimonials__card .agentic-testimonials__role {
+	color: rgba(255, 255, 255, 0.75);
+}
+
+.agentic-testimonials__product-chip {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	padding: 0.5rem;
+	background: var(--wp--preset--color--base);
+	border-radius: var(--agentic-radius-pill);
+	width: fit-content;
+}
+
+.agentic-testimonials__product-chip img {
+	width: 2.25rem;
+	height: 2.25rem;
+	object-fit: cover;
+	border-radius: var(--agentic-radius-pill);
+}
+
+.agentic-testimonials__product-info {
+	display: flex;
+	flex-direction: column;
+	padding-right: 0.5rem;
+}
+
+.agentic-testimonials__product-name {
+	font-size: var(--wp--preset--font-size--small);
+	font-weight: 600;
+	color: var(--wp--preset--color--contrast);
+}
+
+.agentic-testimonials__product-price {
+	font-size: var(--wp--preset--font-size--small);
+	color: var(--wp--preset--color--muted);
+}
+
+.agentic-testimonials__nav {
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 2.75rem;
+	height: 2.75rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: none;
+	border-radius: var(--agentic-radius-pill);
+	background: var(--wp--preset--color--base);
+	color: var(--wp--preset--color--contrast);
+	font-size: 1.5rem;
+	line-height: 1;
+	cursor: pointer;
+	box-shadow: 0 2px 8px rgba(26, 26, 26, 0.12);
+}
+
+.agentic-testimonials__nav--prev { left: -0.5rem; }
+.agentic-testimonials__nav--next { right: -0.5rem; }

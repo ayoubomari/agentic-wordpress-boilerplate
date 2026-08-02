@@ -1,0 +1,186 @@
+.agentic-search-drawer__trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--wp--preset--color--contrast);
+  cursor: pointer;
+  margin-top: 5px;
+}
+
+.agentic-search-drawer__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(26, 26, 26, 0.4);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 1000;
+}
+
+.agentic-search-drawer__panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(26rem, 100vw);
+  background: var(--wp--preset--color--base);
+  box-shadow: -4px 0 24px rgba(26, 26, 26, 0.12);
+  padding: var(--wp--preset--spacing--50) var(--wp--preset--spacing--40);
+  overflow-y: auto;
+  transform: translateX(100%);
+  transition: transform 0.25s ease;
+  z-index: 1001;
+}
+
+.agentic-search-drawer.is-open .agentic-search-drawer__overlay {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.agentic-search-drawer.is-open .agentic-search-drawer__panel {
+  transform: translateX(0);
+}
+
+.agentic-search-drawer__panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--wp--preset--spacing--40);
+}
+
+.agentic-search-drawer__heading {
+  margin: 0;
+  font-size: var(--wp--preset--font-size--x-large);
+}
+
+.agentic-search-drawer__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  background: none;
+  border: none;
+  color: var(--wp--preset--color--contrast);
+  cursor: pointer;
+}
+
+.agentic-search-drawer__form {
+  position: relative;
+  margin-bottom: var(--wp--preset--spacing--50);
+}
+
+.agentic-search-drawer__form-icon {
+  position: absolute;
+  top: 50%;
+  left: 1rem;
+  transform: translateY(-50%);
+  color: var(--wp--preset--color--muted);
+  pointer-events: none;
+}
+
+.agentic-search-drawer__input {
+  width: 100%;
+  padding: 0.9rem 1.1rem 0.9rem 2.75rem;
+  font: inherit;
+  font-size: var(--wp--preset--font-size--small);
+  background: var(--wp--preset--color--subtle);
+  border: 1px solid var(--wp--preset--color--border);
+  border-radius: var(--agentic-radius-pill);
+  color: var(--wp--preset--color--contrast);
+}
+
+.agentic-search-drawer__input:focus-visible {
+  outline: 2px solid var(--wp--preset--color--contrast);
+  outline-offset: 1px;
+}
+
+.agentic-search-drawer__section {
+  margin-bottom: var(--wp--preset--spacing--50);
+}
+
+.agentic-search-drawer__section-heading {
+  margin: 0 0 var(--wp--preset--spacing--30);
+  font-size: var(--wp--preset--font-size--medium);
+  font-weight: 600;
+}
+
+.agentic-search-drawer__keywords {
+  margin: 0;
+  font-size: var(--wp--preset--font-size--small);
+  color: var(--wp--preset--color--muted);
+}
+
+.agentic-search-drawer__keywords a {
+  color: var(--wp--preset--color--contrast);
+  text-decoration: underline;
+}
+
+.agentic-search-drawer__products {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--wp--preset--spacing--30);
+}
+
+.agentic-search-drawer__product-link {
+  display: flex;
+  align-items: center;
+  gap: var(--wp--preset--spacing--30);
+  text-decoration: none;
+  color: inherit;
+}
+
+.agentic-search-drawer__product-media {
+  flex: 0 0 auto;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: var(--agentic-radius-card);
+  overflow: hidden;
+  background: var(--wp--preset--color--subtle);
+}
+
+.agentic-search-drawer__product-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.agentic-search-drawer__product-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.agentic-search-drawer__product-name {
+  font-size: var(--wp--preset--font-size--small);
+  font-weight: 600;
+}
+
+.agentic-search-drawer__product-price {
+  font-size: var(--wp--preset--font-size--small);
+  color: var(--wp--preset--color--muted);
+}
+
+.agentic-search-drawer__product-price ins {
+  color: var(--wp--preset--color--sale);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.agentic-search-drawer__product-price del {
+  /* No opacity — see the identical fix/explanation in
+	   featured-collection/style.css's .agentic-product-card__price del. */
+  text-decoration: line-through;
+}
+
+/* Lock page scroll behind the drawer while it's open. */
+body.agentic-search-drawer-open {
+  overflow: hidden;
+}

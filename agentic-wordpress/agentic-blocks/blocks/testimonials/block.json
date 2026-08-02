@@ -5,10 +5,11 @@
   "title": "Testimonials",
   "category": "agentic",
   "icon": "format-quote",
-  "description": "Customer quotes with attribution.",
+  "description": "Customer quotes with attribution — a grid, or set layout:\"carousel\" for large photo-testimonial cards with a product chip.",
   "attributes": {
     "heading": { "type": "string", "default": "What customers say" },
     "columns": { "type": "number", "default": 3 },
+    "layout": { "type": "string", "default": "grid" },
     "items": {
       "type": "array",
       "default": [

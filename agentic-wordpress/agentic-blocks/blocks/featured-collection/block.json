@@ -5,15 +5,17 @@
   "title": "Featured Collection",
   "category": "agentic",
   "icon": "grid-view",
-  "description": "A grid of products, optionally filtered to one product category.",
+  "description": "A grid of products, optionally filtered to one category and/or a max price. Set `tabs` (2+) for a tabbed collection switcher (What's hot / Best sellers / Sale).",
   "attributes": {
     "heading": { "type": "string", "default": "Featured products" },
     "category": { "type": "string", "default": "" },
+    "maxPrice": { "type": "number", "default": 0 },
     "count": { "type": "number", "default": 4 },
     "columns": { "type": "number", "default": 4 },
     "orderby": { "type": "string", "default": "date" },
     "ctaText": { "type": "string", "default": "View all" },
-    "ctaUrl": { "type": "string", "default": "/shop/" }
+    "ctaUrl": { "type": "string", "default": "/shop/" },
+    "tabs": { "type": "array", "default": [] }
   },
   "supports": { "align": ["wide", "full"], "spacing": { "margin": true, "padding": true } },
   "render": "file:./render.php",

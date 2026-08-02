@@ -14,12 +14,16 @@
       "custom": true,
       "palette": [
         { "slug": "base", "color": "#ffffff", "name": "Base" },
-        { "slug": "contrast", "color": "#121212", "name": "Contrast" },
-        { "slug": "subtle", "color": "#f3f3f3", "name": "Subtle background" },
+        { "slug": "contrast", "color": "#1a1a1a", "name": "Contrast" },
+        { "slug": "subtle", "color": "#f8f1ee", "name": "Subtle background" },
         { "slug": "muted", "color": "#6b6b6b", "name": "Muted text" },
-        { "slug": "border", "color": "#e5e5e5", "name": "Border" },
-        { "slug": "accent", "color": "#1f4fd8", "name": "Accent" },
-        { "slug": "sale", "color": "#b3121f", "name": "Sale" }
+        { "slug": "border", "color": "#ece0da", "name": "Border" },
+        { "slug": "accent", "color": "#c96f52", "name": "Accent (terracotta)" },
+        { "slug": "sale", "color": "#c23b3a", "name": "Sale" },
+        { "slug": "blush", "color": "#f0d7d0", "name": "Blush" },
+        { "slug": "sand", "color": "#ecd9c3", "name": "Sand" },
+        { "slug": "new-badge", "color": "#3f7d4e", "name": "New badge" },
+        { "slug": "selling-fast", "color": "#6d5bd0", "name": "Selling fast badge" }
       ]
     },
     "typography": {
@@ -29,12 +33,28 @@
         {
           "slug": "body",
           "name": "Body",
-          "fontFamily": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+          "fontFamily": "'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+          "fontFace": [
+            {
+              "fontFamily": "DM Sans",
+              "fontWeight": "100 1000",
+              "fontStyle": "normal",
+              "fontDisplay": "swap",
+              "src": ["file:./assets/fonts/DMSans-Variable.woff2"]
+            },
+            {
+              "fontFamily": "DM Sans",
+              "fontWeight": "100 1000",
+              "fontStyle": "italic",
+              "fontDisplay": "swap",
+              "src": ["file:./assets/fonts/DMSans-Variable-Italic.woff2"]
+            }
+          ]
         },
         {
           "slug": "heading",
           "name": "Heading",
-          "fontFamily": "Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', Palatino, serif"
+          "fontFamily": "'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
         }
       ],
       "fontSizes": [
@@ -78,6 +98,7 @@
   },
 
   "styles": {
+    "css": ":root{--agentic-radius-pill:999px;--agentic-radius-card:10px;--agentic-radius-panel:20px;}",
     "color": {
       "background": "var(--wp--preset--color--base)",
       "text": "var(--wp--preset--color--contrast)"
@@ -95,9 +116,9 @@
       "heading": {
         "typography": {
           "fontFamily": "var(--wp--preset--font-family--heading)",
-          "fontWeight": "600",
-          "lineHeight": "1.2",
-          "letterSpacing": "-0.01em"
+          "fontWeight": "800",
+          "lineHeight": "1.15",
+          "letterSpacing": "-0.02em"
         }
       },
       "h1": { "typography": { "fontSize": "var(--wp--preset--font-size--xx-large)" } },
@@ -113,7 +134,7 @@
           "background": "var(--wp--preset--color--contrast)",
           "text": "var(--wp--preset--color--base)"
         },
-        "border": { "radius": "4px", "width": "1px", "style": "solid", "color": "var(--wp--preset--color--contrast)" },
+        "border": { "radius": "999px", "width": "1px", "style": "solid", "color": "var(--wp--preset--color--contrast)" },
         "spacing": { "padding": { "top": "0.9rem", "bottom": "0.9rem", "left": "1.75rem", "right": "1.75rem" } },
         "typography": {
           "fontSize": "var(--wp--preset--font-size--small)",

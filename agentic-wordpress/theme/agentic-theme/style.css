@@ -16,34 +16,71 @@ Requires PHP: 8.0
  * agentic_product_badge_markup() helper in agentic-blocks.php — so its CSS
  * can't live inside one block's per-block stylesheet.
  */
+.agentic-product-badge-group {
+  position: absolute;
+  z-index: 1;
+  top: var(--wp--preset--spacing--20);
+  display: flex;
+  gap: 0.4em;
+}
+
+.agentic-product-badge-group--top-left {
+  left: var(--wp--preset--spacing--20);
+}
+
+.agentic-product-badge-group--top-right {
+  right: var(--wp--preset--spacing--20);
+}
+
 .agentic-product-badge {
-	position: absolute;
-	z-index: 1;
-	top: var(--wp--preset--spacing--20);
-	display: inline-block;
-	padding: 0.3em 0.7em;
-	font-size: var(--wp--preset--font-size--small);
-	font-weight: 500;
-	line-height: 1.2;
-	color: var(--wp--preset--color--base);
-	background: var(--wp--preset--color--contrast);
-	border-radius: 2px;
-}
-
-.agentic-product-badge--top-left {
-	left: var(--wp--preset--spacing--20);
-}
-
-.agentic-product-badge--top-right {
-	right: var(--wp--preset--spacing--20);
+  display: inline-block;
+  padding: 0.3em 0.75em;
+  font-size: var(--wp--preset--font-size--small);
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: var(--wp--preset--color--base);
+  background: var(--wp--preset--color--contrast);
+  border-radius: var(--agentic-radius-pill);
 }
 
 .agentic-product-badge--sale {
-	background: var(--wp--preset--color--sale);
+  background: var(--wp--preset--color--sale);
+}
+
+.agentic-product-badge--new {
+  background: var(--wp--preset--color--new-badge);
+}
+
+.agentic-product-badge--selling-fast {
+  background: var(--wp--preset--color--selling-fast);
+}
+
+.agentic-product-badge--sold-out {
+  background: var(--wp--preset--color--muted);
 }
 
 /* WooCommerce's Product Template list item — needed so an
    agentic/product-badge placed inside it has a positioning context. */
 .wc-block-product {
-	position: relative;
+  position: relative;
+}
+
+/* The core `woocommerce/product-image` block auto-nests its own
+   `woocommerce/product-sale-badge` sub-block whenever a product is on sale
+   — this is not something our templates add explicitly, WooCommerce injects
+   it as a default inner block. Left alone it duplicates our own styled
+   badge (a plain unstyled "Sale" box in the opposite corner). Suppressed
+   globally since product grids appear on many templates, not just one. */
+.wc-block-components-product-sale-badge {
+  display: none;
+}
+
+/* The mini-cart drawer's own close button ships a -14px margin that pulls it
+   right up into the corner (it visibly clips past the viewport edge) — pull
+   it back in with some breathing room instead. Mini-cart opens from the
+   header on every page, not just cart/checkout/account, so this lives in
+   the always-on stylesheet rather than assets/css/woocommerce.css. */
+.wc-block-components-drawer__close {
+  margin: 10px 5px 0 0 !important;
 }

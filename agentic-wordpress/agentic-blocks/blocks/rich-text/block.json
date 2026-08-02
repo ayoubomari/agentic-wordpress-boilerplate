@@ -11,6 +11,7 @@
     "text": { "type": "string", "default": "" },
     "ctaText": { "type": "string", "default": "" },
     "ctaUrl": { "type": "string", "default": "" },
+    "linkStyle": { "type": "string", "default": "button" },
     "maxWidth": { "type": "string", "default": "40rem" }
   },
   "supports": { "align": ["wide", "full"], "spacing": { "margin": true, "padding": true } },

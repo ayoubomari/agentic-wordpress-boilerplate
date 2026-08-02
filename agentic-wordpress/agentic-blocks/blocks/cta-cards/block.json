@@ -1,0 +1,21 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "agentic/cta-cards",
+  "title": "CTA Cards",
+  "category": "agentic",
+  "icon": "grid-view",
+  "description": "A row of colored cards (image, heading, pill button) — for content teasers like the Journal, a store locator, or a social handle.",
+  "attributes": {
+    "cards": {
+      "type": "array",
+      "default": [
+        { "heading": "News, tips, reviews", "imageUrl": "", "backgroundColor": "subtle", "ctaText": "View Our Blog", "ctaUrl": "/journal/" },
+        { "heading": "On the gram", "imageUrl": "", "backgroundColor": "blush", "ctaText": "Follow us", "ctaUrl": "#" }
+      ]
+    }
+  },
+  "supports": { "align": ["wide", "full"], "spacing": { "margin": true, "padding": true } },
+  "render": "file:./render.php",
+  "style": "file:./style.css"
+}

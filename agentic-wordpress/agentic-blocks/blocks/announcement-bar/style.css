@@ -1,17 +1,65 @@
 .agentic-announcement-bar {
 	background: var(--wp--preset--color--contrast);
 	color: var(--wp--preset--color--base);
-	text-align: center;
 	padding: 0.6rem var(--wp--preset--spacing--40);
 }
 
-.agentic-announcement-bar__text {
+/* Static, single-message mode — plain centered bar, no animation. */
+.agentic-announcement-bar:not(.is-marquee) {
+	text-align: center;
+}
+
+.agentic-announcement-bar__item {
 	margin: 0;
 	font-size: var(--wp--preset--font-size--small);
 	color: inherit;
 	text-decoration: none;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	font-weight: 600;
 }
 
-a.agentic-announcement-bar__text:hover {
+a.agentic-announcement-bar__item:hover {
 	text-decoration: underline;
+}
+
+/* Marquee mode — a track duplicated --agentic-marquee-copies times (set
+   inline by render.php, based on estimated content width) scrolls left
+   forever; every copy is identical so translating by exactly 1/N of the
+   track's width loops with no visible seam and no trailing blank gap. */
+.agentic-announcement-bar.is-marquee {
+	overflow: hidden;
+	padding-block: 0.75rem;
+}
+
+.agentic-announcement-bar__track {
+	display: flex;
+	align-items: center;
+	width: max-content;
+	animation: agentic-announcement-marquee var(--agentic-marquee-duration, 24s) linear infinite;
+}
+
+.agentic-announcement-bar.is-marquee .agentic-announcement-bar__item {
+	flex: 0 0 auto;
+	white-space: nowrap;
+	padding-inline: 2rem;
+}
+
+@keyframes agentic-announcement-marquee {
+	from {
+		transform: translateX(0);
+	}
+	to {
+		transform: translateX(calc(-100% / var(--agentic-marquee-copies, 2)));
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.agentic-announcement-bar__track {
+		animation: none;
+	}
+
+	.agentic-announcement-bar.is-marquee {
+		overflow-x: auto;
+	}
 }

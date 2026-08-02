@@ -5,10 +5,18 @@
   "title": "Announcement Bar",
   "category": "agentic",
   "icon": "megaphone",
-  "description": "Thin top-of-page bar for shipping/promo messaging. Was hardcoded markup in parts/header.html — now a configurable section.",
+  "description": "Thin top-of-page bar for shipping/promo messaging. Set `messages` (2+) for a continuously scrolling marquee ticker; a single message (or `text` alone) renders as a plain static centered bar.",
   "attributes": {
     "text": { "type": "string", "default": "Free shipping on orders over $50" },
-    "url": { "type": "string", "default": "" }
+    "url": { "type": "string", "default": "" },
+    "messages": {
+      "type": "array",
+      "default": [
+        { "text": "Free shipping on all U.S. orders $200+", "url": "" },
+        { "text": "100% clean, non-irritating", "url": "" },
+        { "text": "No animal testing", "url": "" }
+      ]
+    }
   },
   "supports": { "spacing": { "margin": false, "padding": false } },
   "render": "file:./render.php",

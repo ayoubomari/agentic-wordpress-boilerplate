@@ -5,11 +5,13 @@
   "title": "Product Badge",
   "category": "agentic",
   "icon": "tag",
-  "description": "\"New\" / \"Sale\" ribbon. Drop inside a product template (product loop or single-product) — it reads the current product from context.",
+  "description": "\"New\" / \"-X%\" / \"Selling fast\" / \"Sold out\" ribbon(s). Drop inside a product template (product loop or single-product) — it reads the current product from context.",
   "usesContext": ["postId"],
   "attributes": {
     "showSale": { "type": "boolean", "default": true },
     "showNew": { "type": "boolean", "default": true },
+    "showSoldOut": { "type": "boolean", "default": true },
+    "showSellingFast": { "type": "boolean", "default": true },
     "newDays": { "type": "number", "default": 14 },
     "position": { "type": "string", "default": "top-left" }
   },
