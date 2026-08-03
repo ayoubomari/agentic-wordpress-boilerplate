@@ -56,13 +56,3 @@
 .agentic-newsletter-signup__button:hover {
 	transform: translateY(-50%) scale(1.08);
 }
-
-.agentic-newsletter-signup__consent {
-	margin: 0.75rem 0 0;
-	font-size: var(--wp--preset--font-size--small);
-	color: var(--wp--preset--color--muted);
-}
-
-.agentic-newsletter-signup__consent a {
-	color: inherit;
-}

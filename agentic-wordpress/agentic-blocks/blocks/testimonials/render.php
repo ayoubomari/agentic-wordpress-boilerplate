@@ -62,6 +62,7 @@ if ( 'carousel' === $layout ) {
 				</figure>
 			<?php endforeach; ?>
 		</div>
+		<?php agentic_carousel_loop_precorrect(); ?>
 
 		<button type="button" class="agentic-testimonials__nav agentic-testimonials__nav--prev" data-carousel-prev aria-label="<?php esc_attr_e( 'Previous review', 'agentic' ); ?>">‹</button>
 		<button type="button" class="agentic-testimonials__nav agentic-testimonials__nav--next" data-carousel-next aria-label="<?php esc_attr_e( 'Next review', 'agentic' ); ?>">›</button>

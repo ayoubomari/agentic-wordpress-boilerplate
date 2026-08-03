@@ -88,22 +88,22 @@ cat > "$DIR/render.php" <<EOF
 ?>
 <section <?php echo agentic_section_classes( '$SLUG' ); ?>>
 	<?php if ( \$heading ) : ?>
-		<h2 class="agentic-$SLUG__heading"><?php echo esc_html( \$heading ); ?></h2>
+		<h2 class="agentic-${SLUG}__heading"><?php echo esc_html( \$heading ); ?></h2>
 	<?php endif; ?>
 
 	<?php if ( \$text ) : ?>
-		<p class="agentic-$SLUG__text"><?php echo esc_html( \$text ); ?></p>
+		<p class="agentic-${SLUG}__text"><?php echo esc_html( \$text ); ?></p>
 	<?php endif; ?>
 </section>
 EOF
 
 cat > "$DIR/style.css" <<EOF
-.agentic-$SLUG__heading {
+.agentic-${SLUG}__heading {
 	margin: 0 0 var(--wp--preset--spacing--40);
 	font-size: var(--wp--preset--font-size--x-large);
 }
 
-.agentic-$SLUG__text {
+.agentic-${SLUG}__text {
 	margin: 0;
 	color: var(--wp--preset--color--muted);
 }

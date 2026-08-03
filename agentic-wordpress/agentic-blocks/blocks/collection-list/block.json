@@ -5,9 +5,11 @@
   "title": "Collection List",
   "category": "agentic",
   "icon": "grid-view",
-  "description": "Grid of product category cards linking to their archives — the main storefront navigation section.",
+  "description": "Row of circular product category icons linking to their archives — the main storefront \"shop by category\" navigation section. Optional ctaText/ctaUrl render a \"View all\" link next to the heading.",
   "attributes": {
     "heading": { "type": "string", "default": "Shop by category" },
+    "ctaText": { "type": "string", "default": "" },
+    "ctaUrl": { "type": "string", "default": "" },
     "columns": { "type": "number", "default": 4 },
     "collections": {
       "type": "array",

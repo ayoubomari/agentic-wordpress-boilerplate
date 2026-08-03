@@ -1,7 +1,63 @@
+.agentic-collection-list__header {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: var(--wp--preset--spacing--30);
+	flex-wrap: wrap;
+	margin-bottom: var(--wp--preset--spacing--50);
+}
+
 .agentic-collection-list__heading {
-	margin: 0 0 var(--wp--preset--spacing--50);
+	margin: 0;
 	font-size: var(--wp--preset--font-size--x-large);
-	text-align: center;
+}
+
+/* Same "teleport" underline hover as agentic-featured-collection__cta —
+   kept identical across blocks so every section-header "View all" link
+   behaves the same way. See that block's style.css for the full rationale. */
+.agentic-collection-list__cta {
+	position: relative;
+	font-size: var(--wp--preset--font-size--medium);
+	font-weight: 600;
+	text-decoration: none;
+	white-space: nowrap;
+	color: var(--wp--preset--color--contrast);
+}
+
+.agentic-collection-list__cta::after {
+	content: "";
+	position: absolute;
+	left: 0;
+	bottom: -0.15em;
+	width: 100%;
+	height: 1px;
+	background: currentColor;
+	transform: scaleX(1);
+	transform-origin: left;
+}
+
+@keyframes agentic-collection-list-cta-teleport {
+	0% {
+		transform: scaleX(1);
+		transform-origin: right;
+	}
+	50% {
+		transform: scaleX(0);
+		transform-origin: right;
+	}
+	50.01% {
+		transform: scaleX(0);
+		transform-origin: left;
+	}
+	100% {
+		transform: scaleX(1);
+		transform-origin: left;
+	}
+}
+
+.agentic-collection-list__cta:hover::after,
+.agentic-collection-list__cta:focus-visible::after {
+	animation: agentic-collection-list-cta-teleport 0.6s ease;
 }
 
 .agentic-collection-list__grid {
@@ -14,15 +70,19 @@
 }
 
 .agentic-collection-list__link {
-	display: block;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
 	text-decoration: none;
 	color: inherit;
 }
 
 .agentic-collection-list__media {
 	display: block;
-	aspect-ratio: 4 / 5;
+	width: 100%;
+	aspect-ratio: 1 / 1;
 	background: var(--wp--preset--color--subtle);
+	border-radius: var(--agentic-radius-pill);
 	overflow: hidden;
 }
 
@@ -35,17 +95,25 @@
 }
 
 .agentic-collection-list__link:hover .agentic-collection-list__media img {
-	transform: scale(1.03);
+	transform: scale(1.06);
 }
 
 .agentic-collection-list__title {
 	display: block;
-	margin-top: var(--wp--preset--spacing--20);
+	margin-top: var(--wp--preset--spacing--30);
 	font-size: var(--wp--preset--font-size--small);
 	font-weight: 500;
 	text-align: center;
 }
 
 @media (max-width: 780px) {
-	.agentic-collection-list__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	.agentic-collection-list__grid {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 480px) {
+	.agentic-collection-list__grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
 }

@@ -182,6 +182,89 @@ add_action(
 );
 
 /**
+ * Front-page performance. Three Lighthouse findings on "/", all fixable
+ * without touching any visual output:
+ *
+ * 1. The hero-banner's first slide is the LCP element, but its image is only
+ *    knowable once the browser parses an inline `background-image` style
+ *    deep inside <main> — long after <head> is sent. A `<link rel=preload>`
+ *    lets the browser fetch it in parallel with everything else instead of
+ *    discovering it late. Read straight from the front-page template's own
+ *    hero-banner block (not hardcoded) so this can never drift out of sync
+ *    with templates/front-page.html.
+ * 2. jQuery + jquery-migrate are render-blocking by default. WordPress
+ *    6.3+'s script "strategy" data defers them — and, being dependency-
+ *    aware, automatically keeps anything incompatible blocking instead of
+ *    breaking load order, unlike a manual footer move.
+ * 3. WooCommerce enqueues its three classic frontend stylesheets
+ *    (general/layout/smallscreen) on every page, but no block used on the
+ *    front page emits the classic markup those target — e.g.
+ *    featured-collection's get_price_html() output is fully re-styled by
+ *    that block's own CSS (see its <ins>/<del> rules). Scoped to just the
+ *    front page rather than removed sitewide, since archive-product /
+ *    single-product still render WooCommerce's own templates.
+ */
+add_action(
+	'wp_head',
+	function () {
+		if ( ! is_front_page() ) {
+			return;
+		}
+
+		$template = get_block_template( get_stylesheet() . '//front-page', 'wp_template' );
+		if ( ! $template ) {
+			return;
+		}
+
+		$image_url = agentic_find_first_hero_image( parse_blocks( $template->content ) );
+		if ( $image_url ) {
+			printf( '<link rel="preload" as="image" href="%s" />' . "\n", esc_url( $image_url ) );
+		}
+	},
+	1
+);
+
+if ( ! function_exists( 'agentic_find_first_hero_image' ) ) {
+	function agentic_find_first_hero_image( $blocks ) {
+		foreach ( $blocks as $block ) {
+			if ( 'agentic/hero-banner' === ( $block['blockName'] ?? '' ) ) {
+				$attrs = $block['attrs'] ?? [];
+				if ( ! empty( $attrs['slides'][0]['imageUrl'] ) ) {
+					return $attrs['slides'][0]['imageUrl'];
+				}
+				return $attrs['imageUrl'] ?? '';
+			}
+			if ( ! empty( $block['innerBlocks'] ) ) {
+				$found = agentic_find_first_hero_image( $block['innerBlocks'] );
+				if ( $found ) {
+					return $found;
+				}
+			}
+		}
+		return '';
+	}
+}
+
+add_action(
+	'wp_enqueue_scripts',
+	function () {
+		wp_script_add_data( 'jquery-core', 'strategy', 'defer' );
+		wp_script_add_data( 'jquery-migrate', 'strategy', 'defer' );
+	},
+	20
+);
+
+add_filter(
+	'woocommerce_enqueue_styles',
+	function ( $styles ) {
+		if ( is_front_page() ) {
+			unset( $styles['woocommerce-layout'], $styles['woocommerce-smallscreen'], $styles['woocommerce-general'] );
+		}
+		return $styles;
+	}
+);
+
+/**
  * Full-height hero carousels (agentic/hero-banner, "large" + slides) need to
  * fit within one screen *below* the header — including the announcement bar
  * above it — so the slide picture and its pagination dots are never pushed

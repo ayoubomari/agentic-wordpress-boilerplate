@@ -140,6 +140,7 @@ $render_slide = static function ( $slide, $align, $height, $extra_classes = [] )
 				<?php $render_slide( $slide, $slide_align( $slide ), $height, [ 'agentic-carousel__slide' ] ); ?>
 			<?php endforeach; ?>
 		</div>
+		<?php agentic_carousel_loop_precorrect(); ?>
 
 		<button type="button" class="agentic-hero-banner__nav agentic-hero-banner__nav--prev" data-carousel-prev aria-label="<?php esc_attr_e( 'Previous slide', 'agentic' ); ?>">‹</button>
 		<button type="button" class="agentic-hero-banner__nav agentic-hero-banner__nav--next" data-carousel-next aria-label="<?php esc_attr_e( 'Next slide', 'agentic' ); ?>">›</button>

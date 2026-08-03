@@ -85,22 +85,21 @@ Requires PHP: 8.0
   margin: 10px 5px 0 0 !important;
 }
 
-/* Footer payment-method row — plain text chips, not brand logo SVGs. This
-   boilerplate ships no payment-icon library, and this file is redistributed
-   as a starting point for other stores, so it deliberately avoids baking in
-   trademarked card-network artwork rather than sourcing one. Swap for real
-   logo icons per-store if desired. */
+/* Footer payment-method row — simplified logo-style icon chips (see the
+   agentic/payment-badges block + agentic_payment_icon_svg() in
+   agentic-blocks.php), not traced official brand artwork. This boilerplate
+   is redistributed as a starting point for other stores, so it deliberately
+   avoids baking in exact trademarked card-network logo files. Swap for real
+   licensed logo SVGs per-store if desired. */
 .agentic-payment-badges {
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
   gap: 0.5rem;
 }
 
-.agentic-payment-badge {
-  padding: 0.3em 0.75em;
-  font-size: var(--wp--preset--font-size--small);
-  font-weight: 600;
-  color: var(--wp--preset--color--muted);
-  border: 1px solid var(--wp--preset--color--border);
+.agentic-payment-badges__icon {
+  display: flex;
   border-radius: var(--agentic-radius-card);
+  overflow: hidden;
 }

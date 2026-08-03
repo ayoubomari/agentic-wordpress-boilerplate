@@ -14,7 +14,7 @@ cd "$(dirname "$0")/.."
 # as empty and fails.
 wp() { wp-env run cli wp "$@"; }
 
-echo "→ [1/11] Building block editor scripts"
+echo "→ [1/12] Building block editor scripts"
 # block.json points editorScript at build/<block>/index.js, so the bundle must
 # exist before the plugin is activated or blocks register without editor UI.
 if [ -d agentic-blocks/blocks ]; then
@@ -24,13 +24,13 @@ if [ -d agentic-blocks/blocks ]; then
   ( cd agentic-blocks && npm run build --silent )
 fi
 
-echo "→ [2/11] Installing WooCommerce + Yoast SEO (free, from wordpress.org)"
+echo "→ [2/12] Installing WooCommerce + Yoast SEO (free, from wordpress.org)"
 # Installed by slug via WP-CLI rather than as .wp-env.json zip URLs: zip
 # sources land in folders named after the zip (woocommerce.latest-stable),
 # which leaks into asset URLs and collides with a slug-named second copy.
 wp plugin install woocommerce wordpress-seo --activate
 
-echo "→ [3/11] Installing essential add-ons (free, from wordpress.org)"
+echo "→ [3/12] Installing essential add-ons (free, from wordpress.org)"
 # Two things WooCommerce doesn't handle on its own, both free and both things
 # an actual store cannot skip:
 #   - wp-mail-smtp: WordPress's default wp_mail() gets spam-filtered by most
@@ -51,11 +51,11 @@ wp option update updraft_interval_db 'daily'
 wp option update updraft_retain '7'
 wp option update updraft_retain_db '7'
 
-echo "→ [4/11] Activating theme + agentic-blocks"
+echo "→ [4/12] Activating theme + agentic-blocks"
 wp theme activate agentic-theme
 wp plugin activate agentic-blocks
 
-echo "→ [5/11] Navigation menus"
+echo "→ [5/12] Navigation menus"
 # Menu *items* are content the store owner edits in
 # Appearance → Editor → Navigation — not layout baked into a template file.
 # Templates reference these by slug via the `agenticMenu` attribute, resolved
@@ -93,26 +93,51 @@ ensure_menu 'footer-shop' 'Footer — Shop' \
 ensure_menu 'footer-help' 'Footer — Help' \
 '<!-- wp:navigation-link {"label":"Shipping &amp; returns","url":"/sample-page/","kind":"custom","isTopLevelLink":true} /--><!-- wp:navigation-link {"label":"Contact","url":"/sample-page/","kind":"custom","isTopLevelLink":true} /--><!-- wp:navigation-link {"label":"Privacy policy","url":"/privacy-policy/","kind":"custom","isTopLevelLink":true} /-->'
 
-# Small legal-link row in the footer's very bottom bar — separate from the
-# "Footer — Help" column above since it's a distinct placement (bottom bar,
-# not a column), same owner-editable-menu treatment either way.
-ensure_menu 'footer-legal' 'Footer — Legal' \
-'<!-- wp:navigation-link {"label":"Privacy Policy","url":"/privacy-policy/","kind":"custom","isTopLevelLink":true} /--><!-- wp:navigation-link {"label":"Terms of Service","url":"/sample-page/","kind":"custom","isTopLevelLink":true} /-->'
-
-echo "→ [6/11] Completing WooCommerce installation"
+echo "→ [6/12] Completing WooCommerce installation"
 # WooCommerce defers part of its installer to the first request after
 # activation, and that deferred run writes its own defaults. Forcing it to
 # finish synchronously here means the settings written below actually stick
 # instead of being silently overwritten a moment later.
 wp eval 'if ( class_exists( "WC_Install" ) ) { WC_Install::install(); }'
 
-echo "→ [7/11] Permalinks"
+echo "→ [7/12] Permalinks"
 # Flat /%postname%/ — the sane structure for products; the WP default
 # day-and-name buries /shop/ URLs under a date path.
 wp rewrite structure '/%postname%/' --hard
 wp rewrite flush --hard
 
-echo "→ [8/11] Store defaults"
+# Long cache lifetimes for static assets (images, fonts, CSS, JS) — Lighthouse's
+# "uses-long-cache-ttl" audit otherwise fails on every asset, since neither
+# Apache nor WordPress sets one by default. Enqueued CSS/JS are cache-busted by
+# WordPress's own ?ver= query string on every change, so a long lifetime is
+# safe even for those. insert_with_markers() is idempotent (marker-scoped, like
+# WordPress's own rewrite block above it) so re-running this never duplicates
+# the block or clobbers anything else in .htaccess.
+wp eval '
+	require_once ABSPATH . "wp-admin/includes/misc.php";
+	insert_with_markers(
+		ABSPATH . ".htaccess",
+		"Agentic Cache",
+		[
+			"<IfModule mod_expires.c>",
+			"  ExpiresActive On",
+			"  ExpiresByType image/jpg \"access plus 1 year\"",
+			"  ExpiresByType image/jpeg \"access plus 1 year\"",
+			"  ExpiresByType image/png \"access plus 1 year\"",
+			"  ExpiresByType image/webp \"access plus 1 year\"",
+			"  ExpiresByType image/svg+xml \"access plus 1 year\"",
+			"  ExpiresByType image/x-icon \"access plus 1 year\"",
+			"  ExpiresByType font/woff \"access plus 1 year\"",
+			"  ExpiresByType font/woff2 \"access plus 1 year\"",
+			"  ExpiresByType text/css \"access plus 1 year\"",
+			"  ExpiresByType application/javascript \"access plus 1 year\"",
+			"  ExpiresByType text/javascript \"access plus 1 year\"",
+			"</IfModule>",
+		]
+	);
+'
+
+echo "→ [8/12] Store defaults"
 wp option update blogdescription 'A code-first WooCommerce store'
 wp option update woocommerce_store_country 'US:CA'
 wp option update woocommerce_currency 'USD'
@@ -120,7 +145,7 @@ wp option update woocommerce_currency 'USD'
 # otherwise force clicking through the UI before the store works.
 wp option update woocommerce_onboarding_profile '{"skipped":true}' --format=json
 
-echo "→ [9/11] Front page + Journal"
+echo "→ [9/12] Front page + Journal"
 # The storefront must be a static page, not the post feed. Blog posts live at
 # /journal/ instead.
 #
@@ -171,7 +196,32 @@ wp eval '
 	}
 '
 
-echo "→ [10/11] Seeding sample products (so templates are verifiable)"
+echo "→ [10/12] Legal pages"
+# WordPress core auto-creates a "Privacy Policy" page (draft, at
+# /privacy-policy/) on every fresh install — there is no equivalent core
+# default for Terms of Use, so it's created here the same way: idempotent,
+# draft (real legal copy is the store owner's to write/review before
+# publishing — see "Owner-editable in wp-admin" in CLAUDE.md), placeholder
+# body text flagged for replacement, same as the seeded sample products.
+#
+# `wp post list --name=` silently ignores draft posts no matter what
+# --post_status is passed (a WP_Query quirk, not a wp-cli bug) — it always
+# came back empty here and recreated a duplicate draft on every single
+# re-run. get_page_by_path() doesn't have that restriction.
+if [ "$( wp eval 'echo get_page_by_path( "terms-of-use", OBJECT, "page" ) ? "1" : "0";' | tr -d '\r\n' )" = "0" ]; then
+  wp post create \
+    --post_type=page \
+    --post_title='Terms of Use' \
+    --post_name='terms-of-use' \
+    --post_status=draft \
+    --post_content='<!-- wp:paragraph --><p>Placeholder Terms of Use — replace with real, reviewed legal copy before launch.</p><!-- /wp:paragraph -->' \
+    --porcelain >/dev/null
+  echo "   created page 'terms-of-use'"
+else
+  echo "   page 'terms-of-use' already exists — leaving it alone"
+fi
+
+echo "→ [11/12] Seeding sample products (so templates are verifiable)"
 # Four, not one: a single product leaves the product grid and the "related
 # products" collection with nothing to show, which hides real template bugs.
 # Two real categories (not one catch-all) so collection-list and the
@@ -196,6 +246,17 @@ if [ "$(wp post list --post_type=product --format=count | tr -d '\r')" = "0" ]; 
 
   SKINCARE_CAT_ID="$( ensure_product_cat 'Skincare' 'skincare' )"
   BATH_BODY_CAT_ID="$( ensure_product_cat 'Bath & Body' 'bath-body' )"
+
+  # No products seeded into these four — they exist purely so
+  # agentic/collection-list ("Our Collections" on the homepage) has real
+  # taxonomy-product_cat archives to link to instead of dead /shop/ hrefs,
+  # demonstrating a store spanning more than one niche/category out of the
+  # box. Empty archives are expected here; the store owner populates them
+  # with real products.
+  ensure_product_cat 'Makeup' 'makeup' > /dev/null
+  ensure_product_cat 'Hair Care' 'hair-care' > /dev/null
+  ensure_product_cat 'Wellness' 'wellness' > /dev/null
+  ensure_product_cat 'Gifts & Sets' 'gifts-sets' > /dev/null
 
   seed_product() {
     local name="$1" slug="$2" category_id="$3" regular_price="$4" sale_price="$5" description="$6" short_description="$7" stock_quantity="${8:-}"
@@ -240,7 +301,7 @@ else
   echo "   products already exist — skipping"
 fi
 
-echo "→ [11/11] Disabling WooCommerce Coming Soon mode"
+echo "→ [12/12] Disabling WooCommerce Coming Soon mode"
 # WooCommerce 9.1+ ships this ON. Left alone it replaces the entire storefront
 # with a "Great things are on the horizon" splash for logged-out visitors, so
 # templates cannot be verified and nothing is indexable.

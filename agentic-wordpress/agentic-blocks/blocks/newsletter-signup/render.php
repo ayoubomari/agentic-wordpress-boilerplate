@@ -49,11 +49,4 @@ $field_id    = wp_unique_id( 'agentic-newsletter-' );
 			</svg>
 		</button>
 	</form>
-
-	<p class="agentic-newsletter-signup__consent">
-		<?php esc_html_e( 'By subscribing you agree to the', 'agentic' ); ?>
-		<a href="/sample-page/"><?php esc_html_e( 'Terms of Use', 'agentic' ); ?></a>
-		&amp;
-		<a href="/privacy-policy/"><?php esc_html_e( 'Privacy Policy', 'agentic' ); ?></a>.
-	</p>
 </div>

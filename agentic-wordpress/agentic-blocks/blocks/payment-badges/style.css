@@ -1,0 +1,4 @@
+/* Layout lives in theme/agentic-theme/style.css (.agentic-payment-badges,
+   .agentic-payment-badges__icon) since the footer template part styles the
+   row alongside the copyright line it sits next to. Nothing block-scoped
+   to add here. */

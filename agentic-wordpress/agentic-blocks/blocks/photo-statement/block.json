@@ -1,0 +1,33 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "agentic/photo-statement",
+  "title": "Photo Statement",
+  "category": "agentic",
+  "icon": "editor-quote",
+  "description": "A large statement built from fixed lines, each a flowing sentence with pill-shaped photos woven inline between the words (Sleek's \"make you look/feel...\" section). `lines` is an array of lines; each line is an array of items, either {type:\"text\", text} or {type:\"image\", imageUrl, imageAlt, backgroundColor, width, height} — backgroundColor insets the photo on a colored pill, omitting it lets the photo bleed full-size to fill the pill. Line breaks are explicit (not auto-wrapped) so the layout always matches the authored grouping.",
+  "attributes": {
+    "lines": {
+      "type": "array",
+      "default": [
+        [
+          { "type": "text", "text": "Make you look" },
+          { "type": "image", "imageUrl": "", "imageAlt": "Woman smiling while applying skincare product to her cheek", "backgroundColor": "blush", "width": "220px", "height": "130px" },
+          { "type": "text", "text": "and" }
+        ],
+        [
+          { "type": "text", "text": "feel glowy" },
+          { "type": "image", "imageUrl": "", "imageAlt": "Serum dropper bottle on a pink background", "backgroundColor": "sale", "width": "200px", "height": "130px" },
+          { "type": "text", "text": "and healthy" },
+          { "type": "image", "imageUrl": "", "imageAlt": "Close-up of moisturizer being applied to skin near the eye", "backgroundColor": "", "width": "220px", "height": "130px" }
+        ]
+      ]
+    }
+  },
+  "supports": {
+    "align": ["wide", "full"],
+    "spacing": { "margin": true, "padding": true }
+  },
+  "render": "file:./render.php",
+  "style": "file:./style.css"
+}

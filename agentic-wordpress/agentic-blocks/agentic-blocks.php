@@ -200,6 +200,52 @@ if ( ! function_exists( 'agentic_section_classes' ) ) {
 }
 
 /**
+ * Loop-correction for looping carousels (hero-banner 2+ slides,
+ * testimonials layout:"carousel" 2+ items), done synchronously and inline
+ * instead of by the external assets/carousel.js.
+ *
+ * carousel.js clones the last slide before the first (and the first after
+ * the last) so the track can scroll-snap "past" either end onto a
+ * pixel-identical clone and loop infinitely, then instantly scrolls onto
+ * the real first slide. That's cheap to do from the external script when
+ * the page renders slowly enough for it to finish before first paint — but
+ * on a fast-rendering page (render-blocking resources deferred, as this
+ * theme now does) the browser paints the *pre*-correction layout first,
+ * and the correction becomes a visible jump — a real, measured layout
+ * shift, not a theoretical one.
+ *
+ * Called immediately after a `.agentic-carousel__track`'s closing tag, this
+ * duplicates just that clone-and-scroll step as a plain synchronous inline
+ * `<script>`, which blocks parsing/painting until it completes — so the
+ * *first* frame the browser ever paints for that track is already the
+ * corrected one, and there is nothing to hide or reveal. carousel.js
+ * detects the `data-carousel-precorrected` flag this leaves behind and
+ * skips redoing the same work (see its `precorrected` check).
+ *
+ * `inert` (plus the `aria-hidden` fallback for older assistive tech) keeps
+ * the cloned slide's own CTA link out of tab order — matching what
+ * carousel.js's own clone creation now also does.
+ */
+if ( ! function_exists( 'agentic_carousel_loop_precorrect' ) ) {
+	function agentic_carousel_loop_precorrect() {
+		echo '<script>(function(){'
+			. 'var t=document.currentScript.previousElementSibling;'
+			. 'if(!t||t.children.length<2){return;}'
+			. 'var kids=t.children;'
+			. 'var lead=kids[kids.length-1].cloneNode(true);'
+			. 'var trail=kids[0].cloneNode(true);'
+			. 'lead.setAttribute("aria-hidden","true");lead.setAttribute("inert","");'
+			. 'trail.setAttribute("aria-hidden","true");trail.setAttribute("inert","");'
+			. 't.insertBefore(lead,kids[0]);'
+			. 't.appendChild(trail);'
+			. 'var real=t.children[1];'
+			. 't.scrollLeft+=real.getBoundingClientRect().left-t.getBoundingClientRect().left;'
+			. 't.setAttribute("data-carousel-precorrected","1");'
+			. '})();</script>';
+	}
+}
+
+/**
  * Default hero-banner graphic — used only when a slide has no imageUrl, so
  * a colour-only slide never looks like a bare, unfinished panel. Deliberately
  * abstract (a few rounded smear shapes, not a depiction of any real
@@ -219,5 +265,29 @@ if ( ! function_exists( 'agentic_hero_banner_illustration' ) ) {
 			</svg>
 		</div>
 		<?php
+	}
+}
+
+/**
+ * Inline payment-network badges for the footer. Simplified logo-style marks
+ * (brand-colour chip + wordmark/glyph), not traced official artwork — close
+ * enough to read at a glance as "we take these cards" without redistributing
+ * exact trademarked logo files in the boilerplate. Swap for real brand SVGs
+ * per-store if the owner has a licence to use the official artwork.
+ */
+if ( ! function_exists( 'agentic_payment_icon_svg' ) ) {
+	function agentic_payment_icon_svg( $method ) {
+		switch ( $method ) {
+			case 'visa':
+				return '<svg viewBox="0 0 40 24" width="38" height="24" role="img" aria-label="Visa"><rect width="40" height="24" rx="4" fill="#1A1F71" /><text x="20" y="16" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" font-weight="700" font-style="italic" fill="#fff">VISA</text></svg>';
+			case 'mastercard':
+				return '<svg viewBox="0 0 40 24" width="38" height="24" role="img" aria-label="Mastercard"><rect width="40" height="24" rx="4" fill="#F4F4F4" /><circle cx="17" cy="12" r="7" fill="#EB001B" /><circle cx="23" cy="12" r="7" fill="#F79E1B" fill-opacity="0.9" /></svg>';
+			case 'amex':
+				return '<svg viewBox="0 0 40 24" width="38" height="24" role="img" aria-label="American Express"><rect width="40" height="24" rx="4" fill="#006FCF" /><text x="20" y="15.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="8.5" font-weight="700" fill="#fff">AMEX</text></svg>';
+			case 'paypal':
+				return '<svg viewBox="0 0 40 24" width="38" height="24" role="img" aria-label="PayPal"><rect width="40" height="24" rx="4" fill="#F4F4F4" /><text x="20" y="16" text-anchor="middle" font-family="Arial, sans-serif" font-size="9.5" font-weight="700" font-style="italic" fill="#003087">Pay<tspan fill="#0070E0">Pal</tspan></text></svg>';
+			default:
+				return '';
+		}
 	}
 }

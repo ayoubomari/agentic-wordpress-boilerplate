@@ -40,7 +40,17 @@
 			return;
 		}
 
-		var realSlides = Array.prototype.slice.call( track.children );
+		// agentic_carousel_loop_precorrect() (agentic-blocks.php) may have
+		// already done the clone-insert-and-scroll below as a synchronous
+		// inline script right after this track's markup, so the *first*
+		// frame the browser paints is already correct instead of jumping
+		// after the fact — see that function's docblock. When it has,
+		// track.children already includes both clones; strip them back off
+		// to recover the original real-slide list before redoing the same
+		// counting every other block here depends on.
+		var precorrected = track.getAttribute( 'data-carousel-precorrected' ) === '1';
+		var allChildren = Array.prototype.slice.call( track.children );
+		var realSlides = precorrected ? allChildren.slice( 1, -1 ) : allChildren;
 		var count = realSlides.length;
 		var looping = count > 1;
 		var prevBtn = root.querySelector( '[data-carousel-prev]' );
@@ -50,11 +60,18 @@
 		// Real slide i ends up at extended index i + offset once its clones
 		// are spliced in on either side.
 		var offset = looping ? 1 : 0;
-		if ( looping ) {
+		if ( looping && ! precorrected ) {
 			var leadClone = realSlides[ count - 1 ].cloneNode( true );
 			var trailClone = realSlides[ 0 ].cloneNode( true );
+			// `inert` (Baseline-supported everywhere this theme targets) keeps
+			// the clone's own CTA link out of tab order; aria-hidden alone left
+			// it focusable, which is exactly the failure Lighthouse's
+			// aria-hidden-focus audit flags — kept alongside as a fallback
+			// signal for assistive tech that doesn't understand inert yet.
 			leadClone.setAttribute( 'aria-hidden', 'true' );
+			leadClone.setAttribute( 'inert', '' );
 			trailClone.setAttribute( 'aria-hidden', 'true' );
+			trailClone.setAttribute( 'inert', '' );
 			track.insertBefore( leadClone, realSlides[ 0 ] );
 			track.appendChild( trailClone );
 		}
@@ -87,8 +104,9 @@
 		}
 
 		// Jump to the first real slide before anything paints — instant, not
-		// smooth, so the page never shows an animated scroll on load.
-		if ( looping ) {
+		// smooth, so the page never shows an animated scroll on load. Skipped
+		// when the inline precorrect script already did this synchronously.
+		if ( looping && ! precorrected ) {
 			scrollToSlide( offset, 'auto' );
 		}
 

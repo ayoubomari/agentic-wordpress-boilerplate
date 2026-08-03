@@ -88,6 +88,23 @@ single-slide ones that need no JS at all. `featured-collection`'s tabs use a
 different, JS-free technique (radio-input + CSS `~` sibling selectors) since
 a plain "show the panel whose radio is checked" toggle doesn't need a script.
 
+Both blocks also call `agentic_carousel_loop_precorrect()` (agentic-blocks.php)
+immediately after their `.agentic-carousel__track` markup. Looping needs a
+clone of the last slide before the first (and vice versa) so the track can
+scroll-snap "past" either end onto a pixel-identical clone; `carousel.js`
+alone did that clone-insert-and-scroll correction, and it stayed invisible
+only as long as the page rendered slowly enough to finish it before first
+paint. On a fast-rendering page the browser paints the *pre*-correction
+layout first and the correction becomes a real, measured layout shift.
+`agentic_carousel_loop_precorrect()` prints that same correction as a
+synchronous inline `<script>` right in the HTML stream — which blocks
+parsing/painting of just that point until it finishes — so the first frame
+ever painted is already correct. It leaves a `data-carousel-precorrected`
+flag on the track; `carousel.js` checks for it and skips redoing the same
+work rather than double-inserting clones. Don't remove either half without
+the other — carousel.js alone would reintroduce the shift, and the inline
+script alone would leave prev/next/dots/autoplay unwired.
+
 ## Brand inputs — `../system-design/`
 Brand material lives in a `system-design/` folder **next to** this repo (it is
 deliberately outside, so the published boilerplate stays brand-neutral):
@@ -241,7 +258,20 @@ the page record exists only so WordPress routes `/` correctly.
 `hero-banner`, `featured-collection`, `image-with-text`, `multicolumn`,
 `testimonials`, `faq-accordion`, `newsletter-signup`, `collection-list`,
 `rich-text`, `logo-list`, `video-section`, `countdown-banner`,
-`product-badge`, `announcement-bar`, `cta-cards`, `search-drawer`.
+`product-badge`, `announcement-bar`, `cta-cards`, `search-drawer`,
+`payment-badges`.
+
+`payment-badges` is footer chrome, not a page section — a row of accepted
+card-network icons (`methods` attribute, defaults to
+`visa, mastercard, amex, paypal`), wired into `parts/footer.html` next to
+the copyright line. Icons are simplified logo-style marks from
+`agentic_payment_icon_svg()` in `agentic-blocks.php` (brand-colour chip +
+wordmark/glyph, not traced official artwork — see that function's docblock
+for why). The consent line ("By subscribing you agree to…") and social
+icons are a full-width `wp:paragraph` + core `wp:social-links` row in
+`parts/footer.html` directly, sitting *below* the narrow 30%-width
+newsletter-signup column rather than inside it — that column isn't wide
+enough for the sentence to stay on one line next to the icons.
 
 `search-drawer` is header chrome, not a page section — a search icon plus a
 slide-out panel (real WP search form, curated `popularSearches` keyword

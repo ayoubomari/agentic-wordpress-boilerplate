@@ -1,0 +1,15 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "agentic/payment-badges",
+  "title": "Payment Badges",
+  "category": "agentic",
+  "icon": "money-alt",
+  "description": "Row of accepted payment-method icons — Visa, Mastercard, Amex, PayPal.",
+  "attributes": {
+    "methods": { "type": "array", "default": ["visa", "mastercard", "amex", "paypal"] }
+  },
+  "supports": { "spacing": { "margin": true, "padding": true } },
+  "render": "file:./render.php",
+  "style": "file:./style.css"
+}

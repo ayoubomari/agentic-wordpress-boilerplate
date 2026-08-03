@@ -1,0 +1,90 @@
+.agentic-photo-statement {
+	padding-top: var(--wp--preset--spacing--70);
+	padding-bottom: var(--wp--preset--spacing--70);
+}
+
+.agentic-photo-statement__line {
+	--agentic-ps-scale: 1;
+	margin: 0 auto;
+	max-width: 100%;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	row-gap: 0.75rem;
+	column-gap: 1.5rem;
+	padding-inline: var(--wp--preset--spacing--40);
+	font-family: var(--wp--preset--font-family--heading);
+	font-weight: 600;
+	line-height: 1.2;
+	letter-spacing: -0.02em;
+	font-size: 3.25rem;
+	color: var(--wp--preset--color--contrast);
+	text-align: center;
+}
+
+.agentic-photo-statement__line:not(:first-child) {
+	margin-top: var(--wp--preset--spacing--40);
+}
+
+.agentic-photo-statement__text {
+	min-width: 0;
+	overflow-wrap: break-word;
+}
+
+.agentic-photo-statement__pill {
+	--agentic-ps-width: 200px;
+	--agentic-ps-height: 130px;
+	flex-shrink: 0;
+	display: inline-flex;
+	width: calc(var(--agentic-ps-width) * var(--agentic-ps-scale));
+	height: calc(var(--agentic-ps-height) * var(--agentic-ps-scale));
+	border-radius: var(--agentic-radius-pill);
+	overflow: hidden;
+}
+
+.agentic-photo-statement__pill--has-background {
+	background: var(--agentic-ps-bg);
+	padding: calc(var(--wp--preset--spacing--20) * var(--agentic-ps-scale));
+}
+
+.agentic-photo-statement__pill img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	border-radius: var(--agentic-radius-pill);
+}
+
+.agentic-photo-statement__placeholder {
+	display: block;
+	width: 100%;
+	height: 100%;
+	border-radius: var(--agentic-radius-pill);
+	background: var(--wp--preset--color--subtle);
+}
+
+@media (max-width: 1024px) {
+	.agentic-photo-statement__line {
+		--agentic-ps-scale: 0.85;
+		font-size: 2.5rem;
+		column-gap: 1.15rem;
+	}
+}
+
+@media (max-width: 700px) {
+	.agentic-photo-statement__line {
+		--agentic-ps-scale: 0.62;
+		font-size: 1.85rem;
+		row-gap: 0.6rem;
+		column-gap: 0.85rem;
+	}
+}
+
+@media (max-width: 460px) {
+	.agentic-photo-statement__line {
+		--agentic-ps-scale: 0.42;
+		font-size: 1.4rem;
+		row-gap: 0.5rem;
+		column-gap: 0.6rem;
+	}
+}
