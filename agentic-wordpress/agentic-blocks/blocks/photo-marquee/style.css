@@ -1,0 +1,83 @@
+.agentic-photo-marquee {
+	overflow: hidden;
+	border-top: 1px solid var(--wp--preset--color--border);
+	border-bottom: 1px solid var(--wp--preset--color--border);
+	padding-block: var(--wp--preset--spacing--40);
+}
+
+.agentic-photo-marquee:not(.is-marquee) {
+	display: flex;
+	justify-content: center;
+}
+
+/* Marquee mode — a track duplicated --agentic-marquee-copies times (set
+   inline by render.php, based on estimated content width) scrolls right to
+   left forever; every copy is identical so translating by exactly 1/N of
+   the track's width loops with no visible seam and no trailing blank gap.
+   Same technique as announcement-bar. */
+.agentic-photo-marquee__track {
+	display: flex;
+	align-items: center;
+	width: max-content;
+}
+
+.agentic-photo-marquee.is-marquee .agentic-photo-marquee__track {
+	animation: agentic-photo-marquee-scroll var(--agentic-marquee-duration, 30s) linear infinite;
+}
+
+.agentic-photo-marquee__track--static {
+	width: auto;
+}
+
+.agentic-photo-marquee__item {
+	display: flex;
+	flex: 0 0 auto;
+	align-items: center;
+	gap: var(--wp--preset--spacing--60);
+	padding-inline: calc(var(--wp--preset--spacing--40) + 10px);
+	white-space: nowrap;
+}
+
+.agentic-photo-marquee__photo {
+	flex: 0 0 auto;
+	width: 3.5rem;
+	height: 3.5rem;
+	border-radius: var(--agentic-radius-pill);
+	object-fit: cover;
+}
+
+.agentic-photo-marquee__text {
+	font-size: calc(var(--wp--preset--font-size--large) * 1.15);
+	font-weight: 600;
+	color: var(--wp--preset--color--contrast);
+}
+
+@keyframes agentic-photo-marquee-scroll {
+	from {
+		transform: translateX(0);
+	}
+	to {
+		transform: translateX(calc(-100% / var(--agentic-marquee-copies, 2)));
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.agentic-photo-marquee.is-marquee .agentic-photo-marquee__track {
+		animation: none;
+	}
+
+	.agentic-photo-marquee.is-marquee {
+		overflow-x: auto;
+	}
+}
+
+@media (max-width: 600px) {
+	.agentic-photo-marquee__photo {
+		width: 2.75rem;
+		height: 2.75rem;
+	}
+
+	.agentic-photo-marquee__text {
+		font-size: var(--wp--preset--font-size--medium);
+	}
+}

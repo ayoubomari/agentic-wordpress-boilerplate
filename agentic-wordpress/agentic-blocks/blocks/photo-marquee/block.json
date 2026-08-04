@@ -1,0 +1,27 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "agentic/photo-marquee",
+  "title": "Photo Marquee",
+  "category": "agentic",
+  "icon": "images-alt2",
+  "description": "Continuously scrolling right-to-left strip alternating a circular photo with a short line of copy, e.g. \"Rescue Your Skin\". Set `items` (each `{ imageUrl, alt, text }`) — 2+ items scrolls as a seamless marquee, a single item renders as a static centered row.",
+  "attributes": {
+    "items": {
+      "type": "array",
+      "default": [
+        { "imageUrl": "", "alt": "", "text": "Rescue Your Skin" },
+        { "imageUrl": "", "alt": "", "text": "Made With Love" },
+        { "imageUrl": "", "alt": "", "text": "New Season Essential" },
+        { "imageUrl": "", "alt": "", "text": "Bestseller Alert" },
+        { "imageUrl": "", "alt": "", "text": "Cruelty-Free" }
+      ]
+    }
+  },
+  "supports": {
+    "align": ["wide", "full"],
+    "spacing": { "margin": true, "padding": false }
+  },
+  "render": "file:./render.php",
+  "style": "file:./style.css"
+}

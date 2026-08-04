@@ -7,6 +7,7 @@
   "icon": "align-pull-left",
   "description": "Split section: image on one side, heading/text/CTA on the other. Set backgroundColor + imageStyle:\"inset\" for a colored promo panel with a contained (not edge-bleed) image.",
   "attributes": {
+    "eyebrow": { "type": "string", "default": "" },
     "heading": { "type": "string", "default": "Made to be used" },
     "text": { "type": "string", "default": "" },
     "imageUrl": { "type": "string", "default": "" },

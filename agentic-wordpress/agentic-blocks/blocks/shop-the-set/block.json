@@ -1,0 +1,31 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "agentic/shop-the-set",
+  "title": "Shop The Set",
+  "category": "agentic",
+  "icon": "cart",
+  "description": "Split section: a product photo with numbered hotspot pins on the left, a numbered list of real WooCommerce products (image, name, price via get_price_html) with an \"Add all to cart\" button on the right. hotspotX/hotspotY are each pin's position as a percentage of the FULL, uncropped source photo, matched by number to the product list — view.js recomputes the on-screen position against the actual object-fit:cover crop at render time, so pins stay correct at every screen size.",
+  "attributes": {
+    "eyebrow": { "type": "string", "default": "Shop the Set" },
+    "heading": { "type": "string", "default": "Level up your routine with the bundle" },
+    "imageUrl": { "type": "string", "default": "" },
+    "imageAlt": { "type": "string", "default": "" },
+    "ctaText": { "type": "string", "default": "Add All To Cart" },
+    "products": {
+      "type": "array",
+      "default": [
+        { "productId": 28, "variant": "50ml", "hotspotX": 58, "hotspotY": 47 },
+        { "productId": 29, "variant": "100ml", "hotspotX": 38.3, "hotspotY": 56.4 },
+        { "productId": 31, "variant": "100ml", "hotspotX": 70.6, "hotspotY": 31 }
+      ]
+    }
+  },
+  "supports": {
+    "align": ["wide", "full"],
+    "spacing": { "margin": true, "padding": true }
+  },
+  "render": "file:./render.php",
+  "viewScript": "file:./view.js",
+  "style": "file:./style.css"
+}

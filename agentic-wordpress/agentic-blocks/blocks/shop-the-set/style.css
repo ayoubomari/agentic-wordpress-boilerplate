@@ -1,0 +1,222 @@
+.agentic-shop-the-set {
+	display: grid;
+	grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+	align-items: start;
+	gap: var(--wp--preset--spacing--70);
+}
+
+/* ---------- Media + numbered hotspot pins ---------- */
+
+.agentic-shop-the-set__media {
+	position: relative;
+}
+
+/* Fallback sizing for before view.js runs (and if JS is disabled): a
+   portrait aspect-ratio, same as the old fixed layout. view.js measures
+   the content column's actual (text-driven) rendered height and sets an
+   explicit inline height on .media to match it — CSS Grid's own auto row
+   sizing can't do this itself, because a grid row's auto height is the max
+   of *every* item's intrinsic content size, and a `height:100%` image still
+   contributes its full intrinsic aspect-ratio height to that calculation
+   regardless (measured: it stretched the row — and the shorter text column
+   with it — up to the image's own natural height instead of the reverse).
+   Once view.js sets a pixel height on .media, the image's height:100%
+   below resolves against that instead, and aspect-ratio no longer applies
+   since both dimensions are then definite. Cleared back to `auto` by
+   view.js under the 780px breakpoint, where media/content stack instead of
+   sitting side by side. Hotspot pin percentages are tuned against the
+   resulting crop; if the product photo or list length changes materially,
+   re-check them. */
+.agentic-shop-the-set__media img,
+.agentic-shop-the-set__placeholder {
+	display: block;
+	width: 100%;
+	height: 100%;
+	aspect-ratio: 4 / 5;
+	object-fit: cover;
+	border-radius: var(--agentic-radius-panel);
+	background: var(--wp--preset--color--blush);
+}
+
+.agentic-shop-the-set__pin {
+	position: absolute;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.75rem;
+	height: 1.75rem;
+	transform: translate(-50%, -50%);
+	border-radius: var(--agentic-radius-pill);
+	background: var(--wp--preset--color--base);
+	color: var(--wp--preset--color--contrast);
+	font-size: var(--wp--preset--font-size--small);
+	font-weight: 600;
+	box-shadow: 0 1px 4px rgba(18, 18, 18, 0.2);
+	cursor: pointer;
+	text-decoration: none;
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Hovering a pin (or, via view.js, its matching list row) scales it up so
+   the "which product is this" link back to the list reads clearly. */
+.agentic-shop-the-set__pin.is-active {
+	transform: translate(-50%, -50%) scale(1.15);
+	box-shadow: 0 2px 8px rgba(18, 18, 18, 0.3);
+}
+
+/* ---------- Content column ---------- */
+
+.agentic-shop-the-set__content {
+	max-width: 30rem;
+	margin-inline: auto;
+	text-align: center;
+}
+
+.agentic-shop-the-set__eyebrow {
+	margin: 0 0 var(--wp--preset--spacing--20);
+	font-size: var(--wp--preset--font-size--small);
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--wp--preset--color--muted);
+}
+
+.agentic-shop-the-set__heading {
+	margin: 0 0 var(--wp--preset--spacing--50);
+	font-size: var(--wp--preset--font-size--x-large);
+}
+
+/* ---------- Product list ---------- */
+
+.agentic-shop-the-set__list {
+	margin: 0 0 var(--wp--preset--spacing--50);
+	padding: 0;
+	list-style: none;
+	text-align: left;
+}
+
+.agentic-shop-the-set__row {
+	display: flex;
+	align-items: center;
+	gap: var(--wp--preset--spacing--30);
+	padding: var(--wp--preset--spacing--30) 0;
+	border-bottom: 1px solid var(--wp--preset--color--subtle);
+}
+
+.agentic-shop-the-set__row:first-child {
+	padding-top: 0;
+}
+
+/* Hovering a hotspot pin on the photo (or this row itself) dims every
+   *other* row's photo/text to a grayed-out, disabled look, so the matching
+   product reads as the one currently "in focus" — see view.js. */
+.agentic-shop-the-set__row-media,
+.agentic-shop-the-set__row-info,
+.agentic-shop-the-set__row-price {
+	transition: opacity 0.2s ease, filter 0.2s ease;
+}
+
+.agentic-shop-the-set__row.is-dimmed .agentic-shop-the-set__row-media,
+.agentic-shop-the-set__row.is-dimmed .agentic-shop-the-set__row-info,
+.agentic-shop-the-set__row.is-dimmed .agentic-shop-the-set__row-price {
+	opacity: 0.4;
+	filter: grayscale(1);
+}
+
+.agentic-shop-the-set__number {
+	display: flex;
+	flex: 0 0 auto;
+	align-items: center;
+	justify-content: center;
+	width: 1.5rem;
+	height: 1.5rem;
+	border-radius: var(--agentic-radius-pill);
+	border: 1px solid var(--wp--preset--color--subtle);
+	font-size: var(--wp--preset--font-size--small);
+	color: var(--wp--preset--color--muted);
+}
+
+.agentic-shop-the-set__row-media {
+	flex: 0 0 auto;
+	display: block;
+	width: 3.25rem;
+	height: 3.25rem;
+	border-radius: var(--agentic-radius-card);
+	overflow: hidden;
+	background: var(--wp--preset--color--subtle);
+}
+
+.agentic-shop-the-set__row-media img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.agentic-shop-the-set__row-info {
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.agentic-shop-the-set__row-title {
+	font-weight: 600;
+	color: var(--wp--preset--color--contrast);
+	text-decoration: none;
+}
+
+.agentic-shop-the-set__row-title:hover {
+	text-decoration: underline;
+}
+
+.agentic-shop-the-set__row-variant {
+	font-size: var(--wp--preset--font-size--small);
+	color: var(--wp--preset--color--muted);
+}
+
+.agentic-shop-the-set__row-price {
+	flex: 0 0 auto;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+/* WooCommerce wraps the sale price in <ins> and the struck-through regular
+   price in <del> — same treatment as agentic/featured-collection's price. */
+.agentic-shop-the-set__row-price ins {
+	color: var(--wp--preset--color--sale);
+	text-decoration: none;
+}
+
+.agentic-shop-the-set__row-price del {
+	display: block;
+	color: var(--wp--preset--color--muted);
+	font-weight: 400;
+	font-size: var(--wp--preset--font-size--small);
+	text-decoration: line-through;
+}
+
+/* ---------- Add all to cart ---------- */
+
+.agentic-shop-the-set__cta {
+	display: block;
+	width: 100%;
+	text-align: center;
+	cursor: pointer;
+}
+
+.agentic-shop-the-set__cta.is-loading {
+	opacity: 0.7;
+	pointer-events: none;
+}
+
+@media (max-width: 780px) {
+	.agentic-shop-the-set {
+		grid-template-columns: minmax(0, 1fr);
+		gap: var(--wp--preset--spacing--50);
+	}
+
+	.agentic-shop-the-set__content {
+		max-width: none;
+	}
+}

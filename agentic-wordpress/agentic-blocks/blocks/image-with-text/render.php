@@ -11,6 +11,7 @@
  *
  * @var array $attributes
  */
+$eyebrow    = $attributes['eyebrow'] ?? '';
 $heading    = $attributes['heading'] ?? '';
 $text       = $attributes['text'] ?? '';
 $image_url  = $attributes['imageUrl'] ?? '';
@@ -43,18 +44,24 @@ if ( '' !== $bg_color ) {
 	</div>
 
 	<div class="agentic-image-with-text__content">
-		<?php if ( $heading ) : ?>
-			<h2 class="agentic-image-with-text__heading"><?php echo esc_html( $heading ); ?></h2>
-		<?php endif; ?>
+		<div class="agentic-image-with-text__content-inner">
+			<?php if ( $eyebrow ) : ?>
+				<p class="agentic-image-with-text__eyebrow"><?php echo esc_html( $eyebrow ); ?></p>
+			<?php endif; ?>
 
-		<?php if ( $text ) : ?>
-			<p class="agentic-image-with-text__text"><?php echo esc_html( $text ); ?></p>
-		<?php endif; ?>
+			<?php if ( $heading ) : ?>
+				<h2 class="agentic-image-with-text__heading"><?php echo esc_html( $heading ); ?></h2>
+			<?php endif; ?>
 
-		<?php if ( $cta_text && $cta_url ) : ?>
-			<a class="agentic-image-with-text__cta wp-element-button" href="<?php echo esc_url( $cta_url ); ?>">
-				<?php echo esc_html( $cta_text ); ?>
-			</a>
-		<?php endif; ?>
+			<?php if ( $text ) : ?>
+				<p class="agentic-image-with-text__text"><?php echo esc_html( $text ); ?></p>
+			<?php endif; ?>
+
+			<?php if ( $cta_text && $cta_url ) : ?>
+				<a class="agentic-image-with-text__cta wp-element-button" href="<?php echo esc_url( $cta_url ); ?>">
+					<?php echo esc_html( $cta_text ); ?>
+				</a>
+			<?php endif; ?>
+		</div>
 	</div>
 </section>

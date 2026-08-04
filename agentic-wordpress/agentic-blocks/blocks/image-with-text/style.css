@@ -1,7 +1,7 @@
 .agentic-image-with-text {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
-	align-items: center;
+	align-items: stretch;
 	gap: var(--wp--preset--spacing--60);
 }
 
@@ -19,20 +19,42 @@
 	background: var(--wp--preset--color--subtle);
 }
 
+.agentic-image-with-text__content {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.agentic-image-with-text__content-inner {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--wp--preset--spacing--30);
+	max-width: 500px;
+	text-align: center;
+}
+
+.agentic-image-with-text__eyebrow {
+	margin: 0;
+	font-size: var(--wp--preset--font-size--small);
+	font-weight: 500;
+	color: var(--wp--preset--color--muted);
+}
+
 .agentic-image-with-text__heading {
-	margin: 0 0 var(--wp--preset--spacing--30);
-	font-size: var(--wp--preset--font-size--x-large);
+	margin: 0;
+	font-size: var(--wp--preset--font-size--xx-large);
+	line-height: 1.1;
 }
 
 .agentic-image-with-text__text {
 	margin: 0;
-	max-width: 48ch;
+	font-size: clamp(0.9375rem, 0.85rem + 0.4vw, 1.0625rem);
 	color: var(--wp--preset--color--muted);
 }
 
 .agentic-image-with-text__cta {
 	display: inline-block;
-	margin-top: var(--wp--preset--spacing--40);
 	text-decoration: none;
 }
 
@@ -58,6 +80,7 @@
    colors (blush/sand) — fails WCAG AA's 4.5:1 for normal body text, even
    though it passes fine on a plain white/subtle background elsewhere.
    Use --contrast for text specifically inside a colored panel instead. */
+.agentic-image-with-text--has-background .agentic-image-with-text__eyebrow,
 .agentic-image-with-text--has-background .agentic-image-with-text__text {
 	color: var(--wp--preset--color--contrast);
 }
