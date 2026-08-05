@@ -1,0 +1,18 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "agentic/product-subcategories",
+  "title": "Product Subcategories",
+  "category": "agentic",
+  "icon": "layout",
+  "description": "Row of photo tiles linking to the current product category's child categories (or, on the generic shop archive, the store's top-level categories). Fully dynamic — reads the current archive from context, nothing to configure per template. Renders nothing where there are no categories to show.",
+  "attributes": {
+    "columns": { "type": "number", "default": 5 }
+  },
+  "supports": {
+    "align": ["wide", "full"],
+    "spacing": { "margin": true, "padding": true }
+  },
+  "render": "file:./render.php",
+  "style": "file:./style.css"
+}

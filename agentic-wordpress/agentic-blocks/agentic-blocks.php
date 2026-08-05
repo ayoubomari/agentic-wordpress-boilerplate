@@ -7,6 +7,8 @@
 
 defined( 'ABSPATH' ) || exit;
 
+require __DIR__ . '/inc/form-entries.php';
+
 /**
  * Group every custom block under one inserter category, so a store builder
  * (human or agent) sees the section library as a single set.
@@ -289,5 +291,41 @@ if ( ! function_exists( 'agentic_payment_icon_svg' ) ) {
 			default:
 				return '';
 		}
+	}
+}
+
+/**
+ * Inline review-platform marks for testimonial cards ("Verified on Google" /
+ * "Verified on Trustpilot" chips). Same approach as agentic_payment_icon_svg()
+ * above — simplified logo-style marks (brand-colour glyph + wordmark), not
+ * traced official artwork. Swap for real brand SVGs per-store if the owner
+ * has a licence to use the official artwork.
+ */
+if ( ! function_exists( 'agentic_review_platform_svg' ) ) {
+	function agentic_review_platform_svg( $platform ) {
+		switch ( $platform ) {
+			case 'google':
+				return '<svg viewBox="0 0 74 24" width="64" height="20" role="img" aria-label="Google"><text x="0" y="17" font-family="Arial, sans-serif" font-size="15" font-weight="700"><tspan fill="#4285F4">G</tspan><tspan fill="#EA4335">o</tspan><tspan fill="#FBBC05">o</tspan><tspan fill="#4285F4">g</tspan><tspan fill="#34A853">l</tspan><tspan fill="#EA4335">e</tspan></text></svg>';
+			case 'trustpilot':
+				return '<svg viewBox="0 0 96 24" width="80" height="20" role="img" aria-label="Trustpilot"><rect x="0" y="4" width="16" height="16" rx="3" fill="#00B67A" /><path d="M8 7.2l1.55 3.55L13.4 11l-2.7 2.45.75 3.85L8 15.3l-3.45 2 .75-3.85L2.6 11l3.85-.25L8 7.2z" fill="#fff" /><text x="20" y="17" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#00B67A">Trustpilot</text></svg>';
+			default:
+				return '';
+		}
+	}
+}
+
+/**
+ * Star-rating row (filled/empty SVG stars) for testimonial cards. Renders
+ * only the real, declared rating on the item — never invents a number.
+ */
+if ( ! function_exists( 'agentic_star_rating_svg' ) ) {
+	function agentic_star_rating_svg( $rating ) {
+		$rating = max( 0, min( 5, (int) $rating ) );
+		$star   = '<svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M10 1.5l2.6 5.3 5.8.8-4.2 4.1 1 5.8L10 14.7l-5.2 2.8 1-5.8-4.2-4.1 5.8-.8L10 1.5z" fill="%s" /></svg>';
+		$out    = '';
+		for ( $i = 1; $i <= 5; $i++ ) {
+			$out .= sprintf( $star, $i <= $rating ? '#F5A623' : '#E2DDD6' );
+		}
+		return $out;
 	}
 }

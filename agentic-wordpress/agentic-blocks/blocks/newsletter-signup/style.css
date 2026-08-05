@@ -9,6 +9,26 @@
 	margin: 0 0 1rem;
 }
 
+.agentic-newsletter-signup__notice {
+	font-size: var(--wp--preset--font-size--small);
+	margin: 0 0 1rem;
+}
+
+.agentic-newsletter-signup__notice--error {
+	color: var(--wp--preset--color--sale);
+}
+
+/* Honeypot: off-screen (not display:none/hidden — some bots skip fields
+   hidden that way) but visually and semantically absent for real visitors. */
+.agentic-newsletter-signup__hp {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	white-space: nowrap;
+}
+
 /* One pill-shaped field with the submit button embedded inside it (a
    circular arrow icon at the right edge), not a separate button beside the
    input — the input's own right padding reserves exactly the room the

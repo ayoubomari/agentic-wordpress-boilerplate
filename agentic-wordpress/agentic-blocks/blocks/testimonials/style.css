@@ -4,24 +4,52 @@
 	text-align: center;
 }
 
-.agentic-testimonials__grid {
-	list-style: none;
-	margin: 0;
-	padding: 0;
-	display: grid;
+.agentic-testimonials__track--cards {
+	display: flex;
 	gap: var(--wp--preset--spacing--40);
-	grid-template-columns: repeat(var(--agentic-columns, 3), minmax(0, 1fr));
+	overflow-x: auto;
+	scroll-snap-type: x mandatory;
+	scrollbar-width: none;
+	padding-bottom: var(--wp--preset--spacing--20);
+}
+
+.agentic-testimonials__track--cards::-webkit-scrollbar {
+	display: none;
 }
 
 .agentic-testimonials__figure {
+	flex: 0 0 82%;
+	scroll-snap-align: start;
 	margin: 0;
-	height: 100%;
 	padding: var(--wp--preset--spacing--50);
 	background: var(--wp--preset--color--subtle);
 	border-radius: var(--agentic-radius-card);
 	display: flex;
 	flex-direction: column;
 	gap: var(--wp--preset--spacing--30);
+	text-decoration: none;
+	color: inherit;
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+a.agentic-testimonials__figure {
+	cursor: pointer;
+}
+
+a.agentic-testimonials__figure:hover,
+a.agentic-testimonials__figure:focus-visible {
+	transform: translateY(-0.5rem);
+	box-shadow: var(--wp--preset--shadow--lifted);
+}
+
+@media (min-width: 700px) {
+	.agentic-testimonials__figure { flex-basis: calc((100% - var(--wp--preset--spacing--40)) / 2); }
+}
+
+@media (min-width: 1100px) {
+	.agentic-testimonials__figure {
+		flex-basis: calc( (100% - (var(--agentic-columns, 3) - 1) * var(--wp--preset--spacing--40)) / var(--agentic-columns, 3) );
+	}
 }
 
 .agentic-testimonials__quote {
@@ -36,6 +64,20 @@
 .agentic-testimonials__quote p::before { content: "“"; }
 .agentic-testimonials__quote p::after  { content: "”"; }
 
+.agentic-testimonials__head {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.agentic-testimonials__avatar {
+	width: 3rem;
+	height: 3rem;
+	border-radius: var(--agentic-radius-pill);
+	object-fit: cover;
+	flex-shrink: 0;
+}
+
 .agentic-testimonials__author {
 	font-size: var(--wp--preset--font-size--small);
 	font-weight: 500;
@@ -47,8 +89,18 @@
 	color: var(--wp--preset--color--muted);
 }
 
-@media (max-width: 780px) {
-	.agentic-testimonials__grid { grid-template-columns: minmax(0, 1fr); }
+.agentic-testimonials__stars {
+	display: flex;
+	gap: 0.15rem;
+}
+
+.agentic-testimonials__platform {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin-top: auto;
+	padding-top: var(--wp--preset--spacing--30);
+	border-top: 1px solid var(--wp--preset--color--border);
 }
 
 /* ---------- Carousel layout — large photo-testimonial cards ---------- */
@@ -126,6 +178,20 @@
 	color: rgba(255, 255, 255, 0.75);
 }
 
+.agentic-testimonials__stars--card {
+	position: relative;
+	margin-bottom: var(--wp--preset--spacing--20);
+}
+
+.agentic-testimonials__platform--card {
+	display: inline-flex;
+	margin-left: 0.6rem;
+	padding: 0.15rem 0.5rem;
+	background: var(--wp--preset--color--base);
+	border-radius: var(--agentic-radius-pill);
+	vertical-align: middle;
+}
+
 .agentic-testimonials__product-chip {
 	position: relative;
 	display: flex;
@@ -182,3 +248,12 @@
 
 .agentic-testimonials__nav--prev { left: -0.5rem; }
 .agentic-testimonials__nav--next { right: -0.5rem; }
+
+/* Touch/trackpad swipe on the scroll-snap track already covers navigation
+   here — arrows just crowd a single-card mobile view, so hide them below
+   the same breakpoint hero-banner uses for the same reason. */
+@media (max-width: 780px) {
+	.agentic-testimonials__nav {
+		display: none;
+	}
+}

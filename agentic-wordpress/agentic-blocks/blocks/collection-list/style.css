@@ -116,4 +116,17 @@
 	.agentic-collection-list__grid {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
+
+	/* An odd item count leaves a lone tile in the last row, stuck against
+	   the left edge next to empty space — center it instead of letting it
+	   default to column 1. */
+	.agentic-collection-list__item:last-child:nth-child(odd) {
+		grid-column: 1 / -1;
+		display: flex;
+		justify-content: center;
+	}
+
+	.agentic-collection-list__item:last-child:nth-child(odd) .agentic-collection-list__link {
+		width: calc(50% - (var(--wp--preset--spacing--40) / 2));
+	}
 }

@@ -19,8 +19,9 @@
  *
  * Autoplay is opt-in per instance via a `data-carousel-autoplay="<ms>"`
  * attribute on the root (hero-banner sets it, testimonials doesn't) — it
- * advances on a wraparound timer, pauses on hover/keyboard focus so it never
- * fights a user mid-click or mid-read, and is skipped entirely under
+ * advances on a wraparound timer, pauses on keyboard focus (so it never
+ * fights a keyboard/screen-reader user mid-read) but deliberately keeps
+ * running on mouse hover, and is skipped entirely under
  * prefers-reduced-motion. While enabled it also toggles "is-filling" on the
  * active dot so its progress-fill animation (see hero-banner/style.css)
  * stays in sync with each slide change.
@@ -202,12 +203,11 @@
 		);
 
 		if ( autoplayEnabled ) {
-			[ 'mouseenter', 'focusin' ].forEach( function ( evt ) {
-				root.addEventListener( evt, stopAutoplay );
-			} );
-			[ 'mouseleave', 'focusout' ].forEach( function ( evt ) {
-				root.addEventListener( evt, startAutoplay );
-			} );
+			// Keyboard focus still pauses — a screen-reader/keyboard user
+			// mid-read shouldn't have the slide change under them. Mouse
+			// hover does not pause; the slide keeps advancing on hover.
+			root.addEventListener( 'focusin', stopAutoplay );
+			root.addEventListener( 'focusout', startAutoplay );
 		}
 
 		setActiveDot();

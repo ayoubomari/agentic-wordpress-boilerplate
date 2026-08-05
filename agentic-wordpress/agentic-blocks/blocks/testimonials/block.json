@@ -5,7 +5,7 @@
   "title": "Testimonials",
   "category": "agentic",
   "icon": "format-quote",
-  "description": "Customer quotes with attribution — a grid, or set layout:\"carousel\" for large photo-testimonial cards with a product chip.",
+  "description": "Customer quotes with attribution — a scroll-snap slider of review cards (columns visible on large screens, fewer as the viewport narrows), or set layout:\"carousel\" for large photo-testimonial cards with a product chip. Each item can add a photoUrl avatar, a 1-5 rating, a platform (\"google\" | \"trustpilot\") badge, and a reviewUrl that makes the whole card a new-tab link to the real review.",
   "attributes": {
     "heading": { "type": "string", "default": "What customers say" },
     "columns": { "type": "number", "default": 3 },
@@ -13,9 +13,9 @@
     "items": {
       "type": "array",
       "default": [
-        { "quote": "Exactly what I wanted, and it arrived early.", "author": "Amina R.", "role": "Verified buyer" },
-        { "quote": "The quality is well above what I expected at this price.", "author": "Tom D.", "role": "Verified buyer" },
-        { "quote": "Simple ordering, fast delivery, no fuss.", "author": "Priya S.", "role": "Verified buyer" }
+        { "quote": "Exactly what I wanted, and it arrived early.", "author": "Amina R.", "rating": 5, "platform": "google", "reviewUrl": "https://www.google.com/maps" },
+        { "quote": "The quality is well above what I expected at this price.", "author": "Tom D.", "rating": 5, "platform": "trustpilot", "reviewUrl": "https://www.trustpilot.com/" },
+        { "quote": "Simple ordering, fast delivery, no fuss.", "author": "Priya S.", "rating": 4, "platform": "google", "reviewUrl": "https://www.google.com/maps" }
       ]
     }
   },

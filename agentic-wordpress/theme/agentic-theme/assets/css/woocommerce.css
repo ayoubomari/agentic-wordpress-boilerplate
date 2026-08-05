@@ -201,3 +201,277 @@ table.shop_table td {
 	text-align: left;
 	font-size: var(--wp--preset--font-size--small);
 }
+
+/* ---------- Shop / category / tag archives ---------- */
+
+.wp-block-breadcrumbs .woocommerce-breadcrumb {
+	display: block;
+	text-align: center;
+	color: var(--wp--preset--color--muted);
+	font-size: var(--wp--preset--font-size--small);
+}
+
+.wp-block-breadcrumbs .woocommerce-breadcrumb a {
+	color: var(--wp--preset--color--muted);
+}
+
+.agentic-archive-header {
+	text-align: center;
+	margin: var(--wp--preset--spacing--40) auto var(--wp--preset--spacing--60);
+}
+
+.agentic-archive-header .wp-block-term-description {
+	color: var(--wp--preset--color--muted);
+	margin-top: var(--wp--preset--spacing--20);
+}
+
+.agentic-archive-layout {
+	align-items: flex-start;
+}
+
+.agentic-archive-sidebar h2.wp-block-heading {
+	margin: var(--wp--preset--spacing--50) 0 var(--wp--preset--spacing--30);
+}
+
+.agentic-archive-sidebar h2.wp-block-heading:first-child {
+	margin-top: 0;
+}
+
+/* WooCommerce's own "Filter products" mobile toggle renders at native text
+   height (~19px) — below the 24px minimum touch target. */
+.wc-block-product-filters__open-overlay {
+	min-height: 44px;
+	padding-block: 0.5rem !important;
+}
+
+/* Re-point the filter blocks' own theming custom properties (see WooCommerce's
+   product-filter-*-style.css) at our tokens, rather than fighting their
+   specificity rule by rule. */
+.agentic-archive-sidebar .wc-block-product-filters {
+	display: flex;
+	--wc-product-filter-checkbox-list-option-element-border: var(--wp--preset--color--border);
+	--wc-product-filter-checkbox-list-option-element-selected: var(--wp--preset--color--contrast);
+	--wc-product-filter-checkbox-list-label-element: var(--wp--preset--color--contrast);
+	--wc-product-filter-price-slider: var(--wp--preset--color--contrast);
+	--wc-product-filter-price-slider-handle: var(--wp--preset--color--base);
+	--wc-product-filter-price-slider-handle-border: var(--wp--preset--color--contrast);
+}
+
+.wc-block-product-filter-checkbox-list__text-wrapper {
+	font-size: var(--wp--preset--font-size--small);
+}
+
+/* WooCommerce's own stylesheet scopes both of these to an ancestor
+   `.wc-block-product-filter-checkbox-list` / `.wc-block-product-filter-
+   price-slider` class that this WooCommerce version never actually renders
+   — the real wrapper only carries `wp-block-woocommerce-product-filter-*`,
+   so neither rule ever matches and both fall back to raw browser UA
+   styling: a bare <fieldset>'s default grooved border box around the
+   checkbox list, and an unstyled text input for the price fields. Target
+   the real markup directly instead of fighting Woo's mismatched selector. */
+.wp-block-woocommerce-product-filter-checkbox-list fieldset {
+	border: 0;
+	margin: 0;
+	padding: 0;
+	min-width: 0;
+}
+
+.wc-block-product-filter-price-slider__left.text input[type="text"],
+.wc-block-product-filter-price-slider__right.text input[type="text"] {
+	/* Woo's own (mismatched, see above) rule was the only thing constraining
+	   this to a sane width — without it the browser's UA default (~175px)
+	   applies, which is wider than the whole sidebar column and spills the
+	   input straight into the product grid next to it. */
+	box-sizing: border-box;
+	width: 100%;
+	max-width: 4.5rem;
+	min-width: 0;
+	padding: 0.5rem 0.6rem;
+	border: 1px solid var(--wp--preset--color--border) !important;
+	border-radius: var(--agentic-radius-card) !important;
+	font-family: inherit;
+	font-size: var(--wp--preset--font-size--small);
+	color: var(--wp--preset--color--contrast);
+}
+
+.wc-block-product-filter-price-slider__left.text input[type="text"]:focus,
+.wc-block-product-filter-price-slider__right.text input[type="text"]:focus {
+	outline: 2px solid var(--wp--preset--color--contrast);
+	outline-offset: 1px;
+	border-color: var(--wp--preset--color--contrast) !important;
+}
+
+.agentic-archive-toolbar {
+	margin-bottom: var(--wp--preset--spacing--40);
+	padding-bottom: var(--wp--preset--spacing--30);
+	border-bottom: 1px solid var(--wp--preset--color--border);
+}
+
+.wc-block-product-results-count,
+.woocommerce-result-count {
+	color: var(--wp--preset--color--muted) !important;
+	font-size: var(--wp--preset--font-size--small) !important;
+}
+
+.wc-block-catalog-sorting select {
+	border: 1px solid var(--wp--preset--color--border);
+	border-radius: var(--agentic-radius-card);
+	padding: 0.5rem 0.75rem;
+	font-family: inherit;
+	background-color: var(--wp--preset--color--base);
+}
+
+/* Shop archive product cards — the core Product Collection block ships its
+   own plain markup (bare image, bare title, bare price/button underneath).
+   Re-skin it as the same continuous card surface as
+   agentic/featured-collection's .agentic-product-card (see that block's
+   style.css) — image and text on one panel, not a photo floating over a
+   blank footer — so "What's hot" on the homepage and the full shop grid
+   read as one product-card system instead of two different ones. */
+.wc-block-product-template .wc-block-product {
+	position: relative;
+	background: var(--wp--preset--color--subtle);
+	border-radius: var(--agentic-radius-card);
+	overflow: hidden;
+}
+
+.wc-block-product-template .wc-block-product > :not(:last-child) {
+	margin-bottom: 0 !important;
+}
+
+.wc-block-components-product-image {
+	margin: 0 !important;
+}
+
+.wc-block-components-product-image img {
+	aspect-ratio: 1 / 1;
+	object-fit: cover;
+	transition: transform 0.3s ease;
+}
+
+.wc-block-product-template .wc-block-product:hover .wc-block-components-product-image img {
+	transform: scale(1.03);
+}
+
+/* Second (gallery) photo — same technique and class as
+   agentic/featured-collection's .agentic-product-card__media-hover (see
+   that block's style.css): stacked on top of the first image via absolute
+   positioning so both share one box with no layout shift, then crossfaded
+   in on hover/focus. Injected server-side by the render_block_woocommerce/
+   product-image filter in functions.php; products with no gallery image
+   never get this element at all, so they just keep the static photo. */
+.wc-block-components-product-image a {
+	position: relative;
+	display: block;
+}
+
+.wc-block-components-product-image .agentic-product-card__media-hover {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	opacity: 0;
+	transition: opacity 0.4s ease, transform 0.3s ease;
+}
+
+.wc-block-product-template .wc-block-product:hover .agentic-product-card__media-hover,
+.wc-block-product-template .wc-block-product:focus-within .agentic-product-card__media-hover {
+	opacity: 1;
+}
+
+/* Category eyebrow — same slot/spacing as
+   agentic/featured-collection's .agentic-product-card__category (see that
+   block's style.css); restyled here rather than shared because this
+   stylesheet is the one that actually loads on WooCommerce archive pages,
+   where the featured-collection block (and its CSS) is never enqueued. */
+.wc-block-product-template .wp-block-post-terms {
+	display: block;
+	margin: 1rem 0 0;
+	padding-inline: 1.25rem;
+	font-size: var(--wp--preset--font-size--small);
+}
+
+.wc-block-product-template .wp-block-post-terms a {
+	color: var(--wp--preset--color--muted);
+	text-decoration: none;
+}
+
+.wc-block-product-template .wp-block-post-title {
+	margin: 0.2rem 0 0.2rem !important;
+	padding-inline: 1.25rem;
+	font-weight: 700 !important;
+}
+
+.wc-block-product-template .wp-block-post-title a {
+	color: inherit;
+	text-decoration: none;
+}
+
+.wc-block-product-template .wc-block-components-product-price {
+	padding: 0 1.25rem 1.25rem;
+	font-weight: 600;
+	color: var(--wp--preset--color--muted);
+}
+
+.wc-block-product-template .wc-block-components-product-price ins {
+	color: var(--wp--preset--color--sale) !important;
+	text-decoration: none !important;
+	font-weight: 600;
+}
+
+.wc-block-product-template .wc-block-components-product-price del {
+	color: var(--wp--preset--color--muted) !important;
+	font-weight: 400;
+	text-decoration: line-through;
+}
+
+/* Add to Cart — overlaid on the image and hidden until hover/focus, exactly
+   like agentic/featured-collection's .agentic-product-card__quick-add,
+   instead of sitting as its own row under the price. The button block is a
+   flow sibling of the image (not nested inside it), so it can't be
+   positioned "at the image's bottom edge" directly — instead it's given the
+   image's own box (top:0, full width, 1:1 aspect-ratio) via absolute
+   positioning, then its content is bottom-aligned within that box, landing
+   the pill in the same spot without needing JS to move it into the image. */
+.wc-block-product-template .wp-block-woocommerce-product-button {
+	position: absolute;
+	inset-inline: 0;
+	top: 0;
+	aspect-ratio: 1 / 1;
+	margin: 0 !important;
+	display: flex;
+	/* WC's own product-button wrapper is flex-direction:column, so
+	   justify-content (not align-items) is the vertical axis here — it's
+	   what pins the pill to the bottom of the square image area. */
+	align-items: center;
+	justify-content: flex-end;
+	padding: 0 0.5rem 0.5rem;
+	opacity: 0;
+	transform: translateY(0.4rem);
+	transition: opacity 0.15s ease, transform 0.15s ease;
+	pointer-events: none;
+}
+
+.wc-block-product-template .wc-block-product:hover .wp-block-woocommerce-product-button,
+.wc-block-product-template .wc-block-product:focus-within .wp-block-woocommerce-product-button {
+	opacity: 1;
+	transform: translateY(0);
+	pointer-events: auto;
+}
+
+/* Core's global button styles set `.wp-block-button__link { height: 100% }`
+   (meant to make same-row buttons match height) — the same element here
+   carries that class, and with the wrapper's height now driven by
+   aspect-ratio (~card width) it would stretch the pill to that full height.
+   Override back to content-sized. */
+.wc-block-product-template .wc-block-components-product-button__button {
+	flex-shrink: 0;
+	width: 100% !important;
+	height: auto !important;
+	padding: 0.6em 1em !important;
+	font-weight: 600;
+	text-align: center;
+	color: var(--wp--preset--color--contrast) !important;
+	background: var(--wp--preset--color--base) !important;
+	border-radius: var(--agentic-radius-pill) !important;
+}

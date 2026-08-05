@@ -260,6 +260,14 @@
 .agentic-hero-banner__nav--prev { left: var(--wp--preset--spacing--30); }
 .agentic-hero-banner__nav--next { right: var(--wp--preset--spacing--30); }
 
+/* Touch/trackpad swipe on the scroll-snap track, plus the dots, already
+   cover navigation here — arrows are hidden at every screen size, not just
+   mobile. The buttons stay in the markup (autoplay, dots, and carousel.js's
+   click handlers still target them) so this is purely visual. */
+.agentic-hero-banner__nav {
+	display: none;
+}
+
 .agentic-hero-banner__dots {
 	display: flex;
 	justify-content: center;

@@ -5,7 +5,7 @@
   "title": "Newsletter Signup",
   "category": "agentic",
   "icon": "email",
-  "description": "Email capture block. Markup only — point the action at your provider.",
+  "description": "Email capture block. Leave action empty to store signups in-house and email the admin; point it at your ESP to post there instead.",
   "attributes": {
     "heading": { "type": "string", "default": "Stay in the loop" },
     "description": { "type": "string", "default": "" },

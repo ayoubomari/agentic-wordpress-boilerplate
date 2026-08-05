@@ -155,6 +155,22 @@ boilerplate meant to be cloned. The purchase event is guarded by order meta
 (`_agentic_purchase_tracked`) so revisiting the thank-you page never
 double-counts a sale — a common, easy-to-miss bug in hand-rolled pixel setups.
 
+**Form submissions (newsletter-signup) are likewise not a forms plugin** —
+same call as analytics above: storing an email and notifying the admin isn't
+enough surface area to justify a dependency with its own entries UI and DB
+tables. `agentic-blocks/inc/form-entries.php` is the storage layer: a
+private, non-public `agentic_form_entry` CPT (wp-admin → Form Entries, admin
+capability only, `create_posts` disabled so entries only ever come from real
+submissions) plus `agentic_record_form_entry( $type, $email, $page )`, a
+small reusable helper any future form block can call. `newsletter-signup`'s
+`render.php` uses it automatically whenever its `action` attribute is empty:
+the form posts to `admin-post.php` (nonce + a CSS-hidden honeypot field
+against bots) instead of your ESP, which stores the entry and emails
+`admin_email` via `wp_mail()` — actual delivery still depends on WP Mail SMTP
+being configured (see the "Email deliverability" setup-checklist item). Set
+`action` to a real ESP endpoint (Mailchimp, Klaviyo, Buttondown …) to bypass
+this entirely and post straight there instead, same as before.
+
 The `theme/agentic-theme` and `agentic-blocks` folders are bind-mounted from
 this repo, so editing them on disk edits the live site instantly.
 

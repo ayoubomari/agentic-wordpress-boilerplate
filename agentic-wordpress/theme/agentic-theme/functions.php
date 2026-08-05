@@ -155,12 +155,12 @@ add_action(
 );
 
 /**
- * Cart, checkout, and My Account render through WooCommerce's own
- * block/classic markup, which ships rounded corners, drop shadows, and blue
- * accents that don't match the Sleek-style token set in theme.json. Re-point
- * their class names at our tokens — see assets/css/woocommerce.css — loaded
- * only on the pages that actually render that markup, so it costs nothing
- * elsewhere.
+ * Cart, checkout, My Account, and the product archives (shop, category, tag)
+ * all render through WooCommerce's own block/classic markup, which ships
+ * rounded corners, drop shadows, and blue accents that don't match the
+ * Sleek-style token set in theme.json. Re-point their class names at our
+ * tokens — see assets/css/woocommerce.css — loaded only on the pages that
+ * actually render that markup, so it costs nothing elsewhere.
  */
 add_action(
 	'wp_enqueue_scripts',
@@ -169,7 +169,7 @@ add_action(
 			return; // WooCommerce inactive.
 		}
 
-		if ( is_cart() || is_checkout() || is_account_page() ) {
+		if ( is_cart() || is_checkout() || is_account_page() || is_shop() || is_product_taxonomy() ) {
 			$path = get_theme_file_path( 'assets/css/woocommerce.css' );
 			wp_enqueue_style(
 				'agentic-woocommerce-overrides',
@@ -179,6 +179,61 @@ add_action(
 			);
 		}
 	}
+);
+
+/**
+ * Shop/category/tag product cards — second (gallery) photo, crossfaded in on
+ * hover, matching agentic/featured-collection's own product cards (see
+ * agentic-product-card__media-hover in that block's style.css and
+ * render.php). The core Product Collection block's `woocommerce/product-
+ * image` has no attribute for a second image, so this reads the product's
+ * gallery from the same `render_block_{$name}` filter WordPress already
+ * fires for every block — core, not just agentic/* ones — and appends the
+ * image markup into that block's own output. Every `woocommerce/product-
+ * image` instance in this theme's templates already sits inside a product
+ * loop (`isDescendentOfQueryLoop`) — the single-product hero photo uses a
+ * different block, `product-image-gallery` — so this never touches
+ * anything but grid cards.
+ */
+add_filter(
+	'render_block_woocommerce/product-image',
+	function ( $block_content, $parsed_block, $block_instance ) {
+		if ( ! function_exists( 'wc_get_product' ) ) {
+			return $block_content;
+		}
+
+		$product_id = $block_instance->context['postId'] ?? get_the_ID();
+		$product    = $product_id ? wc_get_product( $product_id ) : null;
+		if ( ! $product ) {
+			return $block_content;
+		}
+
+		$gallery_ids = $product->get_gallery_image_ids();
+		if ( empty( $gallery_ids ) ) {
+			return $block_content;
+		}
+
+		$hover_image = wp_get_attachment_image(
+			$gallery_ids[0],
+			'woocommerce_single',
+			false,
+			[
+				'class' => 'agentic-product-card__media-hover',
+				'alt'   => '',
+			]
+		);
+
+		// Inserted right before WC's own (always-present) inner-container
+		// div, so it lands inside the same <a> as the primary photo and can
+		// be absolutely positioned over it with no markup restructuring.
+		return str_replace(
+			'<div class="wc-block-components-product-image__inner-container">',
+			wp_kses_post( $hover_image ) . '<div class="wc-block-components-product-image__inner-container">',
+			$block_content
+		);
+	},
+	10,
+	3
 );
 
 /**
@@ -366,4 +421,109 @@ function agentic_get_navigation_id( $slug ) {
 	$cache[ $slug ] = $menus ? (int) $menus[0]->ID : 0;
 
 	return $cache[ $slug ];
+}
+
+/**
+ * Restyle the header's mobile nav drawer (parts/header.html's
+ * `wp:navigation {"overlayMenu":"mobile"}`) to match Shopify Sleek's mobile
+ * menu — a site title next to the close button, and a bottom row (Log In +
+ * social icons) instead of core's bare, centered link list floating in an
+ * otherwise empty full-screen overlay.
+ *
+ * The block only exposes a menu-items slot — there's no attribute or inner
+ * block for extra drawer chrome — so this splices the extra markup into the
+ * already-rendered HTML string, the same technique the product-image hover
+ * photo above uses. Two anchors:
+ *  - the close button's own opening tag (always present, always unique)
+ *    gets the title inserted right before it, so CSS can lay the two out as
+ *    a header row via the close button's existing `position:absolute`.
+ *  - the LAST `</ul>` in the markup — found with strrpos rather than a
+ *    plain str_replace, since a menu item with a submenu renders its own
+ *    nested `<ul>` that closes *before* the top-level one — is where the
+ *    footer row gets appended, right before the wrapping divs close.
+ *
+ * Scoped to `agenticMenu === "header-menu"` so the footer's own navs
+ * (`overlayMenu:"never"`, no drawer to touch) are never touched.
+ */
+add_filter(
+	'render_block_core/navigation',
+	function ( $block_content, $parsed_block ) {
+		if ( ( $parsed_block['attrs']['agenticMenu'] ?? '' ) !== 'header-menu' ) {
+			return $block_content;
+		}
+
+		$title_markup = '<span class="agentic-nav-drawer__title">' . esc_html( get_bloginfo( 'name' ) ) . '</span>';
+		$block_content = str_replace(
+			'<button aria-label="Close menu" class="wp-block-navigation__responsive-container-close"',
+			$title_markup . '<button aria-label="Close menu" class="wp-block-navigation__responsive-container-close"',
+			$block_content
+		);
+
+		$footer_markup = '<div class="agentic-nav-drawer__footer">';
+		if ( function_exists( 'wc_get_page_permalink' ) ) {
+			$footer_markup .= '<a class="agentic-nav-drawer__login" href="' . esc_url( wc_get_page_permalink( 'myaccount' ) ) . '">' . esc_html__( 'Log In', 'agentic-theme' ) . '</a>';
+		}
+		$footer_markup .= agentic_nav_drawer_social_links();
+		$footer_markup .= '</div>';
+
+		$last_ul_end = strrpos( $block_content, '</ul>' );
+		if ( false !== $last_ul_end ) {
+			$insert_at     = $last_ul_end + strlen( '</ul>' );
+			$block_content = substr( $block_content, 0, $insert_at ) . $footer_markup . substr( $block_content, $insert_at );
+		}
+
+		return $block_content;
+	},
+	10,
+	2
+);
+
+/**
+ * Same six social networks, same styling, as the row in parts/footer.html —
+ * rendered here via `render_block()` on a hand-built parsed-block array
+ * (rather than duplicating parts/footer.html's markup by hand) so both
+ * places stay in sync with whatever core/social-links and core/social-link
+ * output for these attributes.
+ *
+ * @return string Rendered `<ul class="wp-block-social-links …">` markup.
+ */
+function agentic_nav_drawer_social_links() {
+	$services     = [ 'facebook', 'x', 'instagram', 'tiktok', 'pinterest', 'youtube' ];
+	$inner_blocks = [];
+	foreach ( $services as $service ) {
+		$inner_blocks[] = [
+			'blockName'    => 'core/social-link',
+			'attrs'        => [
+				'url'     => '#',
+				'service' => $service,
+			],
+			'innerBlocks'  => [],
+			'innerHTML'    => '',
+			'innerContent' => [],
+		];
+	}
+
+	// core/social-links is a static block (no render_callback of its own),
+	// so render_block() on it renders only the inner core/social-link items
+	// — each one correctly picking up the iconColor/iconColorValue context
+	// declared here — and drops the block's own saved `<ul>` wrapper, since
+	// that wrapper isn't reconstructible from an `innerContent` made only of
+	// null placeholders. Add the same wrapper parts/footer.html's copy of
+	// this block saves, by hand, around that inner-blocks output.
+	$items = render_block(
+		[
+			'blockName'    => 'core/social-links',
+			'attrs'        => [
+				'iconColor'      => 'contrast',
+				'iconColorValue' => '#1a1a1a',
+				'className'      => 'is-style-logos-only',
+				'size'           => 'has-small-icon-size',
+			],
+			'innerBlocks'  => $inner_blocks,
+			'innerHTML'    => '',
+			'innerContent' => array_fill( 0, count( $inner_blocks ), null ),
+		]
+	);
+
+	return '<ul class="wp-block-social-links has-small-icon-size has-icon-color is-style-logos-only agentic-nav-drawer__social">' . $items . '</ul>';
 }

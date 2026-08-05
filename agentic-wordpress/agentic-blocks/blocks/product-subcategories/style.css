@@ -1,0 +1,94 @@
+.agentic-product-subcategories__grid {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	gap: var(--wp--preset--spacing--40);
+	grid-template-columns: repeat(var(--agentic-columns, 5), minmax(0, 1fr));
+}
+
+.agentic-product-subcategories__link {
+	position: relative;
+	display: block;
+	aspect-ratio: 4 / 3;
+	border-radius: var(--agentic-radius-card);
+	overflow: hidden;
+	background: var(--wp--preset--color--subtle);
+	text-decoration: none;
+}
+
+/* No term thumbnail and no product photo to fall back to yet (an empty
+   category): a plain warm-tone panel with dark text, rather than a photo
+   overlay treatment with nothing under it or a solid near-black box that
+   reads as broken. */
+.agentic-product-subcategories__link--no-image {
+	background: var(--wp--preset--color--sand);
+}
+
+.agentic-product-subcategories__link--no-image .agentic-product-subcategories__title {
+	color: var(--wp--preset--color--contrast);
+}
+
+.agentic-product-subcategories__media {
+	position: absolute;
+	inset: 0;
+	display: block;
+}
+
+.agentic-product-subcategories__media::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: rgba(20, 16, 14, 0.35);
+}
+
+.agentic-product-subcategories__media img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+	transition: transform 0.4s ease;
+}
+
+.agentic-product-subcategories__link:hover .agentic-product-subcategories__media img {
+	transform: scale(1.06);
+}
+
+.agentic-product-subcategories__title {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 100%;
+	padding: var(--wp--preset--spacing--30);
+	text-align: center;
+	color: #fff;
+	font-size: var(--wp--preset--font-size--medium);
+	font-weight: 700;
+}
+
+@media (max-width: 780px) {
+	.agentic-product-subcategories__grid {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 480px) {
+	.agentic-product-subcategories__grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	/* An odd item count leaves a lone tile in the last row, stuck against
+	   the left edge next to empty space — center it instead of letting it
+	   default to column 1. Same technique as collection-list's grid. */
+	.agentic-product-subcategories__item:last-child:nth-child(odd) {
+		grid-column: 1 / -1;
+		display: flex;
+		justify-content: center;
+	}
+
+	.agentic-product-subcategories__item:last-child:nth-child(odd) .agentic-product-subcategories__link {
+		width: calc(50% - (var(--wp--preset--spacing--40) / 2));
+	}
+}

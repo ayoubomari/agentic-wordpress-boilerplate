@@ -103,3 +103,211 @@ Requires PHP: 8.0
   border-radius: var(--agentic-radius-card);
   overflow: hidden;
 }
+
+/* Header top row (parts/header.html) is a single space-between flex row:
+   site-title, wp:navigation, icon group — in that DOM order, since the
+   navigation block markup has to follow the title. On desktop that flex row
+   reads fine as logo — centered nav links — icons. Below the core
+   Navigation block's own 600px breakpoint (where it swaps its inline links
+   for a hamburger toggle), the desired reading order is different — icon
+   left, title centered, other icons right — which DOM order alone can't
+   produce (space-between just spreads the three items out; flex `order`
+   can reshuffle them but can't center the title independent of how wide the
+   hamburger vs. icon group are). Switch to a 3-column grid instead: two
+   `1fr` edge columns of equal width keep the title column perfectly
+   centered no matter how the hamburger and icon-group content widths
+   differ, with `order` placing each element into its column regardless of
+   source order. */
+@media (max-width: 599px) {
+  header .is-content-justification-space-between {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    column-gap: var(--wp--preset--spacing--20);
+  }
+
+  header .is-content-justification-space-between > .wp-block-navigation {
+    order: 1;
+    justify-self: start;
+  }
+
+  header .is-content-justification-space-between > .wp-block-site-title {
+    order: 2;
+    justify-self: center;
+    text-align: center;
+  }
+
+  header .is-content-justification-space-between > :last-child {
+    order: 3;
+    justify-self: end;
+    gap: 0px;
+  }
+
+  /* The search-drawer trigger is a bare 20px icon with no built-in
+     padding, while WooCommerce's own customer-account link and mini-cart
+     button ship a ~7px padding around their icon on a 35px box — so at the
+     tighter gap above the three end up unevenly spaced and vertically
+     misaligned. Shrink the WooCommerce icons' padding to bring their box
+     closer to the search trigger's size, and nudge the search trigger's own
+     margin/padding to land its glyph level with the other two. */
+  header .agentic-search-drawer__trigger {
+    margin-top: 5px;
+    padding-top: 1px;
+  }
+
+  header .wc-block-customer-account__link,
+  header .wc-block-mini-cart__button {
+    padding: 4px;
+  }
+}
+
+/* Mobile nav drawer (Shopify Sleek reference) — restyles core's own
+   full-screen `wp:navigation` overlay markup, with a title/social-links
+   footer spliced in via the render_block_core/navigation filter in
+   functions.php (see that filter's docblock for why splicing, not an
+   attribute, is how the extra chrome gets in). Everything below targets
+   core's own class names; there is no agentic/* block backing this drawer.
+
+   `.wp-block-navigation__responsive-container-content` is not a mobile-only
+   clone — it's the single, only rendering of the menu; a `min-width:600px`
+   media query is what turns it from a full-screen overlay back into the
+   plain inline desktop link row, without touching its DOM content. That
+   means the title/footer spliced in are unconditionally in that same markup
+   too, so — unlike core's own close button, which core already hides above
+   600px — they need an explicit default-hidden rule here, undone only
+   inside the max-width query below, or they leak into the desktop nav. */
+.agentic-nav-drawer__title,
+.agentic-nav-drawer__footer {
+  display: none;
+}
+
+@media (max-width: 599px) {
+  /* Core already makes the close button `position:absolute;top:0;right:0`
+     against `.wp-block-navigation__responsive-dialog` (`position:relative`)
+     inset by the overlay's own 16px/24px padding — the injected title span
+     just needs the mirror-image absolute position to sit as a header row
+     with it, no extra wrapper required. */
+  .agentic-nav-drawer__title {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    font-family: var(--wp--preset--font-family--heading);
+    font-weight: 800;
+    font-size: var(--wp--preset--font-size--medium);
+    line-height: 24px;
+  }
+
+  /* Core's own `.wp-block-navigation__responsive-container` is already
+     `position:fixed;inset:0`, which on some mobile browsers sizes itself
+     against the tallest possible viewport (URL bar hidden) rather than the
+     one actually visible — leaving the drawer taller than what's on screen,
+     so the footer below the fold needs a page scroll to reach. Pin it to
+     the *current* viewport with `100dvh` (falling back to `100vh` on
+     browsers that don't support dynamic viewport units) and clip instead of
+     letting the drawer itself grow past that. */
+  .wp-block-navigation__responsive-container {
+    max-height: 100vh;
+    max-height: 100dvh;
+    overflow: hidden;
+  }
+
+  /* Push the menu list below the title/close row, then stretch the whole
+     content column to the overlay's full height so `justify-content:
+     space-between` pins the footer (title row's sibling once the ul closes)
+     to the bottom instead of it trailing right after the last link.
+     `min-height: 0` overrides flexbox's default `min-height: auto` on these
+     nested flex containers — without it, a long menu can force the whole
+     chain taller than the drawer instead of the menu list scrolling
+     internally per the rule below. */
+  .wp-block-navigation__responsive-close,
+  .wp-block-navigation__responsive-dialog,
+  .wp-block-navigation__responsive-container-content {
+    height: 100%;
+    min-height: 0;
+  }
+
+  /* Core's own layout support prints a per-instance inline <style> tag for
+     this nav's `justifyContent:"center"` attribute — a same-specificity
+     single-class rule that lands later in the cascade than this stylesheet
+     regardless of source order, since it's injected at the point the block
+     renders rather than enqueued in <head>. `!important` is the only way to
+     reliably win against markup content can't predict the hash of. */
+  .wp-block-navigation__responsive-container-content {
+    box-sizing: border-box;
+    padding-top: 52px;
+    align-items: stretch !important;
+    justify-content: space-between !important;
+  }
+
+  /* If the menu ever grows long enough that the list plus the pinned footer
+     no longer both fit, the list scrolls internally instead of pushing the
+     footer (and its social icons) below the fold. */
+  .wp-block-navigation__responsive-container-content .wp-block-navigation__container {
+    align-items: stretch !important;
+    width: 100% !important;
+    flex-shrink: 1;
+    min-height: 0;
+    overflow-y: auto;
+    gap: 0;
+  }
+
+  .agentic-nav-drawer__footer {
+    flex-shrink: 0;
+  }
+
+  .wp-block-navigation__responsive-container-content .wp-block-navigation-item__content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: var(--wp--preset--spacing--30) 0;
+    font-weight: 700;
+    font-size: var(--wp--preset--font-size--medium);
+  }
+
+  /* Core's submenu toggle ships a downward "expand" caret for the inline
+     dropdown it opens on desktop; Sleek's reference uses a right-facing
+     chevron instead, so re-point it without touching the toggle's own
+     expand/collapse behavior. */
+  .wp-block-navigation__responsive-container-content .wp-block-navigation__submenu-icon svg {
+    width: 18px;
+    height: 18px;
+    transform: rotate(-90deg);
+  }
+
+  .agentic-nav-drawer__footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--wp--preset--spacing--40);
+    padding-bottom: var(--wp--preset--spacing--20);
+  }
+
+  .agentic-nav-drawer__login {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+    padding: var(--wp--preset--spacing--30);
+    border-radius: var(--agentic-radius-pill);
+    background: var(--wp--preset--color--contrast);
+    color: var(--wp--preset--color--base);
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  /* Hand-built wrapper in agentic_nav_drawer_social_links() (functions.php)
+     — core/social-links is a static block, so render_block() on it drops
+     its saved `<ul>` (see that function's docblock), which also means this
+     copy never gets the `is-layout-flex`/`…-is-layout-flex` classes core's
+     layout support would normally add. Define the flex row directly rather
+     than depending on those. */
+  .agentic-nav-drawer__social.wp-block-social-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--wp--preset--spacing--30);
+  }
+}

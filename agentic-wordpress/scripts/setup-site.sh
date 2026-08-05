@@ -224,9 +224,10 @@ fi
 echo "→ [11/12] Seeding sample products (so templates are verifiable)"
 # Four, not one: a single product leaves the product grid and the "related
 # products" collection with nothing to show, which hides real template bugs.
-# Two real categories (not one catch-all) so collection-list and the
-# featured-collection tabs have real taxonomy archives to link to. Two of
-# the four carry real sale pricing so the sale badge, the tabbed "Sale"
+# Spread across three of the five categories (not one catch-all) so
+# collection-list, the featured-collection tabs, and the shop/category archive
+# filters all have real taxonomy archives and price/stock spread to work with.
+# Two of the four carry real sale pricing so the sale badge, the tabbed "Sale"
 # panel, and the maxPrice-filtered row all have real data to render.
 # Delete these before launching a real store.
 if [ "$(wp post list --post_type=product --format=count | tr -d '\r')" = "0" ]; then
@@ -236,27 +237,33 @@ if [ "$(wp post list --post_type=product --format=count | tr -d '\r')" = "0" ]; 
   # So categories are created (or looked up if already present) first, and
   # every product below is assigned by the resulting numeric ID.
   ensure_product_cat() {
-    local name="$1" slug="$2" id
+    local name="$1" slug="$2" parent_id="${3:-0}" description="${4:-}" id
     id="$( wp wc product_cat list --slug="$slug" --field=id --user=admin | tr -d '\r\n' )"
     if [ -z "$id" ]; then
-      id="$( wp wc product_cat create --name="$name" --slug="$slug" --user=admin --porcelain )"
+      local args=( wp wc product_cat create --name="$name" --slug="$slug" --user=admin --porcelain )
+      [ "$parent_id" != "0" ] && args+=( --parent="$parent_id" )
+      [ -n "$description" ] && args+=( --description="$description" )
+      id="$( "${args[@]}" )"
     fi
     printf '%s' "$id"
   }
 
-  SKINCARE_CAT_ID="$( ensure_product_cat 'Skincare' 'skincare' )"
-  BATH_BODY_CAT_ID="$( ensure_product_cat 'Bath & Body' 'bath-body' )"
+  # Five flat, top-level categories — no subcategory nesting. Real one-line
+  # tagline copy (not a placeholder string) on each, shown centered under the
+  # category heading on taxonomy-product_cat.html, the same spot Sleek's own
+  # reference collection pages use for a one-line collection blurb.
+  CLEANSERS_CAT_ID="$( ensure_product_cat 'Cleansers' 'cleansers' 0 'Soap-free formulas that lift away impurities without stripping the skin.' )"
+  MOISTURIZERS_CAT_ID="$( ensure_product_cat 'Moisturizers' 'moisturizers' 0 'Lightweight hydration that locks in moisture for up to 24 hours.' )"
+  TREATMENTS_CAT_ID="$( ensure_product_cat 'Treatments' 'treatments' 0 'Targeted formulas for brighter, smoother, more radiant skin.' )"
 
-  # No products seeded into these four — they exist purely so
-  # agentic/collection-list ("Our Collections" on the homepage) has real
-  # taxonomy-product_cat archives to link to instead of dead /shop/ hrefs,
-  # demonstrating a store spanning more than one niche/category out of the
-  # box. Empty archives are expected here; the store owner populates them
-  # with real products.
-  ensure_product_cat 'Makeup' 'makeup' > /dev/null
-  ensure_product_cat 'Hair Care' 'hair-care' > /dev/null
-  ensure_product_cat 'Wellness' 'wellness' > /dev/null
-  ensure_product_cat 'Gifts & Sets' 'gifts-sets' > /dev/null
+  # No products seeded into these two — they exist purely so
+  # agentic/collection-list ("Our Collections" on the homepage) and
+  # agentic/product-subcategories (the tile row on /shop/) have real
+  # taxonomy-product_cat archives to link to instead of dead hrefs. Empty
+  # archives are expected here; the store owner populates them with real
+  # products.
+  ensure_product_cat 'Eye Care' 'eye-care' 0 "Gentle care for the eye area's especially delicate skin." > /dev/null
+  ensure_product_cat 'Accessories' 'accessories' 0 'The tools that help your routine actually work.' > /dev/null
 
   seed_product() {
     local name="$1" slug="$2" category_id="$3" regular_price="$4" sale_price="$5" description="$6" short_description="$7" stock_quantity="${8:-}"
@@ -285,16 +292,16 @@ if [ "$(wp post list --post_type=product --format=count | tr -d '\r')" = "0" ]; 
     "${args[@]}"
   }
 
-  seed_product 'Rejuvenating Night Oil' 'rejuvenating-night-oil' "$SKINCARE_CAT_ID" '79.00' '' \
+  seed_product 'Rejuvenating Night Oil' 'rejuvenating-night-oil' "$TREATMENTS_CAT_ID" '79.00' '' \
     'A nourishing night oil formulated with rosehip and squalane to replenish skin while you sleep. Placeholder product — delete before launch.' \
     'Nourishing night oil with rosehip and squalane.'
-  seed_product 'Rose Quartz Facial Polish' 'rose-quartz-facial-polish' "$SKINCARE_CAT_ID" '79.00' '59.00' \
+  seed_product 'Rose Quartz Facial Polish' 'rose-quartz-facial-polish' "$TREATMENTS_CAT_ID" '79.00' '59.00' \
     'A gentle exfoliating polish with fine rose quartz powder to reveal smoother, brighter skin. Placeholder product — delete before launch.' \
     'Gentle exfoliating polish with rose quartz powder.'
-  seed_product 'Hydrating Body Serum' 'hydrating-body-serum' "$BATH_BODY_CAT_ID" '79.00' '' \
+  seed_product 'Hydrating Body Serum' 'hydrating-body-serum' "$MOISTURIZERS_CAT_ID" '79.00' '' \
     'A lightweight, fast-absorbing serum that locks in moisture for up to 24 hours. Placeholder product — delete before launch.' \
     'Lightweight, fast-absorbing hydrating serum.' '2'
-  seed_product 'Gentle Gel Cleanser' 'gentle-gel-cleanser' "$BATH_BODY_CAT_ID" '39.00' '29.00' \
+  seed_product 'Gentle Gel Cleanser' 'gentle-gel-cleanser' "$CLEANSERS_CAT_ID" '39.00' '29.00' \
     'A soap-free gel cleanser that lifts away impurities without stripping the skin. Placeholder product — delete before launch.' \
     'Soap-free gel cleanser for daily use.'
 else
