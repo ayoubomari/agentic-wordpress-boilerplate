@@ -14,7 +14,7 @@ cd "$(dirname "$0")/.."
 # as empty and fails.
 wp() { wp-env run cli wp "$@"; }
 
-echo "→ [1/12] Building block editor scripts"
+echo "→ [1/14] Building block editor scripts"
 # block.json points editorScript at build/<block>/index.js, so the bundle must
 # exist before the plugin is activated or blocks register without editor UI.
 if [ -d agentic-blocks/blocks ]; then
@@ -24,13 +24,13 @@ if [ -d agentic-blocks/blocks ]; then
   ( cd agentic-blocks && npm run build --silent )
 fi
 
-echo "→ [2/12] Installing WooCommerce + Yoast SEO (free, from wordpress.org)"
+echo "→ [2/14] Installing WooCommerce + Yoast SEO (free, from wordpress.org)"
 # Installed by slug via WP-CLI rather than as .wp-env.json zip URLs: zip
 # sources land in folders named after the zip (woocommerce.latest-stable),
 # which leaks into asset URLs and collides with a slug-named second copy.
 wp plugin install woocommerce wordpress-seo --activate
 
-echo "→ [3/12] Installing essential add-ons (free, from wordpress.org)"
+echo "→ [3/14] Installing essential add-ons (free, from wordpress.org)"
 # Two things WooCommerce doesn't handle on its own, both free and both things
 # an actual store cannot skip:
 #   - wp-mail-smtp: WordPress's default wp_mail() gets spam-filtered by most
@@ -51,11 +51,11 @@ wp option update updraft_interval_db 'daily'
 wp option update updraft_retain '7'
 wp option update updraft_retain_db '7'
 
-echo "→ [4/12] Activating theme + agentic-blocks"
+echo "→ [4/14] Activating theme + agentic-blocks"
 wp theme activate agentic-theme
 wp plugin activate agentic-blocks
 
-echo "→ [5/12] Navigation menus"
+echo "→ [5/14] Navigation menus"
 # Menu *items* are content the store owner edits in
 # Appearance → Editor → Navigation — not layout baked into a template file.
 # Templates reference these by slug via the `agenticMenu` attribute, resolved
@@ -85,7 +85,7 @@ ensure_menu() {
 }
 
 ensure_menu 'header-menu' 'Header' \
-'<!-- wp:navigation-link {"label":"Shop","url":"/shop/","kind":"custom","isTopLevelLink":true} /--><!-- wp:navigation-link {"label":"About","url":"/sample-page/","kind":"custom","isTopLevelLink":true} /--><!-- wp:navigation-link {"label":"Journal","url":"/journal/","kind":"custom","isTopLevelLink":true} /-->'
+'<!-- wp:navigation-link {"label":"Shop","url":"/shop/","kind":"custom","isTopLevelLink":true} /--><!-- wp:navigation-link {"label":"About","url":"/about-us/","kind":"custom","isTopLevelLink":true} /--><!-- wp:navigation-link {"label":"Journal","url":"/journal/","kind":"custom","isTopLevelLink":true} /-->'
 
 ensure_menu 'footer-shop' 'Footer — Shop' \
 '<!-- wp:navigation-link {"label":"All products","url":"/shop/","kind":"custom","isTopLevelLink":true} /--><!-- wp:navigation-link {"label":"Cart","url":"/cart/","kind":"custom","isTopLevelLink":true} /--><!-- wp:navigation-link {"label":"My account","url":"/my-account/","kind":"custom","isTopLevelLink":true} /-->'
@@ -93,14 +93,14 @@ ensure_menu 'footer-shop' 'Footer — Shop' \
 ensure_menu 'footer-help' 'Footer — Help' \
 '<!-- wp:navigation-link {"label":"Shipping &amp; returns","url":"/sample-page/","kind":"custom","isTopLevelLink":true} /--><!-- wp:navigation-link {"label":"Contact","url":"/sample-page/","kind":"custom","isTopLevelLink":true} /--><!-- wp:navigation-link {"label":"Privacy policy","url":"/privacy-policy/","kind":"custom","isTopLevelLink":true} /-->'
 
-echo "→ [6/12] Completing WooCommerce installation"
+echo "→ [6/14] Completing WooCommerce installation"
 # WooCommerce defers part of its installer to the first request after
 # activation, and that deferred run writes its own defaults. Forcing it to
 # finish synchronously here means the settings written below actually stick
 # instead of being silently overwritten a moment later.
 wp eval 'if ( class_exists( "WC_Install" ) ) { WC_Install::install(); }'
 
-echo "→ [7/12] Permalinks"
+echo "→ [7/14] Permalinks"
 # Flat /%postname%/ — the sane structure for products; the WP default
 # day-and-name buries /shop/ URLs under a date path.
 wp rewrite structure '/%postname%/' --hard
@@ -137,7 +137,7 @@ wp eval '
 	);
 '
 
-echo "→ [8/12] Store defaults"
+echo "→ [8/14] Store defaults"
 wp option update blogdescription 'A code-first WooCommerce store'
 wp option update woocommerce_store_country 'US:CA'
 wp option update woocommerce_currency 'USD'
@@ -145,7 +145,7 @@ wp option update woocommerce_currency 'USD'
 # otherwise force clicking through the UI before the store works.
 wp option update woocommerce_onboarding_profile '{"skipped":true}' --format=json
 
-echo "→ [9/12] Front page + Journal"
+echo "→ [9/14] Front page + Journal"
 # The storefront must be a static page, not the post feed. Blog posts live at
 # /journal/ instead.
 #
@@ -196,7 +196,28 @@ wp eval '
 	}
 '
 
-echo "→ [10/12] Legal pages"
+echo "→ [10/14] About Us page"
+# Same container-page pattern as Home/Journal above: the page record exists
+# only so WordPress has something to route /about-us/ to. The actual content
+# lives in templates/page-about-us.html, resolved automatically by WordPress's
+# block-template hierarchy from the page's slug — no manual "Template" picker
+# needed, and re-running this never touches an owner's edits to the page.
+ABOUT_US_ID="$( ensure_page 'about-us' 'About Us' )"
+
+# Same reasoning as the front page's meta description above: post_content is
+# empty (content lives in the template file), so Yoast has nothing to
+# auto-generate a description from without this.
+wp eval '
+	if ( ! get_post_meta( '"$ABOUT_US_ID"', "_yoast_wpseo_metadesc", true ) ) {
+		update_post_meta(
+			'"$ABOUT_US_ID"',
+			"_yoast_wpseo_metadesc",
+			"Learn about our story, how we formulate, and why we make skincare for sensitive skin."
+		);
+	}
+'
+
+echo "→ [11/14] Legal pages"
 # WordPress core auto-creates a "Privacy Policy" page (draft, at
 # /privacy-policy/) on every fresh install — there is no equivalent core
 # default for Terms of Use, so it's created here the same way: idempotent,
@@ -221,7 +242,7 @@ else
   echo "   page 'terms-of-use' already exists — leaving it alone"
 fi
 
-echo "→ [11/12] Seeding sample products (so templates are verifiable)"
+echo "→ [12/14] Seeding sample products (so templates are verifiable)"
 # Four, not one: a single product leaves the product grid and the "related
 # products" collection with nothing to show, which hides real template bugs.
 # Spread across three of the five categories (not one catch-all) so
@@ -308,7 +329,91 @@ else
   echo "   products already exist — skipping"
 fi
 
-echo "→ [12/12] Disabling WooCommerce Coming Soon mode"
+echo "→ [13/14] Seeding Journal posts (so agentic/latest-posts has real content)"
+# WordPress core seeds a "Hello world!" sample post on every fresh install —
+# harmless on its own, but it would sit in the Journal archive and
+# occasionally surface in agentic/latest-posts' "3 most recent" query
+# alongside the real seeded posts below. Deleted unconditionally: if it's
+# already gone (a re-run, or the owner deleted it themselves) this is a
+# silent no-op, --force skips the trash since it's placeholder content with
+# nothing worth recovering.
+HELLO_WORLD_ID="$( wp post list --post_type=post --name=hello-world --field=ID --format=csv | tr -d '\r\n' )"
+if [ -n "$HELLO_WORLD_ID" ]; then
+  wp post delete "$HELLO_WORLD_ID" --force >/dev/null
+  echo "   deleted default 'Hello world!' post"
+fi
+
+# Eight short articles so the Journal archive and agentic/latest-posts (the
+# "From The Journal" grid on About Us) both have real published posts to
+# query instead of rendering empty. Featured images reuse existing theme
+# assets — real product/lifestyle photography, not people, so nothing here
+# needs replacing before launch except the copy itself and, eventually, real
+# photography per the store owner's own content. Delete these before launch.
+if [ "$( wp eval 'echo get_page_by_path( "skincare-basics-for-beginners", OBJECT, "post" ) ? "1" : "0";' | tr -d '\r\n' )" = "0" ]; then
+  SKINCARE_CAT_ID="$( wp term list category --slug=skincare --field=term_id --format=csv | tr -d '\r\n' )"
+  if [ -z "$SKINCARE_CAT_ID" ]; then
+    SKINCARE_CAT_ID="$( wp term create category 'Skincare' --slug=skincare --porcelain | tr -d '\r\n' )"
+  fi
+
+  seed_post() {
+    local title="$1" slug="$2" excerpt="$3" content="$4" image="$5" id
+    id="$( wp post create \
+      --post_type=post \
+      --post_title="$title" \
+      --post_name="$slug" \
+      --post_status=publish \
+      --post_category="$SKINCARE_CAT_ID" \
+      --post_excerpt="$excerpt" \
+      --post_content="$content" \
+      --porcelain )"
+    wp media import "$image" --post_id="$id" --featured_image >/dev/null
+    echo "   created post '$slug'"
+  }
+
+  seed_post 'Skincare Basics for Beginners' 'skincare-basics-for-beginners' \
+    "Starting a routine doesn't have to mean nine steps and a shelf of bottles. Here's the short list that actually matters." \
+    "<!-- wp:paragraph --><p>Walk into any skincare aisle and it's easy to feel like you're already behind — toners, essences, serums, sheet masks, a dozen steps before you've even left the house. None of that is where a good routine starts.</p><!-- /wp:paragraph --><!-- wp:paragraph --><p>Three steps cover almost everything: a gentle cleanser to remove the day without stripping your skin, a treatment suited to what your skin actually needs, and a moisturizer to lock it back in. Add sunscreen in the morning and that's a complete routine.</p><!-- /wp:paragraph --><!-- wp:paragraph --><p>Add one new product at a time, and give it two to three weeks before deciding whether it's working. Skin doesn't change overnight, and neither should your shelf.</p><!-- /wp:paragraph -->" \
+    'wp-content/themes/agentic-theme/assets/images/journal/skincare-basics-for-beginners.webp'
+
+  seed_post 'Why Daily SPF Still Belongs in Your Routine' 'why-daily-spf-still-belongs-in-your-routine' \
+    "Sun protection is the one step dermatologists agree on across every skin type — here's why it still gets skipped, and how to make it stick." \
+    "<!-- wp:paragraph --><p>Sunscreen is the one product nearly every dermatologist agrees on, and it's still the step most people skip — especially on cloudy days, or when they're indoors near a window.</p><!-- /wp:paragraph --><!-- wp:paragraph --><p>UV rays reach skin through clouds and glass alike, and they're the single biggest driver of visible aging: fine lines, uneven tone, and loss of elasticity build up gradually from exposure you don't feel happening.</p><!-- /wp:paragraph --><!-- wp:paragraph --><p>The easiest fix is habit, not intensity. Keep a broad-spectrum SPF next to your toothbrush, apply it as the last step every morning, and reapply if you're outside for more than a couple of hours.</p><!-- /wp:paragraph -->" \
+    'wp-content/themes/agentic-theme/assets/images/journal/why-daily-spf-still-belongs-in-your-routine.webp'
+
+  seed_post 'Building a Calmer Haircare Routine' 'building-a-calmer-haircare-routine' \
+    "Your scalp is skin too. A few small changes make a routine feel a lot less like a chore." \
+    "<!-- wp:paragraph --><p>It's easy to treat hair and skin as two completely separate categories, but your scalp is skin — and it responds to the same things that irritate skin anywhere else: harsh sulfates, hot water, and over-washing.</p><!-- /wp:paragraph --><!-- wp:paragraph --><p>Washing less often, using a lukewarm rinse instead of a hot one, and switching to a sulfate-free formula are three small changes that add up. Your scalp's natural oils are there to protect it, not to be stripped out daily.</p><!-- /wp:paragraph --><!-- wp:paragraph --><p>If your scalp feels tight or itchy after washing, that's usually a sign your routine is working against you, not for you. Calmer products, used consistently, tend to beat aggressive ones used occasionally.</p><!-- /wp:paragraph -->" \
+    'wp-content/themes/agentic-theme/assets/images/journal/building-a-calmer-haircare-routine.webp'
+
+  seed_post 'The Tools Worth Adding to Your Skincare Kit' 'tools-worth-adding-to-your-skincare-kit' \
+    "A gua sha stone and a silicone cleansing brush won't replace a good routine — but they make the routine work harder." \
+    "<!-- wp:paragraph --><p>Good skincare tools don't replace a solid routine, but they can make the products you already use work a little harder.</p><!-- /wp:paragraph --><!-- wp:paragraph --><p>A gua sha stone, used with a facial oil, helps ease tension and encourage circulation along the jaw and under the eyes. A silicone cleansing brush lifts away makeup and daily buildup more gently than fingertips alone, without the microplastics found in traditional exfoliating beads.</p><!-- /wp:paragraph --><!-- wp:paragraph --><p>Neither is essential, and neither is a shortcut. Think of them as a way to get more out of the formulas you already trust.</p><!-- /wp:paragraph -->" \
+    'wp-content/themes/agentic-theme/assets/images/journal/tools-worth-adding-to-your-skincare-kit.webp'
+
+  seed_post 'What Actually Slows Visible Skin Aging' 'what-actually-slows-visible-skin-aging' \
+    "Less about a single miracle ingredient, more about three habits dermatologists keep repeating: SPF, retinoids, and consistency." \
+    "<!-- wp:paragraph --><p>There's no single ingredient that slows visible aging on its own — despite what most product marketing implies. What actually moves the needle is a short list of proven habits, repeated consistently over years, not weeks.</p><!-- /wp:paragraph --><!-- wp:paragraph --><p>Daily sunscreen prevents most of the damage before it starts. Retinoids remain the most researched ingredient for supporting cell turnover and collagen. And layering either with a hydrating, barrier-supporting moisturizer keeps skin from getting irritated enough that you stop using them.</p><!-- /wp:paragraph --><!-- wp:paragraph --><p>None of that is exciting, but it's the difference between a routine that works and one that just looks good on a shelf.</p><!-- /wp:paragraph -->" \
+    'wp-content/themes/agentic-theme/assets/images/journal/what-actually-slows-visible-skin-aging.webp'
+
+  seed_post 'Cold-Weather Skin, Solved' 'cold-weather-skin-solved' \
+    "Dry heat and cold wind pull moisture out of skin faster than most routines put it back. Small seasonal swaps fix that." \
+    "<!-- wp:paragraph --><p>Cold air holds less moisture, indoor heating dries it out further, and the result is skin that feels tight, flaky, or reactive in ways it didn't a few months earlier.</p><!-- /wp:paragraph --><!-- wp:paragraph --><p>The fix isn't a completely new routine — it's a few swaps. Move to a richer moisturizer for the season, skip anything that foams aggressively when you cleanse, and ease off exfoliating acids until your barrier feels steady again.</p><!-- /wp:paragraph --><!-- wp:paragraph --><p>A humidifier in the room you sleep in does more for winter skin than most people expect, and it's one change you only have to make once.</p><!-- /wp:paragraph -->" \
+    'wp-content/themes/agentic-theme/assets/images/journal/cold-weather-skin-solved.webp'
+
+  seed_post 'Behind Every Formula: How We Choose Ingredients' 'behind-every-formula-how-we-choose-ingredients' \
+    "Short ingredient lists aren't a marketing angle for us — they're the actual bar every formula has to clear before it ships." \
+    "<!-- wp:paragraph --><p>Every formula starts with a question: does this ingredient earn its place? If it doesn't do something measurable for the skin, it doesn't make the list — no filler, nothing added just to make a label look fuller.</p><!-- /wp:paragraph --><!-- wp:paragraph --><p>That means fewer lines on the back of the bottle, but every one of them is there on purpose. Formulas go through dermatologist testing and patch testing before anything ships, and nothing is tested on animals at any stage.</p><!-- /wp:paragraph --><!-- wp:paragraph --><p>It's a slower way to build a product line. It's also the only way we're willing to build one.</p><!-- /wp:paragraph -->" \
+    'wp-content/themes/agentic-theme/assets/images/journal/behind-every-formula-how-we-choose-ingredients.webp'
+
+  seed_post 'A Simpler Approach to Your Everyday Routine' 'a-simpler-approach-to-your-everyday-routine' \
+    "More products doesn't mean more results. Here's how to edit a routine down to what your skin actually uses." \
+    "<!-- wp:paragraph --><p>Most routines don't grow because skin needs more — they grow because it's easy to keep adding and hard to know what to take away.</p><!-- /wp:paragraph --><!-- wp:paragraph --><p>A simple audit: for two weeks, use only what you'd call essential — cleanser, one treatment, moisturizer, SPF. Anything you don't miss during those two weeks probably wasn't doing much in the first place.</p><!-- /wp:paragraph --><!-- wp:paragraph --><p>What's left is usually a shorter, cheaper, more consistent routine — and consistency is the one thing that actually shows up in your skin.</p><!-- /wp:paragraph -->" \
+    'wp-content/themes/agentic-theme/assets/images/journal/a-simpler-approach-to-your-everyday-routine.webp'
+else
+  echo "   posts already exist — skipping"
+fi
+
+echo "→ [14/14] Disabling WooCommerce Coming Soon mode"
 # WooCommerce 9.1+ ships this ON. Left alone it replaces the entire storefront
 # with a "Great things are on the horizon" splash for logged-out visitors, so
 # templates cannot be verified and nothing is indexable.

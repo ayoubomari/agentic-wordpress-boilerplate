@@ -1,0 +1,505 @@
+/*
+ * Journal archive (home.html, the page_for_posts listing) and single post
+ * (single.html) layout — enqueued only on those two views, see functions.php.
+ * Both templates use core query-loop/post blocks rather than a custom
+ * agentic/* block, so this file re-points their default markup at the same
+ * design tokens every agentic/* block uses instead of duplicating the grid
+ * in a bespoke block.
+ */
+
+/* ---------- Journal archive — card grid ---------- */
+
+body.blog .wp-block-post-template {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: var(--wp--preset--spacing--50);
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+body.blog .wp-block-post-template > li {
+	display: flex;
+	flex-direction: column;
+}
+
+body.blog .wp-block-post-featured-image {
+	display: block;
+	margin: 0 0 var(--wp--preset--spacing--30);
+	border-radius: var(--agentic-radius-card);
+	overflow: hidden;
+	aspect-ratio: 4 / 3;
+	background: var(--wp--preset--color--subtle);
+}
+
+body.blog .wp-block-post-featured-image img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+body.blog .wp-block-post-date {
+	display: block;
+	font-size: var(--wp--preset--font-size--small);
+	color: var(--wp--preset--color--muted);
+	margin-bottom: 0.35rem;
+}
+
+body.blog .wp-block-post-title {
+	font-size: var(--wp--preset--font-size--large);
+	line-height: 1.3;
+	margin: 0 0 0.5rem;
+}
+
+body.blog .wp-block-post-title a {
+	text-decoration: none;
+	color: inherit;
+}
+
+body.blog .wp-block-post-excerpt {
+	font-size: var(--wp--preset--font-size--small);
+	color: var(--wp--preset--color--muted);
+	margin-bottom: 0.75rem;
+}
+
+body.blog .wp-block-post-excerpt__excerpt {
+	margin: 0;
+}
+
+body.blog .wp-block-read-more {
+	display: inline-block;
+	margin-top: auto;
+	font-weight: 600;
+	text-decoration: underline;
+	color: var(--wp--preset--color--contrast);
+}
+
+@media (max-width: 960px) {
+	body.blog .wp-block-post-template {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 620px) {
+	body.blog .wp-block-post-template {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+/* ---------- Featured hero (latest post banner) ---------- */
+
+body.blog .agentic-journal-hero .wp-block-post-template {
+	display: block;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+body.blog .agentic-journal-hero__card {
+	position: relative;
+	border-radius: var(--agentic-radius-panel);
+	overflow: hidden;
+}
+
+body.blog .agentic-journal-hero__card .wp-block-post-featured-image {
+	margin: 0;
+	border-radius: 0;
+	aspect-ratio: auto;
+}
+
+body.blog .agentic-journal-hero__card .wp-block-post-featured-image img {
+	display: block;
+	width: 100%;
+	height: 26rem;
+	object-fit: cover;
+}
+
+body.blog .agentic-journal-hero__overlay {
+	position: absolute;
+	inset: 0;
+	align-items: center;
+	justify-content: center;
+	gap: var(--wp--preset--spacing--20);
+	text-align: center;
+	padding: var(--wp--preset--spacing--40);
+	background: linear-gradient(rgba(20, 14, 10, 0.05), rgba(20, 14, 10, 0.45));
+}
+
+body.blog .agentic-journal-hero__date {
+	color: var(--wp--preset--color--base);
+	font-size: var(--wp--preset--font-size--small);
+}
+
+body.blog .agentic-journal-hero__title {
+	margin: 0;
+	color: var(--wp--preset--color--base);
+	font-size: var(--wp--preset--font-size--xx-large);
+}
+
+body.blog .agentic-journal-hero__title a {
+	color: inherit;
+	text-decoration: none;
+}
+
+body.blog .agentic-journal-hero__cta {
+	display: inline-block;
+	margin-top: var(--wp--preset--spacing--20);
+	padding: 0.75em 1.75em;
+	background: var(--wp--preset--color--base);
+	color: var(--wp--preset--color--contrast);
+	border-radius: var(--agentic-radius-pill);
+	text-decoration: none;
+	font-weight: 600;
+}
+
+@media (max-width: 620px) {
+	body.blog .agentic-journal-hero__card .wp-block-post-featured-image img {
+		height: 20rem;
+	}
+	body.blog .agentic-journal-hero__title {
+		font-size: var(--wp--preset--font-size--x-large);
+	}
+}
+
+/* ---------- Category filter row ---------- */
+
+body.blog .agentic-journal-filter {
+	margin-top: var(--wp--preset--spacing--50);
+	gap: var(--wp--preset--spacing--40);
+	flex-wrap: wrap;
+}
+
+body.blog .agentic-journal-filter__categories {
+	display: flex;
+	gap: var(--wp--preset--spacing--40);
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	flex-wrap: wrap;
+}
+
+body.blog .agentic-journal-filter a {
+	font-size: var(--wp--preset--font-size--small);
+	font-weight: 500;
+	color: var(--wp--preset--color--muted);
+	text-decoration: none;
+}
+
+body.blog .agentic-journal-filter__item.is-active a,
+body.blog .agentic-journal-filter a:hover {
+	color: var(--wp--preset--color--contrast);
+	text-decoration: underline;
+	text-underline-offset: 0.3em;
+}
+
+/* ---------- Single post ---------- */
+
+/*
+ * Shared reading-column width for every element below the header — meta
+ * card, content, tags, prev/next nav, related posts, and comments — so the
+ * single-post view reads as one narrow centered column (matching the
+ * Shopify Sleek reference article layout) instead of stretching each
+ * section out to the theme's full 1400px content width.
+ */
+body.single-post .agentic-journal-single__meta,
+body.single-post .wp-block-post-content,
+body.single-post .agentic-journal-single__tags.wp-block-post-terms,
+body.single-post .agentic-journal-single__nav,
+body.single-post .agentic-latest-posts--related,
+body.single-post .agentic-journal-single__comments,
+body.single-post .agentic-journal-single__back {
+	max-width: 46rem;
+	margin-inline: auto;
+}
+
+/*
+ * From Related Posts down, widen back out to the site's global content
+ * width on large screens — those sections (a 3-up grid, a comments list)
+ * read cramped in the narrow 46rem article column at desktop sizes, unlike
+ * the single-column title/content/nav above them.
+ */
+@media (min-width: 961px) {
+	body.single-post .agentic-latest-posts--related,
+	body.single-post .agentic-journal-single__comments,
+	body.single-post .agentic-journal-single__back {
+		max-width: var(--wp--style--global--content-size, 1400px);
+	}
+}
+
+body.single-post .wp-block-post-featured-image {
+	border-radius: var(--agentic-radius-panel);
+	overflow: hidden;
+	margin: 0;
+}
+
+body.single-post .wp-block-post-featured-image img {
+	display: block;
+	width: 100%;
+	max-height: 32rem;
+	object-fit: cover;
+}
+
+/* Meta card — date/title/category, overlapping the hero image's bottom edge. */
+body.single-post .agentic-journal-single__meta {
+	position: relative;
+	z-index: 1;
+	margin-top: -4rem;
+	margin-bottom: var(--wp--preset--spacing--50);
+	padding: var(--wp--preset--spacing--60) var(--wp--preset--spacing--50) var(--wp--preset--spacing--40);
+	background: var(--wp--preset--color--base);
+	border-radius: var(--agentic-radius-panel);
+	text-align: center;
+}
+
+body.single-post .wp-block-post-date {
+	display: block;
+	color: var(--wp--preset--color--muted);
+	font-size: var(--wp--preset--font-size--small);
+	margin-bottom: var(--wp--preset--spacing--20);
+}
+
+body.single-post .wp-block-post-title {
+	margin: 0 0 var(--wp--preset--spacing--30);
+}
+
+body.single-post .agentic-journal-single__category.wp-block-post-terms {
+	display: block;
+}
+
+body.single-post .agentic-journal-single__category.wp-block-post-terms a {
+	display: inline-flex;
+	padding: 0.35em 1.1em;
+	font-size: var(--wp--preset--font-size--small);
+	font-weight: 600;
+	color: var(--wp--preset--color--contrast);
+	background: var(--wp--preset--color--subtle);
+	border-radius: var(--agentic-radius-pill);
+	text-decoration: none;
+}
+
+@media (max-width: 620px) {
+	body.single-post .agentic-journal-single__meta {
+		margin-top: -2.5rem;
+		padding: var(--wp--preset--spacing--40) var(--wp--preset--spacing--30) var(--wp--preset--spacing--30);
+	}
+}
+
+body.single-post .wp-block-post-content {
+	font-size: var(--wp--preset--font-size--medium);
+	line-height: 1.75;
+}
+
+body.single-post .wp-block-post-content > p {
+	margin: 0 0 var(--wp--preset--spacing--30);
+}
+
+/* Tags row */
+body.single-post .agentic-journal-single__tags.wp-block-post-terms {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem;
+	margin: var(--wp--preset--spacing--40) auto;
+}
+
+body.single-post .agentic-journal-single__tags.wp-block-post-terms a {
+	display: inline-flex;
+	padding: 0.35em 1em;
+	font-size: var(--wp--preset--font-size--small);
+	color: var(--wp--preset--color--contrast);
+	border: 1px solid var(--wp--preset--color--border);
+	border-radius: var(--agentic-radius-pill);
+	text-decoration: none;
+}
+
+/* Prev / next post navigation */
+body.single-post .agentic-journal-single__nav {
+	gap: var(--wp--preset--spacing--30);
+	margin-top: var(--wp--preset--spacing--50);
+	margin-bottom: var(--wp--preset--spacing--60);
+	padding-top: var(--wp--preset--spacing--40);
+	border-top: 1px solid var(--wp--preset--color--border);
+}
+
+body.single-post .agentic-journal-single__nav .wp-block-post-navigation-link {
+	font-size: var(--wp--preset--font-size--small);
+	font-weight: 600;
+}
+
+body.single-post .agentic-journal-single__nav .wp-block-post-navigation-link a {
+	color: var(--wp--preset--color--contrast);
+	text-decoration: none;
+}
+
+body.single-post .agentic-journal-single__nav .wp-block-post-navigation-link a:hover {
+	text-decoration: underline;
+}
+
+body.single-post .agentic-journal-single__nav .post-navigation-link-next {
+	text-align: right;
+	margin-left: auto;
+}
+
+/* Related posts — reuses agentic/latest-posts, narrowed to the article column */
+body.single-post .agentic-latest-posts--related {
+	margin-top: var(--wp--preset--spacing--60);
+	margin-bottom: var(--wp--preset--spacing--60);
+}
+
+body.single-post .agentic-latest-posts--related .agentic-latest-posts__header {
+	justify-content: center;
+	text-align: center;
+}
+
+/* Comments */
+body.single-post .agentic-journal-single__comments {
+	margin-top: var(--wp--preset--spacing--60);
+	padding-top: var(--wp--preset--spacing--50);
+	border-top: 1px solid var(--wp--preset--color--border);
+}
+
+body.single-post .agentic-journal-single__comments .wp-block-comments-title,
+body.single-post .agentic-journal-single__comments .comment-reply-title {
+	margin: 0 0 var(--wp--preset--spacing--40);
+}
+
+body.single-post .agentic-journal-single__comment {
+	padding: var(--wp--preset--spacing--30) 0;
+	border-bottom: 1px solid var(--wp--preset--color--border);
+}
+
+body.single-post .agentic-journal-single__comment .wp-block-avatar img {
+	border-radius: var(--agentic-radius-pill);
+}
+
+body.single-post .agentic-journal-single__comment .wp-block-comment-author-name {
+	font-weight: 600;
+}
+
+body.single-post .agentic-journal-single__comment .wp-block-comment-date,
+body.single-post .agentic-journal-single__comment .wp-block-comment-date a {
+	color: var(--wp--preset--color--muted);
+	font-size: var(--wp--preset--font-size--small);
+	text-decoration: none;
+}
+
+body.single-post .agentic-journal-single__comment .wp-block-comment-content p {
+	margin: 0.5rem 0 0;
+	line-height: 1.7;
+}
+
+body.single-post .agentic-journal-single__comment .wp-block-comment-reply-link {
+	display: inline-block;
+	margin-top: 0.5rem;
+	font-size: var(--wp--preset--font-size--small);
+	font-weight: 600;
+	text-decoration: underline;
+}
+
+body.single-post .wp-block-comments-pagination {
+	margin: var(--wp--preset--spacing--30) 0;
+}
+
+/* Comment form — core's comment_form() prints fields in a fixed DOM order
+   (notes, comment textarea, notes-after, author, email) that doesn't match
+   the Sleek reference (Name/Email row, then Comment, then a moderation
+   note). CSS Grid `order` reflows the visual sequence without touching
+   that DOM order — grid-column alone can't do it, since auto-placement
+   still walks items row by row in source order. */
+body.single-post .comment-respond {
+	margin-top: var(--wp--preset--spacing--50);
+}
+
+body.single-post .comment-respond .comment-form {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 0 var(--wp--preset--spacing--30);
+}
+
+body.single-post .comment-respond .comment-notes {
+	grid-column: 1 / -1;
+	order: 1;
+	margin: 0 0 var(--wp--preset--spacing--30);
+	color: var(--wp--preset--color--muted);
+	font-size: var(--wp--preset--font-size--small);
+}
+
+body.single-post .comment-respond .comment-form-author {
+	grid-column: 1 / 2;
+	order: 2;
+}
+
+body.single-post .comment-respond .comment-form-email {
+	grid-column: 2 / 3;
+	order: 2;
+}
+
+body.single-post .comment-respond .comment-form-comment {
+	grid-column: 1 / -1;
+	order: 3;
+}
+
+body.single-post .comment-respond .agentic-comment-moderation-note {
+	grid-column: 1 / -1;
+	order: 4;
+	margin: 0 0 var(--wp--preset--spacing--30);
+	color: var(--wp--preset--color--muted);
+	font-size: var(--wp--preset--font-size--small);
+}
+
+body.single-post .comment-respond .comment-form-comment,
+body.single-post .comment-respond .comment-form-author,
+body.single-post .comment-respond .comment-form-email {
+	margin: 0 0 var(--wp--preset--spacing--30);
+}
+
+body.single-post .comment-respond label {
+	display: block;
+	margin-bottom: 0.4rem;
+	font-size: var(--wp--preset--font-size--small);
+	font-weight: 600;
+}
+
+body.single-post .comment-respond input[type="text"],
+body.single-post .comment-respond input[type="email"],
+body.single-post .comment-respond textarea {
+	width: 100%;
+	padding: 0.75em 1em;
+	background: var(--wp--preset--color--subtle);
+	border: 1px solid var(--wp--preset--color--border);
+	border-radius: var(--agentic-radius-card);
+	font-family: inherit;
+	font-size: var(--wp--preset--font-size--small);
+}
+
+body.single-post .comment-respond textarea {
+	min-height: 8rem;
+	resize: vertical;
+}
+
+body.single-post .comment-respond .form-submit {
+	grid-column: 1 / -1;
+	order: 5;
+	margin: 0;
+}
+
+@media (max-width: 620px) {
+	body.single-post .comment-respond .comment-form {
+		grid-template-columns: 1fr;
+	}
+	body.single-post .comment-respond .comment-form-author,
+	body.single-post .comment-respond .comment-form-email {
+		grid-column: 1 / -1;
+	}
+}
+
+body.single-post .agentic-journal-single__back {
+	margin-top: var(--wp--preset--spacing--50);
+	text-align: center;
+}
+
+body.single-post .agentic-journal-single__back a {
+	font-weight: 600;
+	text-decoration: underline;
+}

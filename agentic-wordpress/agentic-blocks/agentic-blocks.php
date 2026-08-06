@@ -191,13 +191,27 @@ if ( ! function_exists( 'agentic_section_classes' ) ) {
 	/**
 	 * Build the wrapper attributes for a section block.
 	 *
-	 * @param string $name       Block slug, e.g. "image-with-text".
-	 * @param array  $extra      Extra classes.
+	 * $extra_style is passed through get_block_wrapper_attributes()'s own
+	 * 'style' merge rather than appended as a second literal style="" on the
+	 * tag — a duplicate HTML attribute is invalid and browsers silently keep
+	 * only the first one, dropping whatever custom property a block tried to
+	 * add this way (cta-cards's --agentic-columns hit this exact trap).
+	 * get_block_wrapper_attributes() instead concatenates it with the
+	 * block's own supports-generated style (margin/padding, etc.) into one
+	 * valid attribute.
+	 *
+	 * @param string $name        Block slug, e.g. "image-with-text".
+	 * @param array  $extra       Extra classes.
+	 * @param string $extra_style Extra inline CSS declarations, e.g. "--agentic-columns:2".
 	 * @return string
 	 */
-	function agentic_section_classes( $name, $extra = [] ) {
-		$classes = array_merge( [ 'agentic-section', 'agentic-' . $name ], $extra );
-		return get_block_wrapper_attributes( [ 'class' => implode( ' ', array_filter( $classes ) ) ] );
+	function agentic_section_classes( $name, $extra = [], $extra_style = '' ) {
+		$classes    = array_merge( [ 'agentic-section', 'agentic-' . $name ], $extra );
+		$attributes = [ 'class' => implode( ' ', array_filter( $classes ) ) ];
+		if ( $extra_style ) {
+			$attributes['style'] = $extra_style;
+		}
+		return get_block_wrapper_attributes( $attributes );
 	}
 }
 

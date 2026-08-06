@@ -5,9 +5,10 @@
   "title": "FAQ Accordion",
   "category": "agentic",
   "icon": "editor-help",
-  "description": "Expandable question/answer list. Uses native <details> — no JavaScript. Set introHeading/introText/imageUrl for a 3-column layout with an intro blurb and image beside the accordion.",
+  "description": "Expandable question/answer list. Uses native <details> — no JavaScript. Set introHeading/introText/imageUrl for a 2-column layout with a portrait image beside the eyebrow, heading, and accordion.",
   "attributes": {
     "heading": { "type": "string", "default": "Frequently asked questions" },
+    "eyebrow": { "type": "string", "default": "" },
     "introHeading": { "type": "string", "default": "" },
     "introText": { "type": "string", "default": "" },
     "imageUrl": { "type": "string", "default": "" },

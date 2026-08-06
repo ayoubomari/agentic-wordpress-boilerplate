@@ -5,14 +5,15 @@
   "title": "Rich Text",
   "category": "agentic",
   "icon": "text",
-  "description": "Centred heading, paragraph, and optional button — an editorial break between product sections.",
+  "description": "Centred heading, paragraph, and optional button — an editorial break between product sections. Optional watermarkImageUrl renders a giant faded wordmark behind the text.",
   "attributes": {
     "heading": { "type": "string", "default": "" },
     "text": { "type": "string", "default": "" },
     "ctaText": { "type": "string", "default": "" },
     "ctaUrl": { "type": "string", "default": "" },
     "linkStyle": { "type": "string", "default": "button" },
-    "maxWidth": { "type": "string", "default": "40rem" }
+    "maxWidth": { "type": "string", "default": "40rem" },
+    "watermarkImageUrl": { "type": "string", "default": "" }
   },
   "supports": { "align": ["wide", "full"], "spacing": { "margin": true, "padding": true } },
   "render": "file:./render.php",

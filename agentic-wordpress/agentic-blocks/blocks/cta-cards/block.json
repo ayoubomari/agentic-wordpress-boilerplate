@@ -5,8 +5,9 @@
   "title": "CTA Cards",
   "category": "agentic",
   "icon": "grid-view",
-  "description": "A row of colored cards (image, heading, pill button) — for content teasers like the Journal, a store locator, or a social handle.",
+  "description": "A row of colored cards (image, heading, pill button) — for content teasers like the Journal, a store locator, or a social handle. Each card can also take an optional `text` line (a short description) for a feature-grid look with no button. Set variant:\"overlay\" for full-bleed panels with a cover background image and the heading/CTA overlaid on top of it, split into as many panels as there are cards.",
   "attributes": {
+    "variant": { "type": "string", "default": "cards" },
     "cards": {
       "type": "array",
       "default": [

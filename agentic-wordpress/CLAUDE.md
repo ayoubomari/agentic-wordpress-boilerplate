@@ -333,9 +333,10 @@ direction" section above for the shared carousel/tabs mechanics:
 - `testimonials` — `layout` (`"grid"` | `"carousel"`) plus per-item
   `photoUrl`/`productName`/`productPrice`/`productImageUrl` for large
   photo-testimonial cards with a product chip.
-- `faq-accordion` — `introHeading`/`introText`/`imageUrl`/`ctaText`/`ctaUrl`
-  for a 3-column intro-blurb-plus-image layout instead of a plain centered
-  list.
+- `faq-accordion` — `eyebrow`/`introHeading`/`introText`/`imageUrl`/`ctaText`/
+  `ctaUrl` for a 2-column layout (portrait image on one side, eyebrow +
+  heading + accordion stacked on the other, first item open by default)
+  instead of a plain centered list.
 
 Sections are **attribute-driven**, like Shopify section settings — they take
 configuration through block attributes rather than requiring nested inner

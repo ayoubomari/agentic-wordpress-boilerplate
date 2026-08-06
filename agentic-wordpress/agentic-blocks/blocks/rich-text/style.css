@@ -4,6 +4,29 @@
 	text-align: center;
 }
 
+.agentic-rich-text--watermarked {
+	position: relative;
+	overflow: hidden;
+	padding-top: calc(var(--wp--preset--spacing--80) + 1.5rem);
+}
+
+.agentic-rich-text__watermark {
+	position: absolute;
+	top: -14%;
+	left: 50%;
+	transform: translateX(-50%);
+	width: min(45%, 620px);
+	height: auto;
+	pointer-events: none;
+	user-select: none;
+	z-index: 0;
+}
+
+.agentic-rich-text--watermarked .agentic-rich-text__inner {
+	position: relative;
+	z-index: 1;
+}
+
 .agentic-rich-text__inner {
 	max-width: var(--agentic-max-width, 40rem);
 	display: flex;

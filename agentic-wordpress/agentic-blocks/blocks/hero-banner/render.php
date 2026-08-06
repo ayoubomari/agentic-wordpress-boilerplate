@@ -23,7 +23,10 @@ if ( ! $slides ) {
 			'ctaText'         => $attributes['ctaText'] ?? '',
 			'ctaUrl'          => $attributes['ctaUrl'] ?? '',
 			'imageUrl'        => $attributes['imageUrl'] ?? '',
+			'videoUrl'        => $attributes['videoUrl'] ?? '',
+			'videoWebmUrl'    => $attributes['videoWebmUrl'] ?? '',
 			'backgroundColor' => $attributes['backgroundColor'] ?? 'blush',
+			'accentColor'     => $attributes['accentColor'] ?? '',
 			'overlayOpacity'  => $attributes['overlayOpacity'] ?? 35,
 		],
 	];
@@ -67,7 +70,10 @@ $render_slide = static function ( $slide, $align, $height, $extra_classes = [] )
 	$cta_text   = $slide['ctaText'] ?? '';
 	$cta_url    = $slide['ctaUrl'] ?? '';
 	$image_url  = $slide['imageUrl'] ?? '';
+	$video_url  = $slide['videoUrl'] ?? '';
+	$video_webm = $slide['videoWebmUrl'] ?? '';
 	$bg_color   = $slide['backgroundColor'] ?? 'blush';
+	$accent     = $slide['accentColor'] ?? '';
 	$overlay    = max( 0, min( 100, (int) ( $slide['overlayOpacity'] ?? 35 ) ) );
 
 	$classes = array_merge(
@@ -80,6 +86,12 @@ $render_slide = static function ( $slide, $align, $height, $extra_classes = [] )
 	);
 	if ( $image_url ) {
 		$classes[] = 'agentic-hero-banner--has-image';
+	}
+	if ( $accent ) {
+		$classes[] = 'agentic-hero-banner--has-accent';
+	}
+	if ( $video_url ) {
+		$classes[] = 'agentic-hero-banner--has-video';
 	}
 	// Only the palette's "contrast" slug is dark enough to need forced light
 	// text — everything else in the palette (blush, sand, subtle, base) is
@@ -103,9 +115,25 @@ $render_slide = static function ( $slide, $align, $height, $extra_classes = [] )
 			esc_attr( $overlay / 100 )
 		);
 	}
+	if ( $accent ) {
+		$accent_safe = preg_replace( '/[^a-z0-9-]/', '', $accent );
+		$style      .= sprintf( '--agentic-hero-accent:var(--wp--preset--color--%s);', esc_attr( $accent_safe ) );
+	}
 	?>
 	<div class="<?php echo esc_attr( implode( ' ', array_filter( $classes ) ) ); ?>"
 		<?php echo $style ? 'style="' . esc_attr( $style ) . '"' : ''; ?>>
+		<?php if ( $video_url ) : ?>
+			<video
+				class="agentic-hero-banner__video"
+				autoplay muted loop playsinline
+				<?php echo $image_url ? 'poster="' . esc_url( $image_url ) . '"' : ''; ?>
+			>
+				<?php if ( $video_webm ) : ?>
+					<source src="<?php echo esc_url( $video_webm ); ?>" type="video/webm">
+				<?php endif; ?>
+				<source src="<?php echo esc_url( $video_url ); ?>" type="video/mp4">
+			</video>
+		<?php endif; ?>
 		<div class="agentic-hero-banner__inner">
 			<?php if ( $eyebrow ) : ?>
 				<p class="agentic-hero-banner__eyebrow"><?php echo esc_html( $eyebrow ); ?></p>

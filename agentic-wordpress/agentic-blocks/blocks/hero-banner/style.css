@@ -26,6 +26,33 @@
 	}
 }
 
+/* videoUrl plays on top of the slide's background-image (used as the
+   <video> poster and as the visible frame until the video has buffered),
+   so no separate loading-state handling is needed here. Bottom-anchored,
+   not centered — the source footage has empty background at the top of
+   frame and the hands near the bottom, so a center crop on a short hero
+   loses the hands first. Scoped to has-video so it doesn't shift the
+   center-cropped photo slides other hero-banner instances use. */
+.agentic-hero-banner--has-video {
+	background-position: center bottom;
+}
+
+.agentic-hero-banner__video {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: center bottom;
+	z-index: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.agentic-hero-banner--has-video .agentic-hero-banner__video {
+		display: none;
+	}
+}
+
 /* ---------- Default illustration (no imageUrl set) ---------- */
 
 .agentic-hero-banner__illustration {
@@ -73,6 +100,15 @@
 @media (min-width: 900px) {
 	.agentic-hero-banner--height-large {
 		min-height: 90vh;
+	}
+
+	/* A single (non-carousel) "large" hero has no dots row to share the
+	   screen with, so it can just fill the viewport below the header
+	   (announcement bar + nav together — see --agentic-header-height,
+	   set in functions.php) instead of the carousel case's 90vh. Scaled to
+	   80% of that full remaining height, not the full 100%. */
+	.agentic-hero-banner:not(.agentic-carousel) .agentic-hero-banner--height-large {
+		min-height: calc((100vh - var(--agentic-header-height, 0px)) * 0.8);
 	}
 
 	/* In carousel mode the dots render below the slide, inside the same
@@ -201,9 +237,33 @@
 
 .agentic-hero-banner--has-image .agentic-hero-banner__cta:hover {
 	transform: scale(1.06);
+}
+
+.agentic-hero-banner--has-image:not(.agentic-hero-banner--has-accent) .agentic-hero-banner__cta:hover {
 	background: var(--wp--preset--color--contrast);
 	color: var(--wp--preset--color--base);
 	border-color: var(--wp--preset--color--contrast);
+}
+
+/* accentColor lets a slide tint its CTA to match a photo's own dominant
+   color instead of the site's default dark button — e.g. the sky blue of a
+   product-on-skin photo's background. Deliberately left off the eyebrow:
+   text tinted the same hue as the photo behind it (rather than a solid
+   button surface) can turn near-invisible wherever the photo itself is that
+   color, so the eyebrow keeps the existing dark has-image text color. */
+.agentic-hero-banner--has-accent .agentic-hero-banner__cta {
+	background: var(--agentic-hero-accent);
+	color: var(--wp--preset--color--contrast);
+	border-color: var(--agentic-hero-accent);
+}
+
+/* has-image already handles hover (scale up, no color invert/outline) above
+   — this only needs to apply when there's no photo, so an accent-only slide
+   (no imageUrl) keeps its own outline-style hover feedback. */
+.agentic-hero-banner--has-accent:not(.agentic-hero-banner--has-image) .agentic-hero-banner__cta:hover {
+	background: transparent;
+	color: var(--agentic-hero-accent);
+	border-color: var(--agentic-hero-accent);
 }
 
 /* ---------- Carousel mode (2+ slides — "peek" layout) ---------- */

@@ -182,6 +182,77 @@ add_action(
 );
 
 /**
+ * Journal archive (the page_for_posts listing) and single post — both
+ * render through core query-loop/post blocks rather than a custom
+ * agentic/* block, so their default markup needs re-pointing at the same
+ * design tokens every agentic/* block uses. See assets/css/journal.css —
+ * loaded only on the two views that actually render that markup.
+ */
+add_action(
+	'wp_enqueue_scripts',
+	function () {
+		if ( ! is_home() && ! is_singular( 'post' ) ) {
+			return;
+		}
+		$path = get_theme_file_path( 'assets/css/journal.css' );
+		wp_enqueue_style(
+			'agentic-journal',
+			get_theme_file_uri( 'assets/css/journal.css' ),
+			[],
+			file_exists( $path ) ? (string) filemtime( $path ) : wp_get_theme()->get( 'Version' )
+		);
+	}
+);
+
+/**
+ * Journal comment form — re-labelled to match the Sleek reference ("Leave a
+ * comment" instead of core's default "Leave a Reply", a plain-language
+ * moderation note) and dropped down to the three fields the reference
+ * shows (Name, Email, Comment). The "Website" field core adds by default is
+ * mostly a spam-bot magnet on a storefront blog, not something a shopper
+ * filling out a comment expects to be asked for.
+ */
+add_filter(
+	'comment_form_default_fields',
+	function ( $fields ) {
+		unset( $fields['url'] );
+		return $fields;
+	}
+);
+
+add_filter(
+	'comment_form_defaults',
+	function ( $defaults ) {
+		$defaults['title_reply']         = __( 'Leave a comment', 'agentic' );
+		$defaults['comment_notes_after'] = '<p class="agentic-comment-moderation-note">' . esc_html__( 'Please note, comments need to be approved before they are published.', 'agentic' ) . '</p>';
+		return $defaults;
+	}
+);
+
+/**
+ * single.html's post-featured-image is the largest-contentful-paint element
+ * on every Journal post, but core/post-featured-image always renders it
+ * `loading="lazy"` — get_the_post_thumbnail() defaults every image to lazy,
+ * and unlike images inside the_content(), a template-level featured-image
+ * block never runs through the "skip lazy-loading for the first content
+ * image" heuristic that would normally exempt it. Lazy-loading your own LCP
+ * image makes the browser wait to even discover it, which is exactly what
+ * tanked this template's Lighthouse performance score. Scoped to
+ * is_singular( 'post' ) so it only touches this one block instance —
+ * agentic/latest-posts' thumbnails further down the same page are offscreen
+ * and should stay lazy.
+ */
+add_filter(
+	'render_block_core/post-featured-image',
+	function ( $block_content ) {
+		if ( ! is_singular( 'post' ) ) {
+			return $block_content;
+		}
+		return str_replace( 'loading="lazy"', 'fetchpriority="high"', $block_content );
+	}
+);
+
+/**
  * Shop/category/tag product cards — second (gallery) photo, crossfaded in on
  * hover, matching agentic/featured-collection's own product cards (see
  * agentic-product-card__media-hover in that block's style.css and

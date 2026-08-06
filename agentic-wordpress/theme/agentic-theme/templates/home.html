@@ -14,12 +14,49 @@
   <p class="has-muted-color has-text-color">News, notes, and product stories.</p>
   <!-- /wp:paragraph -->
 
-  <!-- wp:query {"queryId":0,"query":{"perPage":10,"pages":0,"offset":0,"postType":"post","order":"desc","orderBy":"date","inherit":true},"layout":{"type":"constrained"}} -->
-  <div class="wp-block-query">
+  <!-- The most recent post, featured as a full-bleed banner — a second,
+       independent (inherit:false) single-item query, so it doesn't disturb
+       the main grid's own pagination below. The grid query is offset 1 so
+       this same post doesn't also appear as its own first card. -->
+  <!-- wp:query {"queryId":1,"query":{"perPage":1,"pages":0,"offset":0,"postType":"post","order":"desc","orderBy":"date","inherit":false},"align":"wide","className":"agentic-journal-hero","style":{"spacing":{"margin":{"top":"var:preset|spacing|50"}}}} -->
+  <div class="wp-block-query alignwide agentic-journal-hero" style="margin-top:var(--wp--preset--spacing--50)">
     <!-- wp:post-template -->
-      <!-- wp:post-title {"level":2,"isLink":true} /-->
+      <!-- wp:group {"className":"agentic-journal-hero__card","layout":{"type":"default"}} -->
+      <div class="wp-block-group agentic-journal-hero__card">
+        <!-- wp:post-featured-image {"isLink":false} /-->
+        <!-- wp:group {"className":"agentic-journal-hero__overlay","layout":{"type":"flex","orientation":"vertical","justifyContent":"center"}} -->
+        <div class="wp-block-group agentic-journal-hero__overlay">
+          <!-- wp:post-date {"className":"agentic-journal-hero__date"} /-->
+          <!-- wp:post-title {"level":2,"isLink":true,"className":"agentic-journal-hero__title"} /-->
+          <!-- wp:read-more {"content":"Learn More","className":"agentic-journal-hero__cta"} /-->
+        </div>
+        <!-- /wp:group -->
+      </div>
+      <!-- /wp:group -->
+    <!-- /wp:post-template -->
+  </div>
+  <!-- /wp:query -->
+
+  <!-- Real category links, not invented tabs — showEmpty:false so a fresh
+       clone's unused default "Uncategorized" term never shows up next to
+       "All Posts". -->
+  <!-- wp:group {"tagName":"nav","className":"agentic-journal-filter","layout":{"type":"flex","justifyContent":"center"}} -->
+  <nav class="wp-block-group agentic-journal-filter">
+    <!-- wp:paragraph {"className":"agentic-journal-filter__item is-active"} -->
+    <p class="agentic-journal-filter__item is-active"><a href="/journal/">All Posts</a></p>
+    <!-- /wp:paragraph -->
+    <!-- wp:categories {"showEmpty":false,"showPostCounts":false,"className":"agentic-journal-filter__categories"} /-->
+  </nav>
+  <!-- /wp:group -->
+
+  <!-- wp:query {"queryId":0,"query":{"perPage":9,"pages":0,"offset":1,"postType":"post","order":"desc","orderBy":"date","inherit":false},"align":"wide","layout":{"type":"constrained"},"style":{"spacing":{"margin":{"top":"var:preset|spacing|50"}}}} -->
+  <div class="wp-block-query alignwide" style="margin-top:var(--wp--preset--spacing--50)">
+    <!-- wp:post-template {"layout":{"type":"grid","columnCount":3}} -->
+      <!-- wp:post-featured-image {"isLink":true} /-->
       <!-- wp:post-date {"fontSize":"small"} /-->
-      <!-- wp:post-excerpt /-->
+      <!-- wp:post-title {"level":3,"isLink":true} /-->
+      <!-- wp:post-excerpt {"excerptLength":20} /-->
+      <!-- wp:read-more {"content":"Read More"} /-->
     <!-- /wp:post-template -->
 
     <!-- wp:query-pagination -->

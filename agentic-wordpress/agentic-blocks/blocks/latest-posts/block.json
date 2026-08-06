@@ -1,0 +1,22 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "agentic/latest-posts",
+  "title": "Latest Posts",
+  "category": "agentic",
+  "icon": "layout",
+  "description": "Dynamic grid of Journal posts — a real WP_Query, not attribute-driven content, so it always reflects whatever the Journal actually has. Each card shows the featured image, date, title, excerpt, and a Read More link. Renders nothing if there are no published posts. With `relatedToCurrent` set, queries posts sharing a category with the post currently being viewed (excluding it) instead of the site's latest — used as the 'Related Posts' section on single.html — and backfills with the latest posts if too few share a category, so the grid never looks sparse.",
+  "attributes": {
+    "heading": { "type": "string", "default": "From The Journal" },
+    "ctaText": { "type": "string", "default": "" },
+    "ctaUrl": { "type": "string", "default": "" },
+    "count": { "type": "number", "default": 3 },
+    "relatedToCurrent": { "type": "boolean", "default": false }
+  },
+  "supports": {
+    "align": ["wide", "full"],
+    "spacing": { "margin": true, "padding": true }
+  },
+  "render": "file:./render.php",
+  "style": "file:./style.css"
+}

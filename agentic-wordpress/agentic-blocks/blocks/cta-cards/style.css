@@ -34,6 +34,16 @@
 	font-size: var(--wp--preset--font-size--large);
 }
 
+/* Every card has a colored panel background (never plain white), so —
+   same reasoning as image-with-text's own --has-background rule — the
+   --muted gray fails WCAG AA contrast here; --contrast is the one that
+   reliably clears 4.5:1 on every palette color used for these panels. */
+.agentic-cta-cards__text {
+	margin: 0;
+	font-size: var(--wp--preset--font-size--small);
+	color: var(--wp--preset--color--contrast);
+}
+
 .agentic-cta-cards__cta {
 	text-decoration: none;
 }
@@ -41,5 +51,63 @@
 @media (max-width: 780px) {
 	.agentic-cta-cards {
 		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+/* ---------- "overlay" variant: full-bleed panels, image behind the text ---------- */
+
+/* Edge-to-edge split (no gap, no rounded panel corners) — this variant is
+   meant to read as one full-width strip cut into equal panels, not a row of
+   separate cards like the default variant above. */
+.agentic-cta-cards--overlay {
+	gap: 0;
+}
+
+.agentic-cta-cards--overlay .agentic-cta-cards__card {
+	position: relative;
+	justify-content: center;
+	min-height: 22rem;
+	padding: var(--wp--preset--spacing--60) var(--wp--preset--spacing--40);
+	border-radius: 0;
+	background-size: cover;
+	background-position: center;
+	overflow: hidden;
+	isolation: isolate;
+}
+
+/* Darkening scrim so heading/CTA stay legible regardless of the photo
+   underneath — same reason hero-banner takes an overlayOpacity attribute
+   for its own background image, kept fixed here since these panels are
+   always meant to carry light text, never dark. */
+.agentic-cta-cards--overlay .agentic-cta-cards__card::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: rgba(26, 26, 26, 0.4);
+	z-index: -1;
+}
+
+.agentic-cta-cards--overlay .agentic-cta-cards__heading,
+.agentic-cta-cards--overlay .agentic-cta-cards__text {
+	color: var(--wp--preset--color--base);
+}
+
+.agentic-cta-cards--overlay .agentic-cta-cards__cta {
+	background: var(--wp--preset--color--base);
+	color: var(--wp--preset--color--contrast);
+}
+
+.agentic-cta-cards--overlay .agentic-cta-cards__cta:hover {
+	background: var(--wp--preset--color--contrast);
+	color: var(--wp--preset--color--base);
+}
+
+@media (max-width: 780px) {
+	.agentic-cta-cards--overlay {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.agentic-cta-cards--overlay .agentic-cta-cards__card {
+		min-height: 18rem;
 	}
 }

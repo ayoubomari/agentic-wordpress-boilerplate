@@ -6,6 +6,7 @@
 
 .agentic-faq-accordion__item {
 	border-top: 1px solid var(--wp--preset--color--border);
+	interpolate-size: allow-keywords;
 }
 
 .agentic-faq-accordion__item:last-child {
@@ -29,14 +30,15 @@
 	position: absolute;
 	right: 0;
 	top: 50%;
-	transform: translateY(-50%);
+	transform: translateY(-50%) rotate(0deg);
 	font-size: 1.25rem;
 	line-height: 1;
 	color: var(--wp--preset--color--muted);
+	transition: transform 0.25s ease;
 }
 
 .agentic-faq-accordion__item[open] .agentic-faq-accordion__question::after {
-	content: "–";
+	transform: translateY(-50%) rotate(45deg);
 }
 
 .agentic-faq-accordion__question:focus-visible {
@@ -54,49 +56,67 @@
 	max-width: 68ch;
 }
 
-/* ---------- With intro column + image (3-up layout) ---------- */
+/* Smooth open/close — ::details-content is a pseudo-element built to
+   animate <details>'s hidden content without JS (Chrome 131+); it targets
+   everything inside <details> except the <summary>. Browsers that don't
+   support it yet just keep the native instant show/hide, so this is a
+   pure progressive enhancement. */
+.agentic-faq-accordion__item::details-content {
+	overflow: hidden;
+	height: 0;
+	opacity: 0;
+	transition: height 0.3s ease, opacity 0.25s ease, content-visibility 0.3s allow-discrete;
+}
+
+.agentic-faq-accordion__item[open]::details-content {
+	height: auto;
+	opacity: 1;
+}
+
+/* ---------- With intro image (2-up layout: image | heading + accordion) ---------- */
 
 .agentic-faq-accordion--with-intro {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: flex-start;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+	align-items: center;
 	gap: var(--wp--preset--spacing--60);
-}
-
-.agentic-faq-accordion__intro {
-	flex: 1 1 260px;
-}
-
-.agentic-faq-accordion__intro-heading {
-	margin: 0 0 var(--wp--preset--spacing--30);
-	font-size: var(--wp--preset--font-size--x-large);
-}
-
-.agentic-faq-accordion__intro-text {
-	margin: 0;
-	color: var(--wp--preset--color--muted);
-	max-width: 32ch;
-}
-
-.agentic-faq-accordion__intro-cta {
-	display: inline-block;
-	margin-top: var(--wp--preset--spacing--40);
-	text-decoration: underline;
-	font-weight: 600;
-}
-
-.agentic-faq-accordion__intro-media {
-	flex: 1 1 260px;
 }
 
 .agentic-faq-accordion__intro-media img {
 	display: block;
 	width: 100%;
-	aspect-ratio: 1 / 1;
+	aspect-ratio: 3 / 4;
 	object-fit: cover;
-	border-radius: var(--agentic-radius-card);
+	border-radius: var(--agentic-radius-panel);
 }
 
-.agentic-faq-accordion--with-intro .agentic-faq-accordion__list {
-	flex: 2 1 340px;
+.agentic-faq-accordion__eyebrow {
+	margin: 0 0 var(--wp--preset--spacing--20);
+	font-size: var(--wp--preset--font-size--small);
+	font-weight: 500;
+	color: var(--wp--preset--color--muted);
+}
+
+.agentic-faq-accordion__intro-heading {
+	margin: 0 0 var(--wp--preset--spacing--40);
+	font-size: var(--wp--preset--font-size--x-large);
+}
+
+.agentic-faq-accordion__intro-text {
+	margin: 0 0 var(--wp--preset--spacing--40);
+	color: var(--wp--preset--color--muted);
+	max-width: 48ch;
+}
+
+.agentic-faq-accordion__intro-cta {
+	display: inline-block;
+	margin-bottom: var(--wp--preset--spacing--40);
+	text-decoration: underline;
+	font-weight: 600;
+}
+
+@media (max-width: 780px) {
+	.agentic-faq-accordion--with-intro {
+		grid-template-columns: minmax(0, 1fr);
+	}
 }

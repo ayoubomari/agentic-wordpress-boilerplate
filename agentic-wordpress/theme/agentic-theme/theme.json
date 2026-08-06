@@ -23,7 +23,8 @@
         { "slug": "blush", "color": "#f0d7d0", "name": "Blush" },
         { "slug": "sand", "color": "#ecd9c3", "name": "Sand" },
         { "slug": "new-badge", "color": "#3f7d4e", "name": "New badge" },
-        { "slug": "selling-fast", "color": "#6d5bd0", "name": "Selling fast badge" }
+        { "slug": "selling-fast", "color": "#6d5bd0", "name": "Selling fast badge" },
+        { "slug": "sky", "color": "#81aecf", "name": "Sky blue" }
       ]
     },
     "typography": {
