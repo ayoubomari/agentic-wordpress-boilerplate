@@ -54,7 +54,7 @@ services:
       - wp_data:/var/www/html
       - ./theme/agentic-theme:/var/www/html/wp-content/themes/agentic-theme
       - ./agentic-blocks:/var/www/html/wp-content/plugins/agentic-blocks
-    entrypoint: wp
+    entrypoint: ["wp", "--allow-root"]
 
 volumes:
   db_data:
