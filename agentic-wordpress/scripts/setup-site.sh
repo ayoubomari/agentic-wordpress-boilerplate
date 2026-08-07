@@ -249,7 +249,7 @@ if [ "$(wp post list --post_type=product --format=count | tr -d '\r')" = "0" ]; 
   ensure_product_cat 'Accessories' 'accessories' 0 'The tools that help your routine actually work.' > /dev/null
 
   seed_product() {
-    local name="$1" slug="$2" category_id="$3" regular_price="$4" sale_price="$5" description="$6" short_description="$7" stock_quantity="${8:-}"
+    local name="$1" slug="$2" category_id="$3" regular_price="$4" sale_price="$5" description="$6" short_description="$7" stock_quantity="${8:-}" image="${9:-}"
     local args=(
       wp wc product create
       --name="$name"
@@ -272,21 +272,39 @@ if [ "$(wp post list --post_type=product --format=count | tr -d '\r')" = "0" ]; 
       # in agentic-blocks.php.
       args+=(--manage_stock=true --stock_quantity="$stock_quantity")
     fi
+    if [ -n "$image" ]; then
+      # wc product create's --images only accepts an attachment ID or a
+      # remote URL WooCommerce fetches itself — a local theme asset has to be
+      # imported into the media library first to get that ID, same two-step
+      # shape as seed_post's --featured_image below.
+      local image_id
+      image_id="$( wp media import "$image" --porcelain )"
+      args+=(--images="[{\"id\":$image_id}]")
+    fi
     "${args[@]}"
   }
 
+  # bundle/skincare-set.webp is a single studio shot of exactly these three
+  # products together (labels read "ROSE QUARTZ GENTLE EXFOLIATING SCRUB",
+  # "REJUVENATING NIGHT OIL", "GENTLE GEL CLEANSER") — reused as each one's
+  # product image rather than leaving them imageless, same "delete before
+  # launch" placeholder status as the copy itself.
   seed_product 'Rejuvenating Night Oil' 'rejuvenating-night-oil' "$TREATMENTS_CAT_ID" '79.00' '' \
     'A nourishing night oil formulated with rosehip and squalane to replenish skin while you sleep. Placeholder product — delete before launch.' \
-    'Nourishing night oil with rosehip and squalane.'
+    'Nourishing night oil with rosehip and squalane.' '' \
+    'wp-content/themes/agentic-theme/assets/images/bundle/skincare-set.webp'
   seed_product 'Rose Quartz Facial Polish' 'rose-quartz-facial-polish' "$TREATMENTS_CAT_ID" '79.00' '59.00' \
     'A gentle exfoliating polish with fine rose quartz powder to reveal smoother, brighter skin. Placeholder product — delete before launch.' \
-    'Gentle exfoliating polish with rose quartz powder.'
+    'Gentle exfoliating polish with rose quartz powder.' '' \
+    'wp-content/themes/agentic-theme/assets/images/bundle/skincare-set.webp'
   seed_product 'Hydrating Body Serum' 'hydrating-body-serum' "$MOISTURIZERS_CAT_ID" '79.00' '' \
     'A lightweight, fast-absorbing serum that locks in moisture for up to 24 hours. Placeholder product — delete before launch.' \
-    'Lightweight, fast-absorbing hydrating serum.' '2'
+    'Lightweight, fast-absorbing hydrating serum.' '2' \
+    'wp-content/themes/agentic-theme/assets/images/hero/product-right.webp'
   seed_product 'Gentle Gel Cleanser' 'gentle-gel-cleanser' "$CLEANSERS_CAT_ID" '39.00' '29.00' \
     'A soap-free gel cleanser that lifts away impurities without stripping the skin. Placeholder product — delete before launch.' \
-    'Soap-free gel cleanser for daily use.'
+    'Soap-free gel cleanser for daily use.' '' \
+    'wp-content/themes/agentic-theme/assets/images/bundle/skincare-set.webp'
 else
   echo "   products already exist — skipping"
 fi
