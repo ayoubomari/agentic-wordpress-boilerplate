@@ -1,5 +1,6 @@
 node_modules/
 agentic-blocks/build/
+.env
 lighthouse-report.json
 *.log
 .wp-env-override.json
