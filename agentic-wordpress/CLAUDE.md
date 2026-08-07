@@ -125,7 +125,12 @@ read `identity/` and `styles/`. Translate what you find into code —
 Fonts you actually use must be copied into
 `theme/agentic-theme/assets/fonts/` and registered in `theme.json`; WordPress
 can only serve fonts from inside the theme. If the folder is absent or empty,
-keep the current neutral defaults and say so — do not invent a brand.
+keep the current defaults and say so — do not invent a brand.
+
+See the `apply-brand-input` skill (`.claude/skills/apply-brand-input/`) for
+the concrete step-by-step version of this — how to reconcile this folder, a
+user's written prompt, and a pasted reference screenshot into one set of
+`theme.json`/attribute edits.
 
 ## Stack (what's pre-installed, all free)
 - **WooCommerce** (official, free) — ecommerce engine
@@ -225,35 +230,27 @@ template parts**. Never let WooCommerce fall back to its PHP templates.
 | `page-cart`, `page-checkout`, `page-my-account` | WooCommerce pages |
 | `order-confirmation` | Post-purchase |
 
-### Navigation menus — deliberately dashboard-editable
-Header and footer menu **items** are NOT hardcoded in the template files, and
-must not be turned back into hardcoded links. They are `wp_navigation` menus,
-editable by the store owner in **Appearance → Editor → Navigation**:
+### Navigation menus — hardcoded, like everything else
+Header and footer menu **items** are plain `wp:navigation-link` blocks
+written directly into `parts/header.html` and `parts/footer.html`, using
+core's Navigation block with real inner links instead of a `ref` to a
+`wp_navigation` post:
 
-| Slug | Where |
-|---|---|
-| `header-menu` | Main header nav |
-| `footer-shop` | Footer "Shop" column |
-| `footer-help` | Footer "Help" column |
-
-Templates reference them by slug, never by numeric ID:
 ```html
-<!-- wp:navigation {"agenticMenu":"header-menu","overlayMenu":"mobile"} /-->
+<!-- wp:navigation {"overlayMenu":"mobile"} -->
+<!-- wp:navigation-link {"label":"Shop","url":"/shop/","kind":"custom","isTopLevelLink":true} /-->
+<!-- /wp:navigation -->
 ```
-`agenticMenu` is resolved to the core Navigation block's `ref` at render time
-by a `render_block_data` filter in `theme/agentic-theme/functions.php`. This
-exists because `ref` is a post ID that differs in every install, so a template
-committed to this repo could never hardcode one and still work in a clone.
 
-`scripts/setup-site.sh` creates the three menus **only if missing**, so
-re-running it never overwrites the owner's edits.
+This boilerplate is fully agentic-oriented: there is no dashboard-editable
+content left as an exception, including navigation. Changing a menu means
+editing the template part file and, if needed, verifying with a screenshot —
+the same workflow as any other section change. There is no `wp_navigation`
+post, no `agenticMenu` attribute, and no `ensure_menu` step in
+`setup-site.sh` to keep in sync — this *is* the sync.
 
-**This is not a violation of the code-first rule.** Menu items are content, not
-layout — the same split Shopify makes, where sections live in theme files but
-menus live in the admin. Layout (where the nav sits, how it is styled) stays in
-`parts/header.html` and `theme.json`. To add a *new* menu: add an
-`ensure_menu` call in `setup-site.sh` and reference the new slug from a
-template part.
+To add a new menu location: write the `wp:navigation` + `wp:navigation-link`
+blocks directly into the relevant template part.
 
 ### Homepage and Journal — how the routing works
 `scripts/setup-site.sh` creates two container pages and points WordPress at
@@ -371,19 +368,43 @@ no separate build step. Run it manually after editing any `index.js`.
   first.
 
 ## Verification workflow (after writing/editing code — not for building)
+Screenshot and Lighthouse checks are **opt-in, not automatic**. Once a
+block/template change is done, ask the user whether they want a visual check
+and/or a Lighthouse run before moving on — don't run either by default
+unless their own request already implied it (e.g. "build X and show me a
+screenshot"). This keeps the agent from burning a screenshot + a ~15s
+Lighthouse run after every single small edit when the user is mid-iteration
+and would rather batch verification at the end.
+
 1. `wp-env run cli wp plugin activate agentic-blocks` (only if not already active)
-2. Via Playwright MCP: open a page that uses the new template/block and take
-   a screenshot, purely to visually confirm the code renders as intended
-3. Run `./scripts/lighthouse-check.sh <path> [min-score] [categories]` — it
-   exits non-zero if any category is below the threshold (default 90), since
-   the whole point of this boilerplate is zero bloat. Treat a non-zero exit as
-   a failing check, not a suggestion.
+2. If the user wants a visual check: see the `playwright-verify` skill
+   (`.claude/skills/playwright-verify/`) — screenshot via Playwright MCP,
+   purely to confirm the code renders as intended, never to build content.
+3. If the user wants a performance check: see the `lighthouse-optimize`
+   skill (`.claude/skills/lighthouse-optimize/`) —
+   `./scripts/lighthouse-check.sh <path> [min-score] [categories]`, which
+   exits non-zero if any category is below threshold (default 90). Treat a
+   non-zero exit as a failing check, not a suggestion.
    - Cart, checkout, and my-account are intentionally **noindex**, so their
      SEO score is legitimately low. Audit those without the seo category:
      `./scripts/lighthouse-check.sh /cart/ 90 performance,accessibility,best-practices`
      Do not try to make them indexable.
 4. Fix issues by editing the source files again — never by adjusting
    settings through the UI
+
+## Skills
+Recurring workflows for this boilerplate are written up as Claude Code
+skills under `.claude/skills/`, each self-contained and grounded in this
+repo's actual code (not generic advice):
+
+| Skill | For |
+|---|---|
+| `playwright-verify` | Screenshotting a page/template/block to confirm it renders as intended — see "Verification workflow" above for when to invoke it |
+| `lighthouse-optimize` | Running the Lighthouse gate and fixing the specific LCP/render-blocking/caching failure modes that actually recur in this codebase |
+| `image-to-webp` | Converting a sourced or generated PNG/JPG into WebP, sized/cropped to the target block's aspect ratio, before it goes into `assets/images/` |
+| `responsive-design` | The breakpoints, fluid-type, and aspect-ratio conventions each block already follows |
+| `apply-brand-input` | Turning a written brand prompt, a reference screenshot, and/or `../system-design/` into actual `theme.json`/block-attribute edits |
+| `ai-image-prompts` | Writing an AI image-generation prompt matched to a block's aspect ratio and the current design language, including how to handle a user-supplied image-gen API key without it touching git or chat output |
 
 ## Site setup lives in code too
 `scripts/setup-site.sh` is the code-first equivalent of the WooCommerce
@@ -406,8 +427,6 @@ in sync: a new owner-only setup step belongs in **both** places.
 These are the store owner's job, not the agent's, and editing them in wp-admin
 is **not** a violation of the code-first rule — they are content or external
 credentials, not layout:
-- **Navigation menus** (Appearance → Editor → Navigation) — see the
-  Navigation menus section above. Seeded once, then owned by the store.
 - Product catalogue, prices, images, and descriptions
 - Page copy for About / policy pages
 - Payment gateway credentials (Stripe/PayPal API keys)
@@ -425,10 +444,10 @@ credentials, not layout:
   constants (not edited into `functions.php`), see the Stack section above
 
 ## Do NOT
-- Do not hardcode navigation links back into `parts/header.html` or
-  `parts/footer.html` — menus are owner-editable `wp_navigation` menus,
-  referenced by slug. Do not hardcode a numeric `ref` either; it breaks on
-  every clone.
+- Do not turn navigation menus back into owner-editable `wp_navigation`
+  posts — menu items are hardcoded `wp:navigation-link` blocks in
+  `parts/header.html`/`parts/footer.html`, same as every other section. See
+  "Navigation menus" above.
 - Do not install a page builder (Elementor, Divi, etc.)
 - Do not build pages/content by driving the browser UI — write the
   template/block files instead

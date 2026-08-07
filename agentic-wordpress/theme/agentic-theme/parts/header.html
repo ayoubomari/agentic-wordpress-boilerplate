@@ -11,10 +11,13 @@
 
     <!-- wp:site-title {"level":0} /-->
 
-    <!-- Menu items are editable in Appearance → Editor → Navigation.
-         "header-menu" is a wp_navigation slug, resolved to a ref in
-         functions.php — do not replace it with a hardcoded numeric ref. -->
-    <!-- wp:navigation {"agenticMenu":"header-menu","overlayMenu":"mobile","layout":{"type":"flex","justifyContent":"center","flexWrap":"wrap"},"style":{"spacing":{"blockGap":"var:preset|spacing|40"}}} /-->
+    <!-- Menu items are hardcoded here, not owner-editable — see
+         "Navigation menus" in CLAUDE.md. -->
+    <!-- wp:navigation {"overlayMenu":"mobile","layout":{"type":"flex","justifyContent":"center","flexWrap":"wrap"},"style":{"spacing":{"blockGap":"var:preset|spacing|40"}}} -->
+    <!-- wp:navigation-link {"label":"Shop","url":"/shop/","kind":"custom","isTopLevelLink":true} /-->
+    <!-- wp:navigation-link {"label":"About","url":"/about-us/","kind":"custom","isTopLevelLink":true} /-->
+    <!-- wp:navigation-link {"label":"Journal","url":"/journal/","kind":"custom","isTopLevelLink":true} /-->
+    <!-- /wp:navigation -->
 
     <!-- wp:group {"layout":{"type":"flex","flexWrap":"nowrap"},"style":{"spacing":{"blockGap":"var:preset|spacing|30"}}} -->
     <div class="wp-block-group">

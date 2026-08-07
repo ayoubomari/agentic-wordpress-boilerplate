@@ -117,16 +117,14 @@ cd agentic-blocks && npm install && npm run build
 `setup-site.sh` runs this on `wp-env start`, so a fresh clone needs no
 separate build step; run it manually after editing any `index.js`.
 
-## Content that stays out of git-tracked templates, by design
+## Content handled outside plain template markup, by design
 
-- **Navigation menus** — header/footer menu *items* are real
-  `wp_navigation` posts, editable in Appearance → Editor → Navigation, not
-  hardcoded links in `parts/*.html`. Templates reference them by slug
-  (`agenticMenu: "header-menu"`), resolved to a post-ID `ref` at render
-  time by a `render_block_data` filter in `functions.php` — because `ref`
-  is a per-install post ID, a committed template can never hardcode one.
-  `setup-site.sh` creates the three menus (`header-menu`, `footer-shop`,
-  `footer-help`) only if missing, so re-runs never clobber owner edits.
+Header and footer navigation is **not** one of these exceptions — menu
+items are plain `wp:navigation-link` blocks hardcoded into
+`parts/header.html`/`parts/footer.html`, same as every other section, with
+no dashboard-editable menu behind them. See "Navigation menus" in
+`CLAUDE.md`.
+
 - **Form submissions** — `newsletter-signup` posts to `admin-post.php`
   (nonce + honeypot) into a private `agentic_form_entry` CPT
   (`agentic-blocks/inc/form-entries.php`) and emails the admin, rather than
@@ -203,16 +201,33 @@ Visit:
 
 ## Verification workflow
 
-After writing or editing code (not for building it):
+Screenshot and Lighthouse checks are opt-in — Claude asks before running
+either, rather than doing it after every edit, so quick iteration isn't
+blocked on a check each time. When you do want one:
 1. `wp-env run cli wp plugin activate agentic-blocks` if not already active
 2. Screenshot the affected page via Playwright — visual confirmation only,
-   never how the change was made
+   never how the change was made (`.claude/skills/playwright-verify/`)
 3. `./scripts/lighthouse-check.sh <path> [min-score] [categories]` — fails
    non-zero under the threshold (default 90). Cart/checkout/account are
-   intentionally noindex, so audit those without the `seo` category.
+   intentionally noindex, so audit those without the `seo` category
+   (`.claude/skills/lighthouse-optimize/`)
 
 Fix issues by editing source files again — never by adjusting settings
 through the UI.
+
+## Skills
+
+Recurring workflows live under `.claude/skills/`, each grounded in this
+repo's actual code:
+
+| Skill | For |
+|---|---|
+| `playwright-verify` | Screenshotting a page/template/block to confirm it renders as intended |
+| `lighthouse-optimize` | Running the Lighthouse gate and fixing the LCP/render-blocking/caching failures that actually recur here |
+| `image-to-webp` | Converting a sourced/generated image to WebP, sized to the target block's aspect ratio |
+| `responsive-design` | Breakpoints, fluid type, and aspect-ratio conventions each block follows |
+| `apply-brand-input` | Turning a prompt, reference screenshot, and/or `../system-design/` into `theme.json`/attribute edits |
+| `ai-image-prompts` | AI image-generation prompts matched to a block's aspect ratio and design language, plus safe handling of a user-supplied image-gen API key |
 
 ## Adding a section or page
 

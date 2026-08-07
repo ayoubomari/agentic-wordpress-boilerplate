@@ -560,78 +560,6 @@ add_action(
 );
 
 /**
- * Let templates reference navigation menus by a stable slug.
- *
- * The core Navigation block points at a menu by numeric post ID (`ref`), which
- * is different in every install — so a template committed to this repo can
- * never hardcode one and still work in a clone.
- *
- * This resolves a custom `agenticMenu` attribute (a `wp_navigation` slug) into
- * the right `ref` at render time:
- *
- *     <!-- wp:navigation {"agenticMenu":"header-menu"} /-->
- *
- * The menus themselves are created by scripts/setup-site.sh and are then fully
- * editable by the store owner in Appearance → Editor → Navigation. Menu items
- * are content, not layout — the same split Shopify makes, where sections live
- * in theme files but menus live in the admin.
- *
- * Uses `render_block_data` rather than the block's own attributes because
- * `prepare_attributes_for_render()` drops attributes that are not in the block
- * schema; the raw parsed attributes are still intact at this point.
- */
-add_filter(
-	'render_block_data',
-	function ( $parsed_block ) {
-		if ( 'core/navigation' !== ( $parsed_block['blockName'] ?? '' ) ) {
-			return $parsed_block;
-		}
-
-		$slug = $parsed_block['attrs']['agenticMenu'] ?? '';
-		if ( '' === $slug ) {
-			return $parsed_block;
-		}
-
-		$menu_id = agentic_get_navigation_id( $slug );
-		if ( $menu_id ) {
-			$parsed_block['attrs']['ref'] = $menu_id;
-		}
-
-		return $parsed_block;
-	}
-);
-
-/**
- * Look up a wp_navigation menu by slug, with a short-lived cache so a page
- * with several menus does not run the same query repeatedly.
- *
- * @param string $slug Menu slug, e.g. "header-menu".
- * @return int Menu post ID, or 0 if there is no menu with that slug.
- */
-function agentic_get_navigation_id( $slug ) {
-	static $cache = [];
-
-	if ( isset( $cache[ $slug ] ) ) {
-		return $cache[ $slug ];
-	}
-
-	$menus = get_posts(
-		[
-			'post_type'        => 'wp_navigation',
-			'name'             => $slug,
-			'post_status'      => 'publish',
-			'numberposts'      => 1,
-			'suppress_filters' => false,
-			'no_found_rows'    => true,
-		]
-	);
-
-	$cache[ $slug ] = $menus ? (int) $menus[0]->ID : 0;
-
-	return $cache[ $slug ];
-}
-
-/**
  * Restyle the header's mobile nav drawer (parts/header.html's
  * `wp:navigation {"overlayMenu":"mobile"}`) to match Shopify Sleek's mobile
  * menu — a site title next to the close button, and a bottom row (Log In +
@@ -650,13 +578,14 @@ function agentic_get_navigation_id( $slug ) {
  *    nested `<ul>` that closes *before* the top-level one — is where the
  *    footer row gets appended, right before the wrapping divs close.
  *
- * Scoped to `agenticMenu === "header-menu"` so the footer's own navs
- * (`overlayMenu:"never"`, no drawer to touch) are never touched.
+ * Scoped to `overlayMenu === "mobile"` — only the header nav uses a mobile
+ * overlay, so this can't touch the footer's own navs (`overlayMenu:"never"`,
+ * no drawer to touch).
  */
 add_filter(
 	'render_block_core/navigation',
 	function ( $block_content, $parsed_block ) {
-		if ( ( $parsed_block['attrs']['agenticMenu'] ?? '' ) !== 'header-menu' ) {
+		if ( ( $parsed_block['attrs']['overlayMenu'] ?? '' ) !== 'mobile' ) {
 			return $block_content;
 		}
 

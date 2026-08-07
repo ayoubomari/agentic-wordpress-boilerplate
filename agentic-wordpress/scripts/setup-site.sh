@@ -14,7 +14,7 @@ cd "$(dirname "$0")/.."
 # as empty and fails.
 wp() { wp-env run cli wp "$@"; }
 
-echo "→ [1/14] Building block editor scripts"
+echo "→ [1/13] Building block editor scripts"
 # block.json points editorScript at build/<block>/index.js, so the bundle must
 # exist before the plugin is activated or blocks register without editor UI.
 if [ -d agentic-blocks/blocks ]; then
@@ -24,13 +24,13 @@ if [ -d agentic-blocks/blocks ]; then
   ( cd agentic-blocks && npm run build --silent )
 fi
 
-echo "→ [2/14] Installing WooCommerce + Yoast SEO (free, from wordpress.org)"
+echo "→ [2/13] Installing WooCommerce + Yoast SEO (free, from wordpress.org)"
 # Installed by slug via WP-CLI rather than as .wp-env.json zip URLs: zip
 # sources land in folders named after the zip (woocommerce.latest-stable),
 # which leaks into asset URLs and collides with a slug-named second copy.
 wp plugin install woocommerce wordpress-seo --activate
 
-echo "→ [3/14] Installing essential add-ons (free, from wordpress.org)"
+echo "→ [3/13] Installing essential add-ons (free, from wordpress.org)"
 # Two things WooCommerce doesn't handle on its own, both free and both things
 # an actual store cannot skip:
 #   - wp-mail-smtp: WordPress's default wp_mail() gets spam-filtered by most
@@ -51,56 +51,18 @@ wp option update updraft_interval_db 'daily'
 wp option update updraft_retain '7'
 wp option update updraft_retain_db '7'
 
-echo "→ [4/14] Activating theme + agentic-blocks"
+echo "→ [4/13] Activating theme + agentic-blocks"
 wp theme activate agentic-theme
 wp plugin activate agentic-blocks
 
-echo "→ [5/14] Navigation menus"
-# Menu *items* are content the store owner edits in
-# Appearance → Editor → Navigation — not layout baked into a template file.
-# Templates reference these by slug via the `agenticMenu` attribute, resolved
-# to a post ID in theme/agentic-theme/functions.php, because the core
-# Navigation block's own `ref` is a numeric ID that differs in every install.
-#
-# Done early, before anything renders a page: if a Navigation block renders
-# while these are missing, WordPress silently auto-creates a stray fallback
-# menu that then clutters the owner's Navigation list.
-#
-# Created only if missing, so re-running never clobbers the owner's edits.
-ensure_menu() {
-	local slug="$1" title="$2" content="$3" existing
-	existing="$( wp post list --post_type=wp_navigation --name="$slug" --field=ID --format=csv | tr -d '\r\n' )"
-	if [ -n "$existing" ]; then
-		echo "   menu '$slug' already exists (#$existing) — leaving it alone"
-		return
-	fi
-	wp post create \
-		--post_type=wp_navigation \
-		--post_title="$title" \
-		--post_name="$slug" \
-		--post_status=publish \
-		--post_content="$content" \
-		--porcelain >/dev/null
-	echo "   created menu '$slug'"
-}
-
-ensure_menu 'header-menu' 'Header' \
-'<!-- wp:navigation-link {"label":"Shop","url":"/shop/","kind":"custom","isTopLevelLink":true} /--><!-- wp:navigation-link {"label":"About","url":"/about-us/","kind":"custom","isTopLevelLink":true} /--><!-- wp:navigation-link {"label":"Journal","url":"/journal/","kind":"custom","isTopLevelLink":true} /-->'
-
-ensure_menu 'footer-shop' 'Footer — Shop' \
-'<!-- wp:navigation-link {"label":"All products","url":"/shop/","kind":"custom","isTopLevelLink":true} /--><!-- wp:navigation-link {"label":"Cart","url":"/cart/","kind":"custom","isTopLevelLink":true} /--><!-- wp:navigation-link {"label":"My account","url":"/my-account/","kind":"custom","isTopLevelLink":true} /-->'
-
-ensure_menu 'footer-help' 'Footer — Help' \
-'<!-- wp:navigation-link {"label":"Shipping &amp; returns","url":"/sample-page/","kind":"custom","isTopLevelLink":true} /--><!-- wp:navigation-link {"label":"Contact","url":"/sample-page/","kind":"custom","isTopLevelLink":true} /--><!-- wp:navigation-link {"label":"Privacy policy","url":"/privacy-policy/","kind":"custom","isTopLevelLink":true} /-->'
-
-echo "→ [6/14] Completing WooCommerce installation"
+echo "→ [5/13] Completing WooCommerce installation"
 # WooCommerce defers part of its installer to the first request after
 # activation, and that deferred run writes its own defaults. Forcing it to
 # finish synchronously here means the settings written below actually stick
 # instead of being silently overwritten a moment later.
 wp eval 'if ( class_exists( "WC_Install" ) ) { WC_Install::install(); }'
 
-echo "→ [7/14] Permalinks"
+echo "→ [6/13] Permalinks"
 # Flat /%postname%/ — the sane structure for products; the WP default
 # day-and-name buries /shop/ URLs under a date path.
 wp rewrite structure '/%postname%/' --hard
@@ -137,7 +99,7 @@ wp eval '
 	);
 '
 
-echo "→ [8/14] Store defaults"
+echo "→ [7/13] Store defaults"
 wp option update blogdescription 'A code-first WooCommerce store'
 wp option update woocommerce_store_country 'US:CA'
 wp option update woocommerce_currency 'USD'
@@ -145,7 +107,7 @@ wp option update woocommerce_currency 'USD'
 # otherwise force clicking through the UI before the store works.
 wp option update woocommerce_onboarding_profile '{"skipped":true}' --format=json
 
-echo "→ [9/14] Front page + Journal"
+echo "→ [8/13] Front page + Journal"
 # The storefront must be a static page, not the post feed. Blog posts live at
 # /journal/ instead.
 #
@@ -196,7 +158,7 @@ wp eval '
 	}
 '
 
-echo "→ [10/14] About Us page"
+echo "→ [9/13] About Us page"
 # Same container-page pattern as Home/Journal above: the page record exists
 # only so WordPress has something to route /about-us/ to. The actual content
 # lives in templates/page-about-us.html, resolved automatically by WordPress's
@@ -217,7 +179,7 @@ wp eval '
 	}
 '
 
-echo "→ [11/14] Legal pages"
+echo "→ [10/13] Legal pages"
 # WordPress core auto-creates a "Privacy Policy" page (draft, at
 # /privacy-policy/) on every fresh install — there is no equivalent core
 # default for Terms of Use, so it's created here the same way: idempotent,
@@ -242,7 +204,7 @@ else
   echo "   page 'terms-of-use' already exists — leaving it alone"
 fi
 
-echo "→ [12/14] Seeding sample products (so templates are verifiable)"
+echo "→ [11/13] Seeding sample products (so templates are verifiable)"
 # Four, not one: a single product leaves the product grid and the "related
 # products" collection with nothing to show, which hides real template bugs.
 # Spread across three of the five categories (not one catch-all) so
@@ -329,7 +291,7 @@ else
   echo "   products already exist — skipping"
 fi
 
-echo "→ [13/14] Seeding Journal posts (so agentic/latest-posts has real content)"
+echo "→ [12/13] Seeding Journal posts (so agentic/latest-posts has real content)"
 # WordPress core seeds a "Hello world!" sample post on every fresh install —
 # harmless on its own, but it would sit in the Journal archive and
 # occasionally surface in agentic/latest-posts' "3 most recent" query
@@ -413,7 +375,7 @@ else
   echo "   posts already exist — skipping"
 fi
 
-echo "→ [14/14] Disabling WooCommerce Coming Soon mode"
+echo "→ [13/13] Disabling WooCommerce Coming Soon mode"
 # WooCommerce 9.1+ ships this ON. Left alone it replaces the entire storefront
 # with a "Great things are on the horizon" splash for logged-out visitors, so
 # templates cannot be verified and nothing is indexable.
