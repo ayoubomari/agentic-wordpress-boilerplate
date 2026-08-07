@@ -29,7 +29,7 @@ if ( empty( $items ) ) {
 
 wp_enqueue_script( 'agentic-carousel' );
 ?>
-<section <?php echo agentic_section_classes( 'testimonials', [ 'agentic-carousel' ] ); ?>>
+<section <?php echo agentic_section_classes( 'testimonials', [ 'agentic-carousel' ] ); ?> data-agentic-reveal-mode="stagger-css">
 	<?php if ( $heading ) : ?>
 		<h2 class="agentic-testimonials__heading"><?php echo esc_html( $heading ); ?></h2>
 	<?php endif; ?>

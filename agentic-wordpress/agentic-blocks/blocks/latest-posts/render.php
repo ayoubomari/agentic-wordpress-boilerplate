@@ -90,7 +90,7 @@ if ( empty( $posts ) ) {
 			$post = $related_post;
 			setup_postdata( $post );
 			?>
-			<li class="agentic-latest-posts__item">
+			<li class="agentic-latest-posts__item agentic-reveal-item">
 				<a class="agentic-latest-posts__link" href="<?php the_permalink(); ?>">
 					<span class="agentic-latest-posts__media">
 						<?php if ( has_post_thumbnail() ) : ?>

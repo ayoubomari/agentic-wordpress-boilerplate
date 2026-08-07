@@ -93,7 +93,7 @@ $render_grid = static function ( $products, $columns ) {
 	?>
 	<ul class="agentic-featured-collection__grid" style="--agentic-columns:<?php echo esc_attr( $columns ); ?>">
 		<?php foreach ( $products as $product ) : ?>
-			<li class="agentic-product-card">
+			<li class="agentic-product-card agentic-reveal-item">
 				<a class="agentic-product-card__link" href="<?php echo esc_url( get_permalink( $product->get_id() ) ); ?>">
 					<span class="agentic-product-card__media">
 						<?php

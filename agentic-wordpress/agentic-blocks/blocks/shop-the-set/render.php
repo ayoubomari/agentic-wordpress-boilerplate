@@ -98,7 +98,7 @@ $ajax_url    = class_exists( 'WC_AJAX' ) ? WC_AJAX::get_endpoint( 'add_to_cart' 
 		<ol class="agentic-shop-the-set__list">
 			<?php foreach ( $rows as $i => $row ) : ?>
 				<?php $product = $row['product']; ?>
-				<li class="agentic-shop-the-set__row" data-shop-set-row data-shop-set-index="<?php echo esc_attr( (string) $i ); ?>">
+				<li class="agentic-shop-the-set__row agentic-reveal-item" data-shop-set-row data-shop-set-index="<?php echo esc_attr( (string) $i ); ?>">
 					<span class="agentic-shop-the-set__number" aria-hidden="true"><?php echo esc_html( (string) ( $i + 1 ) ); ?></span>
 
 					<a class="agentic-shop-the-set__row-media" href="<?php echo esc_url( get_permalink( $product->get_id() ) ); ?>">

@@ -67,7 +67,7 @@ $group_name = wp_unique_id( 'agentic-faq-accordion-' );
 		<div class="agentic-faq-accordion__list">
 			<?php foreach ( $items as $index => $item ) : ?>
 				<?php if ( empty( $item['question'] ) ) { continue; } ?>
-				<details class="agentic-faq-accordion__item" name="<?php echo esc_attr( $group_name ); ?>" <?php echo ( $has_intro && 0 === $index ) ? 'open' : ''; ?>>
+				<details class="agentic-faq-accordion__item agentic-reveal-item" name="<?php echo esc_attr( $group_name ); ?>" <?php echo ( $has_intro && 0 === $index ) ? 'open' : ''; ?>>
 					<summary class="agentic-faq-accordion__question">
 						<?php echo esc_html( $item['question'] ); ?>
 					</summary>

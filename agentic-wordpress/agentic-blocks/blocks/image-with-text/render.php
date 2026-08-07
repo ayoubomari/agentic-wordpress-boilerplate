@@ -35,7 +35,7 @@ if ( '' !== $bg_color ) {
 ?>
 <section <?php echo agentic_section_classes( 'image-with-text', $modifiers ); ?>
 	<?php echo $style ? 'style="' . esc_attr( $style ) . '"' : ''; ?>>
-	<div class="agentic-image-with-text__media">
+	<div class="agentic-image-with-text__media agentic-reveal-item">
 		<?php if ( $image_url ) : ?>
 			<img src="<?php echo esc_url( $image_url ); ?>" alt="<?php echo esc_attr( $image_alt ); ?>" loading="lazy" decoding="async" />
 		<?php else : ?>
@@ -43,7 +43,7 @@ if ( '' !== $bg_color ) {
 		<?php endif; ?>
 	</div>
 
-	<div class="agentic-image-with-text__content">
+	<div class="agentic-image-with-text__content agentic-reveal-item">
 		<div class="agentic-image-with-text__content-inner">
 			<?php if ( $eyebrow ) : ?>
 				<p class="agentic-image-with-text__eyebrow"><?php echo esc_html( $eyebrow ); ?></p>

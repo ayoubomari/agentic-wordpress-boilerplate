@@ -1,0 +1,154 @@
+/*
+ * Scroll-reveal — enqueued only on templates with reveal-eligible content
+ * (see functions.php). `agentic-reveal` / `agentic-reveal-item` /
+ * `[data-agentic-reveal-mode]` are pure markup *contracts* (added in
+ * render.php or by scroll-reveal.js) — none of them carry any opacity/
+ * transform on their own. The actual hidden state only ever applies once
+ * scroll-reveal.js also adds `is-agentic-pending` (below the fold, revealed
+ * by IntersectionObserver) or `is-agentic-load-pending` (already on screen
+ * at load, revealed almost immediately on the next animation frame — a
+ * fast ~0.4s fade rather than the slower ~0.6–0.9s scroll one). Which one
+ * applies is decided by scroll-reveal.js checking getBoundingClientRect()
+ * before adding either class. That split matters: an element that starts
+ * server-rendered with `agentic-reveal-item` and an unconditional
+ * `opacity:0` would be hidden from first paint regardless of JS timing —
+ * measured on the shop page, where product-subcategories' tiles sit above
+ * the fold and are the page's Largest Contentful Paint element; a version
+ * of this file that hid them behind an *indefinite* scroll trigger tanked
+ * the LCP score outright. The `-load-pending` fast path exists so
+ * above-the-fold content still gets a reveal instead of either that
+ * regression or the opposite extreme of no animation at all — it costs a
+ * little LCP (anything starting at opacity:0 delays "largest paint" until
+ * it reaches opacity:1) but far less than an indefinite wait.
+ *
+ * Three reveal modes, chosen per-section by scroll-reveal.js based on what
+ * markup is actually present:
+ *
+ * 1. Whole-section fade (`.agentic-reveal`) — the default, for sections
+ *    with no natural sub-items to stagger (photo-marquee is a continuous
+ *    marquee already in motion).
+ * 2. Per-item stagger (`.agentic-reveal-item`) — for sections that mark
+ *    their own repeating children in render.php: featured-collection
+ *    (`.agentic-product-card`), collection-list
+ *    (`.agentic-collection-list__item`), shop-the-set
+ *    (`.agentic-shop-the-set__row`), photo-statement
+ *    (`.agentic-photo-statement__line`), image-with-text (its media/content
+ *    halves), product-subcategories (`.agentic-product-subcategories__item`),
+ *    plus WooCommerce's own product-collection grid (marked via a
+ *    render_block filter in functions.php). Each item reveals individually,
+ *    staggered by DOM order — safe because none of these sit inside a
+ *    clipping/overflow container.
+ * 3. CSS-only stagger (`[data-agentic-reveal-mode="stagger-css"]`) — for
+ *    testimonials only. Its cards sit inside a horizontally-scrolling,
+ *    clipped `agentic-carousel__track`; a card scrolled out of view there
+ *    is clipped out of the intersection rect entirely, so per-item
+ *    IntersectionObserver (mode 2) would leave it permanently invisible.
+ *    Instead JS observes the *section* only (no fade on the section itself
+ *    — the heading stays put) and this file cascades the reveal into each
+ *    card via plain nth-child transition-delay once `.is-agentic-visible`
+ *    lands on the section, regardless of each card's own clip state.
+ */
+.agentic-reveal.is-agentic-pending,
+.agentic-reveal-item.is-agentic-pending {
+  opacity: 0;
+  transform: translateY(32px);
+  transition:
+    opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--agentic-reveal-delay, 0s);
+}
+
+.agentic-reveal-item.is-agentic-pending {
+  transform: translateY(24px);
+  transition-duration: 0.6s;
+}
+
+.agentic-reveal.is-agentic-load-pending,
+.agentic-reveal-item.is-agentic-load-pending {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--agentic-reveal-delay, 0s);
+}
+
+.agentic-reveal.is-agentic-visible,
+.agentic-reveal-item.is-agentic-visible {
+  opacity: 1;
+  transform: none;
+}
+
+.agentic-section[data-agentic-reveal-mode="stagger-css"].is-agentic-pending .agentic-testimonials__card,
+.agentic-section[data-agentic-reveal-mode="stagger-css"].is-agentic-pending .agentic-testimonials__figure {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.agentic-section[data-agentic-reveal-mode="stagger-css"].is-agentic-load-pending .agentic-testimonials__card,
+.agentic-section[data-agentic-reveal-mode="stagger-css"].is-agentic-load-pending .agentic-testimonials__figure {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.agentic-section[data-agentic-reveal-mode="stagger-css"].is-agentic-visible .agentic-testimonials__card,
+.agentic-section[data-agentic-reveal-mode="stagger-css"].is-agentic-visible .agentic-testimonials__figure {
+  opacity: 1;
+  transform: none;
+}
+
+.agentic-section[data-agentic-reveal-mode="stagger-css"].is-agentic-pending .agentic-testimonials__card:nth-child(2),
+.agentic-section[data-agentic-reveal-mode="stagger-css"].is-agentic-pending .agentic-testimonials__figure:nth-child(2) {
+  transition-delay: 0.09s;
+}
+
+.agentic-section[data-agentic-reveal-mode="stagger-css"].is-agentic-pending .agentic-testimonials__card:nth-child(3),
+.agentic-section[data-agentic-reveal-mode="stagger-css"].is-agentic-pending .agentic-testimonials__figure:nth-child(3) {
+  transition-delay: 0.18s;
+}
+
+.agentic-section[data-agentic-reveal-mode="stagger-css"].is-agentic-pending .agentic-testimonials__card:nth-child(4),
+.agentic-section[data-agentic-reveal-mode="stagger-css"].is-agentic-pending .agentic-testimonials__figure:nth-child(4) {
+  transition-delay: 0.27s;
+}
+
+.agentic-section[data-agentic-reveal-mode="stagger-css"].is-agentic-pending .agentic-testimonials__card:nth-child(n + 5),
+.agentic-section[data-agentic-reveal-mode="stagger-css"].is-agentic-pending .agentic-testimonials__figure:nth-child(n + 5) {
+  transition-delay: 0.36s;
+}
+
+.agentic-section[data-agentic-reveal-mode="stagger-css"].is-agentic-load-pending .agentic-testimonials__card:nth-child(2),
+.agentic-section[data-agentic-reveal-mode="stagger-css"].is-agentic-load-pending .agentic-testimonials__figure:nth-child(2) {
+  transition-delay: 0.15s;
+}
+
+.agentic-section[data-agentic-reveal-mode="stagger-css"].is-agentic-load-pending .agentic-testimonials__card:nth-child(3),
+.agentic-section[data-agentic-reveal-mode="stagger-css"].is-agentic-load-pending .agentic-testimonials__figure:nth-child(3) {
+  transition-delay: 0.3s;
+}
+
+.agentic-section[data-agentic-reveal-mode="stagger-css"].is-agentic-load-pending .agentic-testimonials__card:nth-child(n + 4),
+.agentic-section[data-agentic-reveal-mode="stagger-css"].is-agentic-load-pending .agentic-testimonials__figure:nth-child(n + 4) {
+  transition-delay: 0.45s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agentic-reveal.is-agentic-pending,
+  .agentic-reveal-item.is-agentic-pending,
+  .agentic-reveal.is-agentic-load-pending,
+  .agentic-reveal-item.is-agentic-load-pending,
+  .agentic-section[data-agentic-reveal-mode="stagger-css"].is-agentic-pending .agentic-testimonials__card,
+  .agentic-section[data-agentic-reveal-mode="stagger-css"].is-agentic-pending .agentic-testimonials__figure,
+  .agentic-section[data-agentic-reveal-mode="stagger-css"].is-agentic-load-pending .agentic-testimonials__card,
+  .agentic-section[data-agentic-reveal-mode="stagger-css"].is-agentic-load-pending .agentic-testimonials__figure {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

@@ -26,7 +26,7 @@ if ( empty( $cards ) ) {
 			$card_style .= ';background-image:url(' . esc_url( $image_url ) . ')';
 		}
 		?>
-		<div class="agentic-cta-cards__card" style="<?php echo esc_attr( $card_style ); ?>">
+		<div class="agentic-cta-cards__card agentic-reveal-item" style="<?php echo esc_attr( $card_style ); ?>">
 			<?php if ( ! $overlay && $image_url ) : ?>
 				<div class="agentic-cta-cards__media">
 					<img src="<?php echo esc_url( $image_url ); ?>" alt="" loading="lazy" decoding="async" />

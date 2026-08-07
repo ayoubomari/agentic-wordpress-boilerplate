@@ -19,7 +19,7 @@ if ( ! $lines ) {
 		<?php if ( ! is_array( $line ) || ! $line ) : ?>
 			<?php continue; ?>
 		<?php endif; ?>
-		<p class="agentic-photo-statement__line">
+		<p class="agentic-photo-statement__line agentic-reveal-item">
 			<?php foreach ( $line as $item ) : ?>
 				<?php if ( 'image' === ( $item['type'] ?? '' ) ) : ?>
 					<?php

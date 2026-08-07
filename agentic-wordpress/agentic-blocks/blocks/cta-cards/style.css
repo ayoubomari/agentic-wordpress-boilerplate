@@ -92,9 +92,17 @@
 	color: var(--wp--preset--color--base);
 }
 
+/* Larger than the default grid variant's heading — this variant reads as a
+   hero-banner-like promo strip, not a compact 3-up card row, so it needs the
+   same scale as other full-bleed panel headings (image-with-text, hero-banner). */
+.agentic-cta-cards--overlay .agentic-cta-cards__heading {
+	font-size: var(--wp--preset--font-size--x-large);
+}
+
 .agentic-cta-cards--overlay .agentic-cta-cards__cta {
 	background: var(--wp--preset--color--base);
 	color: var(--wp--preset--color--contrast);
+	border: none;
 }
 
 .agentic-cta-cards--overlay .agentic-cta-cards__cta:hover {

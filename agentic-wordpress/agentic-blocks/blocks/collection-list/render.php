@@ -43,7 +43,7 @@ if ( empty( $collections ) ) {
 				continue;
 			}
 			?>
-			<li class="agentic-collection-list__item">
+			<li class="agentic-collection-list__item agentic-reveal-item">
 				<a class="agentic-collection-list__link" href="<?php echo esc_url( $url ); ?>">
 					<span class="agentic-collection-list__media">
 						<?php if ( $image ) : ?>

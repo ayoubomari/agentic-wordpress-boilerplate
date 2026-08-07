@@ -205,6 +205,79 @@ add_action(
 );
 
 /**
+ * Scroll-reveal — fades/slides sections and card grids up as they enter the
+ * viewport (skipping the hero, which is already on screen at load — see
+ * assets/js/scroll-reveal.js for the full contract and why each block is
+ * grouped the way it is). Scoped to the specific templates that actually
+ * have reveal-eligible content, same pattern as journal.css/woocommerce.css
+ * above, rather than loaded everywhere:
+ *  - front page: the homepage's stacked agentic/* sections
+ *  - shop / product category / product tag archives: product-subcategories'
+ *    tile grid and the WooCommerce product-collection grid (see the
+ *    render_block_woocommerce/product-collection filter below, which is
+ *    what puts `agentic-reveal-item` on WooCommerce's own product cards)
+ *  - the About Us page (templates/page-about-us.html): the same stacked-
+ *    section layout as the front page, just a different set of blocks
+ *  - the Journal listing (home.html) and single posts: the post grid and
+ *    agentic/latest-posts' "Related Posts" both need the same card-grid
+ *    treatment (see the render_block_core/post-template filter below,
+ *    which marks core's own query-loop post cards the same way the
+ *    WooCommerce filter above marks product cards)
+ */
+add_action(
+	'wp_enqueue_scripts',
+	function () {
+		$is_shop_page = function_exists( 'is_shop' ) && ( is_shop() || is_product_taxonomy() );
+		$is_journal    = is_home() || is_singular( 'post' );
+		if ( ! is_front_page() && ! $is_shop_page && ! is_page( 'about-us' ) && ! $is_journal ) {
+			return;
+		}
+
+		$css_path = get_theme_file_path( 'assets/css/scroll-reveal.css' );
+		wp_enqueue_style(
+			'agentic-scroll-reveal',
+			get_theme_file_uri( 'assets/css/scroll-reveal.css' ),
+			[],
+			file_exists( $css_path ) ? (string) filemtime( $css_path ) : wp_get_theme()->get( 'Version' )
+		);
+		add_filter( 'style_loader_tag', 'agentic_async_load_scroll_reveal_css', 10, 2 );
+
+		$js_path = get_theme_file_path( 'assets/js/scroll-reveal.js' );
+		wp_enqueue_script(
+			'agentic-scroll-reveal',
+			get_theme_file_uri( 'assets/js/scroll-reveal.js' ),
+			[],
+			file_exists( $js_path ) ? (string) filemtime( $js_path ) : wp_get_theme()->get( 'Version' ),
+			true
+		);
+	}
+);
+
+/**
+ * scroll-reveal.css only matters once scroll-reveal.js adds its
+ * `is-agentic-pending`/`is-agentic-load-pending` classes — every rule in it
+ * is dead weight until then (see that file's own docblock) — so unlike
+ * woocommerce.css/journal.css above it doesn't need to block first paint.
+ * The classic "async CSS" trick: load it as `media="print"` (matches
+ * nothing on screen, so the browser fetches it without blocking render)
+ * and flip it to `media="all"` once it finishes. `wp_enqueue_style()` has
+ * no argument for this, so it's rewritten via `style_loader_tag`, scoped to
+ * just this one handle so no other stylesheet is affected. No `<noscript>`
+ * fallback needed: without JS, nothing ever adds the classes this CSS keys
+ * off of either, so content simply renders at its normal, fully-visible
+ * default either way — the same reasoning that makes this whole feature
+ * safe with JS disabled.
+ */
+if ( ! function_exists( 'agentic_async_load_scroll_reveal_css' ) ) {
+	function agentic_async_load_scroll_reveal_css( $html, $handle ) {
+		if ( 'agentic-scroll-reveal' !== $handle ) {
+			return $html;
+		}
+		return str_replace( "media='all'", "media='print' onload=\"this.media='all'\"", $html );
+	}
+}
+
+/**
  * Journal comment form — re-labelled to match the Sleek reference ("Leave a
  * comment" instead of core's default "Leave a Reply", a plain-language
  * moderation note) and dropped down to the three fields the reference
@@ -230,6 +303,8 @@ add_filter(
 );
 
 /**
+ * Featured-image LCP fix, two places:
+ *
  * single.html's post-featured-image is the largest-contentful-paint element
  * on every Journal post, but core/post-featured-image always renders it
  * `loading="lazy"` — get_the_post_thumbnail() defaults every image to lazy,
@@ -237,15 +312,34 @@ add_filter(
  * block never runs through the "skip lazy-loading for the first content
  * image" heuristic that would normally exempt it. Lazy-loading your own LCP
  * image makes the browser wait to even discover it, which is exactly what
- * tanked this template's Lighthouse performance score. Scoped to
- * is_singular( 'post' ) so it only touches this one block instance —
- * agentic/latest-posts' thumbnails further down the same page are offscreen
- * and should stay lazy.
+ * tanked this template's Lighthouse performance score.
+ *
+ * home.html's Journal listing has the same problem for a different reason:
+ * its featured-post banner (a single-item query independent of, and
+ * rendered before, the main 3-column grid below it) is the first thing on
+ * the page and almost always the LCP element there, but it's still just a
+ * post-featured-image block and inherits the same always-lazy default.
+ * is_home() alone can't distinguish "the hero" from "one of the nine grid
+ * thumbnails further down the same page" (which really do need to stay
+ * lazy) — core/post-featured-image doesn't put `queryId` in its block
+ * context, so there's no attribute to key off. What's reliably true
+ * instead: PHP renders the page top to bottom, and the hero always comes
+ * first in template source order, so the first time this filter fires
+ * during an is_home() request is always the hero — a plain static counter
+ * captures exactly that without needing any block context at all.
  */
 add_filter(
 	'render_block_core/post-featured-image',
 	function ( $block_content ) {
-		if ( ! is_singular( 'post' ) ) {
+		static $journal_call_count = 0;
+
+		$is_single_hero = is_singular( 'post' );
+		if ( is_home() ) {
+			++$journal_call_count;
+		}
+		$is_journal_hero = is_home() && 1 === $journal_call_count;
+
+		if ( ! $is_single_hero && ! $is_journal_hero ) {
 			return $block_content;
 		}
 		return str_replace( 'loading="lazy"', 'fetchpriority="high"', $block_content );
@@ -308,6 +402,44 @@ add_filter(
 );
 
 /**
+ * Shop/category/tag product grid — marks each of WooCommerce's own product
+ * cards `agentic-reveal-item`, the same scroll-reveal contract
+ * agentic/featured-collection's and agentic/collection-list's render.php
+ * files use for their own cards (see assets/js/scroll-reveal.js). The core
+ * Product Collection block has no attribute to add a custom class to its
+ * cards, so — same technique as the hover-image filter above — this
+ * string-inserts the class into the block's own rendered output rather
+ * than restructuring the markup. `<li class="wc-block-product ` is always
+ * followed by a space before more classes (post ID, product, stock status,
+ * …), so this is a targeted match, not a broad string replace.
+ */
+add_filter(
+	'render_block_woocommerce/product-collection',
+	function ( $block_content ) {
+		return str_replace( '<li class="wc-block-product ', '<li class="wc-block-product agentic-reveal-item ', $block_content );
+	}
+);
+
+/**
+ * Journal listing (home.html) and Related Posts (agentic/latest-posts uses
+ * its own markup already, but its host page still needs this asset — see
+ * the enqueue above) — marks core's Query Loop post cards
+ * `agentic-reveal-item`, same reasoning and technique as the WooCommerce
+ * product-collection filter above. `<li class="wp-block-post ` is always
+ * followed by a space before more classes (post ID, categories, …), so
+ * this is a targeted match. Fires for every core/post-template on the
+ * site, including the Journal's single-item "featured post" banner query —
+ * harmless there since scroll-reveal.js never hides anything already on
+ * screen at load, which that banner always is.
+ */
+add_filter(
+	'render_block_core/post-template',
+	function ( $block_content ) {
+		return str_replace( '<li class="wp-block-post ', '<li class="wp-block-post agentic-reveal-item ', $block_content );
+	}
+);
+
+/**
  * Front-page performance. Three Lighthouse findings on "/", all fixable
  * without touching any visual output:
  *
@@ -315,9 +447,10 @@ add_filter(
  *    knowable once the browser parses an inline `background-image` style
  *    deep inside <main> — long after <head> is sent. A `<link rel=preload>`
  *    lets the browser fetch it in parallel with everything else instead of
- *    discovering it late. Read straight from the front-page template's own
+ *    discovering it late. Read straight from the relevant template's own
  *    hero-banner block (not hardcoded) so this can never drift out of sync
- *    with templates/front-page.html.
+ *    with templates/front-page.html or templates/page-about-us.html — the
+ *    only two templates that open with agentic/hero-banner.
  * 2. jQuery + jquery-migrate are render-blocking by default. WordPress
  *    6.3+'s script "strategy" data defers them — and, being dependency-
  *    aware, automatically keeps anything incompatible blocking instead of
@@ -333,11 +466,15 @@ add_filter(
 add_action(
 	'wp_head',
 	function () {
-		if ( ! is_front_page() ) {
+		if ( is_front_page() ) {
+			$template_slug = 'front-page';
+		} elseif ( is_page( 'about-us' ) ) {
+			$template_slug = 'page-about-us';
+		} else {
 			return;
 		}
 
-		$template = get_block_template( get_stylesheet() . '//front-page', 'wp_template' );
+		$template = get_block_template( get_stylesheet() . '//' . $template_slug, 'wp_template' );
 		if ( ! $template ) {
 			return;
 		}
