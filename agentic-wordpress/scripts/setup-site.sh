@@ -220,12 +220,21 @@ if [ "$(wp post list --post_type=product --format=count | tr -d '\r')" = "0" ]; 
   # So categories are created (or looked up if already present) first, and
   # every product below is assigned by the resulting numeric ID.
   ensure_product_cat() {
-    local name="$1" slug="$2" parent_id="${3:-0}" description="${4:-}" id
+    local name="$1" slug="$2" parent_id="${3:-0}" description="${4:-}" image="${5:-}" id
     id="$( wp wc product_cat list --slug="$slug" --field=id --user=admin | tr -d '\r\n' )"
     if [ -z "$id" ]; then
       local args=( wp wc product_cat create --name="$name" --slug="$slug" --user=admin --porcelain )
       [ "$parent_id" != "0" ] && args+=( --parent="$parent_id" )
       [ -n "$description" ] && args+=( --description="$description" )
+      if [ -n "$image" ]; then
+        # Same two-step shape as seed_product's --images below: import the
+        # local theme asset into the media library first to get an
+        # attachment ID, since product_cat create's --image only accepts an
+        # ID or a URL WooCommerce fetches itself.
+        local image_id
+        image_id="$( wp media import "$image" --porcelain )"
+        args+=( --image="{\"id\":$image_id}" )
+      fi
       id="$( "${args[@]}" )"
     fi
     printf '%s' "$id"
@@ -235,9 +244,14 @@ if [ "$(wp post list --post_type=product --format=count | tr -d '\r')" = "0" ]; 
   # tagline copy (not a placeholder string) on each, shown centered under the
   # category heading on taxonomy-product_cat.html, the same spot Sleek's own
   # reference collection pages use for a one-line collection blurb.
-  CLEANSERS_CAT_ID="$( ensure_product_cat 'Cleansers' 'cleansers' 0 'Soap-free formulas that lift away impurities without stripping the skin.' )"
-  MOISTURIZERS_CAT_ID="$( ensure_product_cat 'Moisturizers' 'moisturizers' 0 'Lightweight hydration that locks in moisture for up to 24 hours.' )"
-  TREATMENTS_CAT_ID="$( ensure_product_cat 'Treatments' 'treatments' 0 'Targeted formulas for brighter, smoother, more radiant skin.' )"
+  # assets/images/collections/<slug>.webp already exists per category — it
+  # was never wired up to the actual term before now.
+  CLEANSERS_CAT_ID="$( ensure_product_cat 'Cleansers' 'cleansers' 0 'Soap-free formulas that lift away impurities without stripping the skin.' \
+    'wp-content/themes/agentic-theme/assets/images/collections/cleansers.webp' )"
+  MOISTURIZERS_CAT_ID="$( ensure_product_cat 'Moisturizers' 'moisturizers' 0 'Lightweight hydration that locks in moisture for up to 24 hours.' \
+    'wp-content/themes/agentic-theme/assets/images/collections/moisturizers.webp' )"
+  TREATMENTS_CAT_ID="$( ensure_product_cat 'Treatments' 'treatments' 0 'Targeted formulas for brighter, smoother, more radiant skin.' \
+    'wp-content/themes/agentic-theme/assets/images/collections/treatments.webp' )"
 
   # No products seeded into these two — they exist purely so
   # agentic/collection-list ("Our Collections" on the homepage) and
@@ -245,8 +259,10 @@ if [ "$(wp post list --post_type=product --format=count | tr -d '\r')" = "0" ]; 
   # taxonomy-product_cat archives to link to instead of dead hrefs. Empty
   # archives are expected here; the store owner populates them with real
   # products.
-  ensure_product_cat 'Eye Care' 'eye-care' 0 "Gentle care for the eye area's especially delicate skin." > /dev/null
-  ensure_product_cat 'Accessories' 'accessories' 0 'The tools that help your routine actually work.' > /dev/null
+  ensure_product_cat 'Eye Care' 'eye-care' 0 "Gentle care for the eye area's especially delicate skin." \
+    'wp-content/themes/agentic-theme/assets/images/collections/eye-care.webp' > /dev/null
+  ensure_product_cat 'Accessories' 'accessories' 0 'The tools that help your routine actually work.' \
+    'wp-content/themes/agentic-theme/assets/images/collections/accessories.webp' > /dev/null
 
   seed_product() {
     local name="$1" slug="$2" category_id="$3" regular_price="$4" sale_price="$5" description="$6" short_description="$7" stock_quantity="${8:-}" image="${9:-}"
@@ -284,27 +300,29 @@ if [ "$(wp post list --post_type=product --format=count | tr -d '\r')" = "0" ]; 
     "${args[@]}"
   }
 
-  # bundle/skincare-set.webp is a single studio shot of exactly these three
-  # products together (labels read "ROSE QUARTZ GENTLE EXFOLIATING SCRUB",
-  # "REJUVENATING NIGHT OIL", "GENTLE GEL CLEANSER") — reused as each one's
-  # product image rather than leaving them imageless, same "delete before
-  # launch" placeholder status as the copy itself.
+  # assets/images/products/<slug>.webp — individual crops taken from
+  # bundle/skincare-set.webp (a single studio shot of the three matching
+  # products together, labels reading "ROSE QUARTZ GENTLE EXFOLIATING
+  # SCRUB", "REJUVENATING NIGHT OIL", "GENTLE GEL CLEANSER"), one per
+  # product rather than reusing the same group shot on every product page.
+  # Hydrating Body Serum has no matching group-shot crop, so it uses
+  # hero/product-right.webp (a standalone bottle+jar shot) directly.
   seed_product 'Rejuvenating Night Oil' 'rejuvenating-night-oil' "$TREATMENTS_CAT_ID" '79.00' '' \
     'A nourishing night oil formulated with rosehip and squalane to replenish skin while you sleep. Placeholder product — delete before launch.' \
     'Nourishing night oil with rosehip and squalane.' '' \
-    'wp-content/themes/agentic-theme/assets/images/bundle/skincare-set.webp'
+    'wp-content/themes/agentic-theme/assets/images/products/rejuvenating-night-oil.webp'
   seed_product 'Rose Quartz Facial Polish' 'rose-quartz-facial-polish' "$TREATMENTS_CAT_ID" '79.00' '59.00' \
     'A gentle exfoliating polish with fine rose quartz powder to reveal smoother, brighter skin. Placeholder product — delete before launch.' \
     'Gentle exfoliating polish with rose quartz powder.' '' \
-    'wp-content/themes/agentic-theme/assets/images/bundle/skincare-set.webp'
+    'wp-content/themes/agentic-theme/assets/images/products/rose-quartz-facial-polish.webp'
   seed_product 'Hydrating Body Serum' 'hydrating-body-serum' "$MOISTURIZERS_CAT_ID" '79.00' '' \
     'A lightweight, fast-absorbing serum that locks in moisture for up to 24 hours. Placeholder product — delete before launch.' \
     'Lightweight, fast-absorbing hydrating serum.' '2' \
-    'wp-content/themes/agentic-theme/assets/images/hero/product-right.webp'
+    'wp-content/themes/agentic-theme/assets/images/products/hydrating-body-serum.webp'
   seed_product 'Gentle Gel Cleanser' 'gentle-gel-cleanser' "$CLEANSERS_CAT_ID" '39.00' '29.00' \
     'A soap-free gel cleanser that lifts away impurities without stripping the skin. Placeholder product — delete before launch.' \
     'Soap-free gel cleanser for daily use.' '' \
-    'wp-content/themes/agentic-theme/assets/images/bundle/skincare-set.webp'
+    'wp-content/themes/agentic-theme/assets/images/products/gentle-gel-cleanser.webp'
 else
   echo "   products already exist — skipping"
 fi
