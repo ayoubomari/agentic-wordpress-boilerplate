@@ -265,7 +265,7 @@ if [ "$(wp post list --post_type=product --format=count | tr -d '\r')" = "0" ]; 
     'wp-content/themes/agentic-theme/assets/images/collections/accessories.webp' > /dev/null
 
   seed_product() {
-    local name="$1" slug="$2" category_id="$3" regular_price="$4" sale_price="$5" description="$6" short_description="$7" stock_quantity="${8:-}" image="${9:-}"
+    local name="$1" slug="$2" category_id="$3" regular_price="$4" sale_price="$5" description="$6" short_description="$7" stock_quantity="${8:-}" image="${9:-}" image2="${10:-}"
     local args=(
       wp wc product create
       --name="$name"
@@ -292,37 +292,45 @@ if [ "$(wp post list --post_type=product --format=count | tr -d '\r')" = "0" ]; 
       # wc product create's --images only accepts an attachment ID or a
       # remote URL WooCommerce fetches itself — a local theme asset has to be
       # imported into the media library first to get that ID, same two-step
-      # shape as seed_post's --featured_image below.
-      local image_id
+      # shape as seed_post's --featured_image below. First ID in the array
+      # becomes the product's primary/featured image; a second (optional)
+      # becomes a gallery image alongside it.
+      local image_id image2_id images_json
       image_id="$( wp media import "$image" --porcelain )"
-      args+=(--images="[{\"id\":$image_id}]")
+      images_json="{\"id\":$image_id}"
+      if [ -n "$image2" ]; then
+        image2_id="$( wp media import "$image2" --porcelain )"
+        images_json="$images_json,{\"id\":$image2_id}"
+      fi
+      args+=(--images="[$images_json]")
     fi
     "${args[@]}"
   }
 
-  # assets/images/products/<slug>.webp — individual crops taken from
-  # bundle/skincare-set.webp (a single studio shot of the three matching
-  # products together, labels reading "ROSE QUARTZ GENTLE EXFOLIATING
-  # SCRUB", "REJUVENATING NIGHT OIL", "GENTLE GEL CLEANSER"), one per
-  # product rather than reusing the same group shot on every product page.
-  # Hydrating Body Serum has no matching group-shot crop, so it uses
-  # hero/product-right.webp (a standalone bottle+jar shot) directly.
+  # AI-generated studio product photography, two per product (primary +
+  # gallery), square to match the 1:1 aspect-ratio product image CSS
+  # (woocommerce.css). assets/images/collections/<slug>.webp were
+  # generated the same way, one per category, wired up above.
   seed_product 'Rejuvenating Night Oil' 'rejuvenating-night-oil' "$TREATMENTS_CAT_ID" '79.00' '' \
     'A nourishing night oil formulated with rosehip and squalane to replenish skin while you sleep. Placeholder product — delete before launch.' \
     'Nourishing night oil with rosehip and squalane.' '' \
-    'wp-content/themes/agentic-theme/assets/images/products/rejuvenating-night-oil.webp'
+    'wp-content/themes/agentic-theme/assets/images/products/rejuvenating-night-oil.webp' \
+    'wp-content/themes/agentic-theme/assets/images/products/rejuvenating-night-oil-2.webp'
   seed_product 'Rose Quartz Facial Polish' 'rose-quartz-facial-polish' "$TREATMENTS_CAT_ID" '79.00' '59.00' \
     'A gentle exfoliating polish with fine rose quartz powder to reveal smoother, brighter skin. Placeholder product — delete before launch.' \
     'Gentle exfoliating polish with rose quartz powder.' '' \
-    'wp-content/themes/agentic-theme/assets/images/products/rose-quartz-facial-polish.webp'
+    'wp-content/themes/agentic-theme/assets/images/products/rose-quartz-facial-polish.webp' \
+    'wp-content/themes/agentic-theme/assets/images/products/rose-quartz-facial-polish-2.webp'
   seed_product 'Hydrating Body Serum' 'hydrating-body-serum' "$MOISTURIZERS_CAT_ID" '79.00' '' \
     'A lightweight, fast-absorbing serum that locks in moisture for up to 24 hours. Placeholder product — delete before launch.' \
     'Lightweight, fast-absorbing hydrating serum.' '2' \
-    'wp-content/themes/agentic-theme/assets/images/products/hydrating-body-serum.webp'
+    'wp-content/themes/agentic-theme/assets/images/products/hydrating-body-serum.webp' \
+    'wp-content/themes/agentic-theme/assets/images/products/hydrating-body-serum-2.webp'
   seed_product 'Gentle Gel Cleanser' 'gentle-gel-cleanser' "$CLEANSERS_CAT_ID" '39.00' '29.00' \
     'A soap-free gel cleanser that lifts away impurities without stripping the skin. Placeholder product — delete before launch.' \
     'Soap-free gel cleanser for daily use.' '' \
-    'wp-content/themes/agentic-theme/assets/images/products/gentle-gel-cleanser.webp'
+    'wp-content/themes/agentic-theme/assets/images/products/gentle-gel-cleanser.webp' \
+    'wp-content/themes/agentic-theme/assets/images/products/gentle-gel-cleanser-2.webp'
 else
   echo "   products already exist — skipping"
 fi
