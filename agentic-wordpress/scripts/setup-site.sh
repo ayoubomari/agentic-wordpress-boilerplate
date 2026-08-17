@@ -14,7 +14,7 @@ cd "$(dirname "$0")/.."
 # as empty and fails.
 wp() { wp-env run cli wp "$@"; }
 
-echo "→ [1/13] Building block editor scripts"
+echo "→ [1/14] Building block editor scripts"
 # block.json points editorScript at build/<block>/index.js, so the bundle must
 # exist before the plugin is activated or blocks register without editor UI.
 if [ -d agentic-blocks/blocks ]; then
@@ -24,13 +24,28 @@ if [ -d agentic-blocks/blocks ]; then
   ( cd agentic-blocks && npm run build --silent )
 fi
 
-echo "→ [2/13] Installing WooCommerce + Yoast SEO (free, from wordpress.org)"
+echo "→ [2/14] Installing WooCommerce + The SEO Framework (free, from wordpress.org)"
 # Installed by slug via WP-CLI rather than as .wp-env.json zip URLs: zip
 # sources land in folders named after the zip (woocommerce.latest-stable),
 # which leaks into asset URLs and collides with a slug-named second copy.
-wp plugin install woocommerce wordpress-seo --activate
+#
+# SEO plugin is The SEO Framework (`autodescription`), not Yoast. Reasons, in
+# the order they mattered for a code-first boilerplate:
+#   - It auto-generates titles and meta descriptions from the content that is
+#     already there. Yoast free generates nothing, so every product, category
+#     and archive shipped with no <meta name="description"> at all until the
+#     description templates were configured by hand — a thing a clone's owner
+#     would never know to do.
+#   - No ads, no upsell notices, no onboarding wizard in wp-admin. A dashboard
+#     nagging the owner to buy Premium is noise in a boilerplate.
+#   - It emits less schema, which is less to reconcile against the schema
+#     WooCommerce already emits (see the BreadcrumbList de-duplication in the
+#     theme's functions.php).
+#   - No DB-backed redirect manager to tempt this project back into storing
+#     site behaviour in the database instead of in files.
+wp plugin install woocommerce autodescription --activate
 
-echo "→ [3/13] Installing essential add-ons (free, from wordpress.org)"
+echo "→ [3/14] Installing essential add-ons (free, from wordpress.org)"
 # Two things WooCommerce doesn't handle on its own, both free and both things
 # an actual store cannot skip:
 #   - wp-mail-smtp: WordPress's default wp_mail() gets spam-filtered by most
@@ -51,18 +66,18 @@ wp option update updraft_interval_db 'daily'
 wp option update updraft_retain '7'
 wp option update updraft_retain_db '7'
 
-echo "→ [4/13] Activating theme + agentic-blocks"
+echo "→ [4/14] Activating theme + agentic-blocks"
 wp theme activate agentic-theme
 wp plugin activate agentic-blocks
 
-echo "→ [5/13] Completing WooCommerce installation"
+echo "→ [5/14] Completing WooCommerce installation"
 # WooCommerce defers part of its installer to the first request after
 # activation, and that deferred run writes its own defaults. Forcing it to
 # finish synchronously here means the settings written below actually stick
 # instead of being silently overwritten a moment later.
 wp eval 'if ( class_exists( "WC_Install" ) ) { WC_Install::install(); }'
 
-echo "→ [6/13] Permalinks"
+echo "→ [6/14] Permalinks"
 # Flat /%postname%/ — the sane structure for products; the WP default
 # day-and-name buries /shop/ URLs under a date path.
 wp rewrite structure '/%postname%/' --hard
@@ -99,7 +114,7 @@ wp eval '
 	);
 '
 
-echo "→ [7/13] Store defaults"
+echo "→ [7/14] Store defaults"
 wp option update blogdescription 'A code-first WooCommerce store'
 wp option update woocommerce_store_country 'US:CA'
 wp option update woocommerce_currency 'USD'
@@ -107,7 +122,7 @@ wp option update woocommerce_currency 'USD'
 # otherwise force clicking through the UI before the store works.
 wp option update woocommerce_onboarding_profile '{"skipped":true}' --format=json
 
-echo "→ [8/13] Front page + Journal"
+echo "→ [8/14] Front page + Journal"
 # The storefront must be a static page, not the post feed. Blog posts live at
 # /journal/ instead.
 #
@@ -137,74 +152,245 @@ wp option update show_on_front 'page'
 wp option update page_on_front "$HOME_ID"
 wp option update page_for_posts "$JOURNAL_ID"
 
-# Yoast has nothing to auto-generate a homepage meta description from — the
-# front page's post_content is deliberately empty (its sections live in
-# templates/front-page.html, not the database, per "Homepage and Journal"
-# above) — so without this it fails Lighthouse's SEO meta-description check
-# on every fresh install. This must be a POST META field on the front-page
-# post (`_yoast_wpseo_metadesc`), not the `metadesc-home-wpseo` key in the
-# wpseo_titles option: that option only applies when the blog index itself
-# is the homepage. With show_on_front=page (our setup), Yoast treats the
-# front page like any other page and reads its per-page SEO fields instead
-# — confirmed by testing both directly; only the post-meta version actually
-# rendered a <meta name="description"> tag.
-wp eval '
-	if ( ! get_post_meta( (int) get_option( "page_on_front" ), "_yoast_wpseo_metadesc", true ) ) {
-		update_post_meta(
-			(int) get_option( "page_on_front" ),
-			"_yoast_wpseo_metadesc",
-			get_bloginfo( "description" ) ?: "A code-first WooCommerce store."
-		);
-	}
-'
+# Meta descriptions for these container pages are set in step 14, with every
+# other piece of SEO metadata, rather than here — see the note there on why
+# empty-content pages are the only ones that need one written by hand.
 
-echo "→ [9/13] About Us page"
+echo "→ [9/14] About Us page"
 # Same container-page pattern as Home/Journal above: the page record exists
 # only so WordPress has something to route /about-us/ to. The actual content
 # lives in templates/page-about-us.html, resolved automatically by WordPress's
 # block-template hierarchy from the page's slug — no manual "Template" picker
 # needed, and re-running this never touches an owner's edits to the page.
-ABOUT_US_ID="$( ensure_page 'about-us' 'About Us' )"
+ensure_page 'about-us' 'About Us' > /dev/null
 
-# Same reasoning as the front page's meta description above: post_content is
-# empty (content lives in the template file), so Yoast has nothing to
-# auto-generate a description from without this.
-wp eval '
-	if ( ! get_post_meta( '"$ABOUT_US_ID"', "_yoast_wpseo_metadesc", true ) ) {
-		update_post_meta(
-			'"$ABOUT_US_ID"',
-			"_yoast_wpseo_metadesc",
-			"Learn about our story, how we formulate, and why we make skincare for sensitive skin."
-		);
-	}
-'
-
-echo "→ [10/13] Legal pages"
+echo "→ [10/14] Legal pages"
 # WordPress core auto-creates a "Privacy Policy" page (draft, at
-# /privacy-policy/) on every fresh install — there is no equivalent core
-# default for Terms of Use, so it's created here the same way: idempotent,
-# draft (real legal copy is the store owner's to write/review before
-# publishing — see "Owner-editable in wp-admin" in CLAUDE.md), placeholder
-# body text flagged for replacement, same as the seeded sample products.
+# /privacy-policy/) on every fresh install, pre-filled with its own
+# section-by-section suggested text — there is no equivalent core default for
+# Terms of Use, so it's created here the same way: idempotent, draft (real
+# legal copy is the store owner's to write/review before publishing — see
+# "Owner-editable in wp-admin" in CLAUDE.md), and pre-filled with the
+# equivalent starting draft below.
 #
+# That draft is a starting point to edit, NOT reviewed legal copy — same
+# status as core's privacy suggested text, and it says so in its own first
+# paragraph. It stays a draft until a human has reviewed it, and the
+# dashboard checklist's "Legal pages" item is what surfaces that.
+TERMS_CONTENT="$( cat <<'HTML'
+<!-- wp:paragraph -->
+<p><strong>Starting draft — not reviewed legal copy.</strong> These are general ecommerce terms written to be edited, in the same spirit as the suggested text WordPress puts in a new Privacy Policy. Read every section, replace anything in [square brackets], delete what does not apply to this store, and have the result reviewed before publishing.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Last updated: [date]</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">About these terms</h2>
+<!-- /wp:heading -->
+<!-- wp:paragraph -->
+<p>These Terms of Use govern your access to this website and any order you place through it. By browsing the site or completing a purchase, you agree to them. If you do not agree, please do not use the site.</p>
+<!-- /wp:paragraph -->
+<!-- wp:paragraph -->
+<p>We may need to update these terms from time to time. The version published on this page at the moment you place an order is the version that applies to that order.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Who may use this store</h2>
+<!-- /wp:heading -->
+<!-- wp:paragraph -->
+<p>You must be at least [18] years old, or old enough to enter a binding contract where you live, to order from us. By ordering you confirm that the details you give us are accurate and that you are using a payment method you are authorised to use.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Your account</h2>
+<!-- /wp:heading -->
+<!-- wp:paragraph -->
+<p>You can order as a guest or create an account. If you create one, you are responsible for keeping your password confidential and for activity that happens under your account. Tell us straight away if you think someone else has access to it.</p>
+<!-- /wp:paragraph -->
+<!-- wp:paragraph -->
+<p>We may suspend or close an account that is being used fraudulently, abusively, or in breach of these terms.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Products, descriptions and availability</h2>
+<!-- /wp:heading -->
+<!-- wp:paragraph -->
+<p>We describe our products as accurately as we can, but photographs are illustrative and colours can vary between screens. Packaging and formulations may change, so please read the label on what you receive rather than relying only on the description here.</p>
+<!-- /wp:paragraph -->
+<!-- wp:paragraph -->
+<p>All products are subject to availability. If an item you ordered turns out to be unavailable, we will contact you and refund it in full.</p>
+<!-- /wp:paragraph -->
+<!-- wp:paragraph -->
+<p>Nothing on this site is medical advice. If you have a skin condition, allergies, or you are pregnant, check with a qualified professional before using a new product, and patch-test first.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Prices and payment</h2>
+<!-- /wp:heading -->
+<!-- wp:paragraph -->
+<p>Prices are shown in [currency] and may change at any time before you order. Whether prices include tax, and any shipping charge, is shown at checkout before you pay.</p>
+<!-- /wp:paragraph -->
+<!-- wp:paragraph -->
+<p>Payment is taken at the time of the order through our payment provider. We do not store your full card details ourselves.</p>
+<!-- /wp:paragraph -->
+<!-- wp:paragraph -->
+<p>Obvious pricing errors are not binding on us. If an item is listed at a clearly incorrect price, we will contact you before dispatch and you can confirm the order at the correct price or cancel it for a full refund.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Orders and acceptance</h2>
+<!-- /wp:heading -->
+<!-- wp:paragraph -->
+<p>Your order is an offer to buy. The confirmation email we send when you check out acknowledges that we received it — a contract is formed when we dispatch the goods, or when we tell you we have accepted the order.</p>
+<!-- /wp:paragraph -->
+<!-- wp:paragraph -->
+<p>We may decline an order, for example where an item is out of stock, where we cannot deliver to your address, or where we suspect fraud. If we decline one you have already paid for, you get a full refund.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Shipping and delivery</h2>
+<!-- /wp:heading -->
+<!-- wp:paragraph -->
+<p>Delivery options, costs and estimated timescales are shown at checkout. Estimates are not guarantees; carrier delays, customs and events outside our control can affect them.</p>
+<!-- /wp:paragraph -->
+<!-- wp:paragraph -->
+<p>Risk in the goods passes to you on delivery. For international orders, any import duties or taxes charged on arrival are your responsibility.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Returns, refunds and cancellations</h2>
+<!-- /wp:heading -->
+<!-- wp:paragraph -->
+<p>Our returns and refunds process is set out in our Refund and Returns Policy, which forms part of these terms. Where the law gives you a right to cancel a distance purchase, that right applies in addition to it.</p>
+<!-- /wp:paragraph -->
+<!-- wp:paragraph -->
+<p>For hygiene reasons, opened or used skincare and body-care products cannot usually be returned unless they are faulty or not what you ordered. Nothing here limits your legal rights in respect of faulty goods.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Reviews and anything else you post</h2>
+<!-- /wp:heading -->
+<!-- wp:paragraph -->
+<p>If you submit a review, comment, or any other content, you confirm it is your own, it is honest, and it does not break the law or anyone else's rights. You keep ownership of it and give us permission to display and share it in connection with the store.</p>
+<!-- /wp:paragraph -->
+<!-- wp:paragraph -->
+<p>We may remove content that is unlawful, abusive, misleading, or off-topic.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Acceptable use</h2>
+<!-- /wp:heading -->
+<!-- wp:paragraph -->
+<p>Please do not misuse the site: no attempts to gain unauthorised access, no scraping or bulk automated ordering, no interfering with how the site works for other people, and no using it for anything unlawful.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Intellectual property</h2>
+<!-- /wp:heading -->
+<!-- wp:paragraph -->
+<p>The content on this site — text, photography, graphics, logos and layout — belongs to us or our licensors and is protected by copyright and trade mark law. You may view and print it for your own personal, non-commercial use. Any other use needs our written permission.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Other sites we link to</h2>
+<!-- /wp:heading -->
+<!-- wp:paragraph -->
+<p>Where we link to another website or service, we do so for convenience. We do not control those sites and are not responsible for their content or their privacy practices.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Availability of the site</h2>
+<!-- /wp:heading -->
+<!-- wp:paragraph -->
+<p>We aim to keep the site available and accurate, but we cannot promise it will always be uninterrupted or error-free. We may suspend, withdraw or change any part of it, including individual products, without notice.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Our liability</h2>
+<!-- /wp:heading -->
+<!-- wp:paragraph -->
+<p>Nothing in these terms limits our liability for death or personal injury caused by our negligence, for fraud, or for anything else that cannot lawfully be limited — including your statutory rights as a consumer.</p>
+<!-- /wp:paragraph -->
+<!-- wp:paragraph -->
+<p>Subject to that, we are not liable for losses that were not reasonably foreseeable, or for business losses such as lost profit or lost opportunity. [Confirm with your adviser how liability should be capped for your jurisdiction and business.]</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Privacy</h2>
+<!-- /wp:heading -->
+<!-- wp:paragraph -->
+<p>How we handle personal data is described in our Privacy Policy. Please read it alongside these terms.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Governing law</h2>
+<!-- /wp:heading -->
+<!-- wp:paragraph -->
+<p>These terms are governed by the laws of [jurisdiction], and disputes will be handled by the courts of [jurisdiction]. If you are a consumer, this does not remove the protection of the mandatory rules of the country you live in.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading">Contact us</h2>
+<!-- /wp:heading -->
+<!-- wp:paragraph -->
+<p>Questions about these terms, or about an order, can go to [email address]. Our registered details are: [legal entity name, address, and company or tax registration number].</p>
+<!-- /wp:paragraph -->
+HTML
+)"
+
+# The one-line placeholder this step wrote before the draft above existed.
+# Byte-identical content is treated as "still untouched by the owner", so a
+# store seeded by that older copy gets the fuller draft on its next run —
+# the same repair rule step 14 applies to its `legacy:` values.
+TERMS_LEGACY='<!-- wp:paragraph --><p>Placeholder Terms of Use — replace with real, reviewed legal copy before launch.</p><!-- /wp:paragraph -->'
+
 # `wp post list --name=` silently ignores draft posts no matter what
 # --post_status is passed (a WP_Query quirk, not a wp-cli bug) — it always
 # came back empty here and recreated a duplicate draft on every single
 # re-run. get_page_by_path() doesn't have that restriction.
-if [ "$( wp eval 'echo get_page_by_path( "terms-of-use", OBJECT, "page" ) ? "1" : "0";' | tr -d '\r\n' )" = "0" ]; then
-  wp post create \
-    --post_type=page \
-    --post_title='Terms of Use' \
-    --post_name='terms-of-use' \
-    --post_status=draft \
-    --post_content='<!-- wp:paragraph --><p>Placeholder Terms of Use — replace with real, reviewed legal copy before launch.</p><!-- /wp:paragraph -->' \
-    --porcelain >/dev/null
-  echo "   created page 'terms-of-use'"
-else
-  echo "   page 'terms-of-use' already exists — leaving it alone"
+#
+# Content goes through base64 rather than a --post_content= argument: it is
+# multi-line block markup with quotes in it, and it has to survive both the
+# shell and `wp-env run`'s own argument handling on the way to the container.
+# Same technique as the SEO document in step 14.
+wp eval '
+	$content = base64_decode( "'"$( printf '%s' "$TERMS_CONTENT" | base64 | tr -d '\n' )"'" );
+	$legacy  = base64_decode( "'"$( printf '%s' "$TERMS_LEGACY" | base64 | tr -d '\n' )"'" );
+	$page    = get_page_by_path( "terms-of-use", OBJECT, "page" );
+
+	if ( ! $page ) {
+		wp_insert_post( [
+			"post_type"    => "page",
+			"post_title"   => "Terms of Use",
+			"post_name"    => "terms-of-use",
+			"post_status"  => "draft",
+			"post_content" => $content,
+		] );
+		echo "created page (draft) with starting draft copy";
+	} elseif ( trim( $page->post_content ) === trim( $content ) ) {
+		echo "already holds this draft copy — nothing to do";
+	} elseif ( "" === trim( $page->post_content ) || trim( $page->post_content ) === trim( $legacy ) ) {
+		wp_update_post( [ "ID" => $page->ID, "post_content" => $content ] );
+		echo "filled empty/placeholder page with starting draft copy";
+	} else {
+		echo "already edited — leaving it alone";
+	}
+' | sed "s/^/   terms-of-use: /"
+echo
+
+# WordPress core also ships a published "Sample Page" containing its own
+# placeholder autobiography. Nothing links to it, but it is published, so it is
+# indexable and it turns up in the XML sitemap — a fresh clone would hand a
+# crawler a page of WordPress boilerplate as real store content. Trashed rather
+# than deleted outright, in case an owner has since repurposed the slug.
+if [ "$( wp eval 'echo ( ( $p = get_page_by_path( "sample-page", OBJECT, "page" ) ) && "trash" !== $p->post_status ) ? "1" : "0";' | tr -d '\r\n' )" = "1" ]; then
+  wp post delete "$( wp eval 'echo (int) get_page_by_path( "sample-page", OBJECT, "page" )->ID;' | tr -d '\r\n' )" >/dev/null
+  echo "   trashed core's default 'Sample Page'"
 fi
 
-echo "→ [11/13] Seeding sample products (so templates are verifiable)"
+echo "→ [11/14] Seeding sample products (so templates are verifiable)"
 # Four, not one: a single product leaves the product grid and the "related
 # products" collection with nothing to show, which hides real template bugs.
 # Spread across three of the five categories (not one catch-all) so
@@ -311,31 +497,37 @@ if [ "$(wp post list --post_type=product --format=count | tr -d '\r')" = "0" ]; 
   # gallery), square to match the 1:1 aspect-ratio product image CSS
   # (woocommerce.css). assets/images/collections/<slug>.webp were
   # generated the same way, one per category, wired up above.
+  #
+  # Every short_description below is deliberately EMPTY: WooCommerce's short
+  # description is the field The SEO Framework generates a product's meta
+  # description from, so the copy for it lives with the rest of this script's
+  # SEO copy in step 14 (which also repairs stores seeded before that step
+  # existed) rather than being written in two places that can drift apart.
   seed_product 'Rejuvenating Night Oil' 'rejuvenating-night-oil' "$TREATMENTS_CAT_ID" '79.00' '' \
     'A nourishing night oil formulated with rosehip and squalane to replenish skin while you sleep. Placeholder product — delete before launch.' \
-    'Nourishing night oil with rosehip and squalane.' '' \
+    '' '' \
     'wp-content/themes/agentic-theme/assets/images/products/rejuvenating-night-oil.webp' \
     'wp-content/themes/agentic-theme/assets/images/products/rejuvenating-night-oil-2.webp'
   seed_product 'Rose Quartz Facial Polish' 'rose-quartz-facial-polish' "$TREATMENTS_CAT_ID" '79.00' '59.00' \
     'A gentle exfoliating polish with fine rose quartz powder to reveal smoother, brighter skin. Placeholder product — delete before launch.' \
-    'Gentle exfoliating polish with rose quartz powder.' '' \
+    '' '' \
     'wp-content/themes/agentic-theme/assets/images/products/rose-quartz-facial-polish.webp' \
     'wp-content/themes/agentic-theme/assets/images/products/rose-quartz-facial-polish-2.webp'
   seed_product 'Hydrating Body Serum' 'hydrating-body-serum' "$MOISTURIZERS_CAT_ID" '79.00' '' \
     'A lightweight, fast-absorbing serum that locks in moisture for up to 24 hours. Placeholder product — delete before launch.' \
-    'Lightweight, fast-absorbing hydrating serum.' '2' \
+    '' '2' \
     'wp-content/themes/agentic-theme/assets/images/products/hydrating-body-serum.webp' \
     'wp-content/themes/agentic-theme/assets/images/products/hydrating-body-serum-2.webp'
   seed_product 'Gentle Gel Cleanser' 'gentle-gel-cleanser' "$CLEANSERS_CAT_ID" '39.00' '29.00' \
     'A soap-free gel cleanser that lifts away impurities without stripping the skin. Placeholder product — delete before launch.' \
-    'Soap-free gel cleanser for daily use.' '' \
+    '' '' \
     'wp-content/themes/agentic-theme/assets/images/products/gentle-gel-cleanser.webp' \
     'wp-content/themes/agentic-theme/assets/images/products/gentle-gel-cleanser-2.webp'
 else
   echo "   products already exist — skipping"
 fi
 
-echo "→ [12/13] Seeding Journal posts (so agentic/latest-posts has real content)"
+echo "→ [12/14] Seeding Journal posts (so agentic/latest-posts has real content)"
 # WordPress core seeds a "Hello world!" sample post on every fresh install —
 # harmless on its own, but it would sit in the Journal archive and
 # occasionally surface in agentic/latest-posts' "3 most recent" query
@@ -419,7 +611,7 @@ else
   echo "   posts already exist — skipping"
 fi
 
-echo "→ [13/13] Disabling WooCommerce Coming Soon mode"
+echo "→ [13/14] Disabling WooCommerce Coming Soon mode"
 # WooCommerce 9.1+ ships this ON. Left alone it replaces the entire storefront
 # with a "Great things are on the horizon" splash for logged-out visitors, so
 # templates cannot be verified and nothing is indexable.
@@ -436,5 +628,222 @@ if [ "$COMING_SOON" != "no" ]; then
   echo "  the storefront would be hidden behind the Coming Soon splash." >&2
   exit 1
 fi
+
+echo "→ [14/14] SEO titles + meta descriptions"
+# The SEO Framework auto-generates a title and a meta description for anything
+# with real content underneath it, so the Journal's posts and the populated
+# product categories need nothing written here — that is most of why it was
+# chosen over Yoast (see step 2).
+#
+# What it cannot generate a *passing* title or description for is three cases,
+# and its own SEO Bar (the coloured TG/DG/I/F/A/R column in wp-admin's post
+# lists) flags each of them orange or red until they are fixed here:
+#
+#  1. A page whose post_content is deliberately EMPTY. Every "container" page
+#     in this boilerplate is one: the front page, the Journal, About Us and
+#     WooCommerce's Shop page all render from templates/*.html rather than from
+#     the database (see "Homepage and Journal" in CLAUDE.md), so there is
+#     nothing to generate a description *from*.
+#  2. A page whose title is one short word. TSF brands every title
+#     ("Shop - Store Name"), and "Shop", "Cart", "Checkout", "Privacy Policy"
+#     and "Terms of Use" are all still under its 35-character floor even
+#     branded. Each gets an explicit SEO title. This sets only
+#     <title>/og:title — never the H1, the menu label or the breadcrumb — so
+#     /shop/ still reads "Shop" on the page.
+#
+#     Cart, checkout and my-account get a description as well. They are
+#     noindex on purpose (see CLAUDE.md) so no search engine will use it, but
+#     they have no content to generate one from either, which leaves the SEO
+#     Bar reporting an empty description on three pages forever; the value is
+#     also what og:description falls back to when someone shares the link.
+#  3. Content whose generated value falls outside the length guidelines: the
+#     four sample products' short descriptions (WooCommerce's excerpt field is
+#     what TSF generates a product description from, and a 37-character one
+#     cannot produce a valid meta description), and the one sample article
+#     whose 46-character headline brands out to 66 — one over the upper bound.
+#
+# Thresholds are TSF's own, from its Helper\Guidelines: a title wants 35-65
+# characters (25-75 tolerated), a description 80-160 (45-320 tolerated). The
+# copy below sits mid-band on purpose, leaving room for a store name longer
+# than this boilerplate's, since TSF appends " - <blogname>" to every title.
+#
+# Length is not the only rule: TSF also grades a description on REPEATED WORDS
+# and marks it orange once more than one word occurs twice, or any word occurs
+# four times. A first draft of the checkout description below said "your" three
+# times and was flagged for exactly that — keep each word in a description to
+# one use where the sentence allows it.
+#
+# Verify the result with ./scripts/seo-check.py, which gates these same bands.
+
+# One line per value, `locator|field|value`, applied in a SINGLE `wp eval`:
+# every `wp` call here is a fresh container round-trip through wp-env, and a
+# step that fires a dozen of them is both slow and an extra place for
+# `wp-env start` to fall over. The document is handed to PHP base64-encoded
+# rather than interpolated into the snippet, because a clone's copy will
+# eventually contain an apostrophe or a double quote and either would silently
+# break a PHP string built by the shell. The only character the copy may not
+# contain is the `|` separator.
+#
+# Locators: `option:<name>` (a page ID stored in an option), `page:<slug>`,
+# `post:<slug>`, `product:<slug>`, `term:<taxonomy>:<slug>`.
+# Fields: `seo_title` and `seo_description` write TSF's own post/term meta;
+# `term_description` and `short_description` write the real WordPress term
+# description / product excerpt, which are visible on the front end too. A
+# `legacy:<field>` line writes nothing — it records a value an OLDER version of
+# this script once wrote, so the current copy is allowed to replace it. See the
+# don't-clobber rule below.
+BLOGNAME="$( wp option get blogname | tr -d '\r\n' )"
+BLOGDESCRIPTION="$( wp option get blogdescription | tr -d '\r\n' )"
+SEO_DOC="$( cat <<DOC
+option:page_on_front|seo_description|Shop skincare, body care, and the tools that go with them — plus routine notes and ingredient guides from the Journal.
+option:page_for_posts|seo_title|Journal: Notes and Routine Guides
+option:page_for_posts|seo_description|Skincare notes, ingredient explainers, and simple routine guides from the team behind the shop — no ten-step routines.
+option:woocommerce_shop_page_id|seo_title|Shop All Skincare and Body Care
+option:woocommerce_shop_page_id|seo_description|Browse the full range of cleansers, moisturizers, treatments, eye care, and accessories available at ${BLOGNAME}.
+option:woocommerce_cart_page_id|seo_title|Your Cart — Review Your Order
+option:woocommerce_cart_page_id|seo_description|Review the items in your cart, update quantities, and check your order total before you continue to checkout.
+option:woocommerce_checkout_page_id|seo_title|Secure Checkout — Pay Safely
+option:woocommerce_checkout_page_id|seo_description|Enter shipping and payment details to complete the order securely. Totals appear in full before any card is charged.
+option:woocommerce_myaccount_page_id|seo_title|Your Account and Order History
+option:woocommerce_myaccount_page_id|seo_description|Sign in to view your orders, track deliveries, and manage your addresses and account details.
+page:about-us|seo_title|Our Story and How We Formulate
+page:about-us|seo_description|Learn about our story, how we formulate, and why we make skincare for sensitive skin.
+page:privacy-policy|seo_title|Privacy Policy and Data Practices
+page:terms-of-use|seo_title|Terms of Use and Store Conditions
+post:behind-every-formula-how-we-choose-ingredients|seo_title|How We Choose Our Ingredients
+term:product_cat:cleansers|seo_description|Soap-free cleansers that lift away makeup, sunscreen, and daily buildup without stripping or tightening the skin.
+term:product_cat:moisturizers|seo_description|Lightweight moisturizers and hydrating serums that lock in moisture for up to 24 hours, on every skin type.
+term:product_cat:treatments|seo_description|Targeted treatments — night oils, polishes, and actives — for visibly brighter, smoother, more even-looking skin.
+term:category:skincare|term_description|Notes, ingredient explainers, and routine guides on skincare — what actually works, and what you can skip.
+product:rejuvenating-night-oil|short_description|A nourishing overnight oil with rosehip and squalane that replenishes dry, tired skin while you sleep. Wake up softer.
+product:rose-quartz-facial-polish|short_description|A gentle exfoliating polish with finely milled rose quartz that smooths and brightens without scratching the skin.
+product:hydrating-body-serum|short_description|A lightweight, fast-absorbing body serum that locks in moisture for up to 24 hours without any greasy finish.
+product:gentle-gel-cleanser|short_description|A soap-free gel cleanser that lifts away makeup, sunscreen, and daily buildup without stripping or tightening skin.
+option:page_on_front|legacy:seo_description|${BLOGDESCRIPTION}
+option:page_for_posts|legacy:seo_description|Skincare notes, ingredient explainers, and routine guides from the team.
+option:woocommerce_shop_page_id|legacy:seo_description|Browse the full range of products available at ${BLOGNAME}.
+DOC
+)"
+
+# Re-runs never clobber an owner's edit. Alongside each value the snippet
+# records what it wrote in an `_agentic_seo_seeded` post/term meta map, and it
+# only writes a field whose stored value is (a) empty, (b) still byte-identical
+# to that record, or (c) byte-identical to one of the `legacy:` values above.
+# So: edit a description in wp-admin and this step leaves it alone from then on;
+# edit the copy above and every clone that never touched it picks the new copy
+# up on the next `wp-env start`.
+#
+# Case (c) is what lets this step repair a store that was seeded by an older
+# version of it, before there was any record to compare against — the front
+# page, Journal and Shop descriptions it used to write were all shorter than
+# TSF's 45-character floor or its 80-character ideal. Those three `legacy:`
+# lines can be dropped once no clone is running the older copy.
+#
+# The three product categories keep their SHORT term description — that string
+# is the visible one-line tagline under the category heading on
+# taxonomy-product_cat.html and must stay one line — and get the longer copy as
+# TSF's own term meta instead, which only search engines see. Eye Care and
+# Accessories deliberately get neither: they hold no products, and TSF
+# noindexes an empty archive by itself, so there is nothing to describe.
+wp eval '
+	$doc     = base64_decode( "'"$( printf '%s' "$SEO_DOC" | base64 | tr -d '\n' )"'" );
+	$tsf_tax = \defined( "THE_SEO_FRAMEWORK_TERM_OPTIONS" ) ? THE_SEO_FRAMEWORK_TERM_OPTIONS : "autodescription-term-settings";
+	$written = 0;
+
+	// Two passes: `legacy:` lines are declarations, not values to write, and a
+	// legacy line may appear after the value it applies to.
+	$entries = [];
+	$legacy  = [];
+
+	foreach ( explode( "\n", $doc ) as $line ) {
+		$line = trim( $line );
+		if ( "" === $line ) continue;
+
+		list( $locator, $field, $value ) = array_pad( explode( "|", $line, 3 ), 3, "" );
+
+		if ( 0 === strpos( $field, "legacy:" ) ) {
+			$legacy[ $locator ][ substr( $field, 7 ) ][] = $value;
+		} else {
+			$entries[] = [ $locator, $field, $value ];
+		}
+	}
+
+	foreach ( $entries as list( $locator, $field, $value ) ) {
+		$parts = explode( ":", $locator );
+
+		// Resolve the locator to a post ID or a term.
+		$id   = 0;
+		$term = null;
+		switch ( $parts[0] ) {
+			case "option":
+				$id = (int) get_option( $parts[1] );
+				break;
+			case "page":
+			case "post":
+			case "product":
+				$id = (int) ( get_page_by_path( $parts[1], OBJECT, $parts[0] )->ID ?? 0 );
+				break;
+			case "term":
+				$term = get_term_by( "slug", $parts[2], $parts[1] );
+				break;
+		}
+		if ( ! $id && ! $term ) continue;
+
+		// Where this field is stored, and what is in it right now.
+		$tsf_key = "seo_title" === $field ? "doctitle" : "description";
+		if ( $term ) {
+			$seeded  = get_term_meta( $term->term_id, "_agentic_seo_seeded", true ) ?: [];
+			$tsf     = get_term_meta( $term->term_id, $tsf_tax, true ) ?: [];
+			$current = "term_description" === $field ? $term->description : ( $tsf[ $tsf_key ] ?? "" );
+		} else {
+			$seeded   = get_post_meta( $id, "_agentic_seo_seeded", true ) ?: [];
+			$meta_key = "seo_title" === $field ? "_genesis_title" : "_genesis_description";
+			$current  = "short_description" === $field
+				? get_post_field( "post_excerpt", $id )
+				: (string) get_post_meta( $id, $meta_key, true );
+		}
+
+		// A product still carrying the placeholder marker in its long
+		// description belongs to this script, not to the store owner, so its
+		// short description is always safe to rewrite.
+		$is_placeholder = ! $term
+			&& "short_description" === $field
+			&& false !== strpos( get_post_field( "post_content", $id ), "Placeholder product — delete before launch." );
+
+		$ours = "" === $current
+			|| ( $seeded[ $field ] ?? null ) === $current
+			|| \in_array( $current, $legacy[ $locator ][ $field ] ?? [], true )
+			|| $is_placeholder;
+
+		if ( ! $ours ) continue;
+
+		// Already correct: record it as ours (so a later edit is respected)
+		// without touching the database value or counting it as a write.
+		if ( $current !== $value ) {
+			if ( $term ) {
+				if ( "term_description" === $field ) {
+					wp_update_term( $term->term_id, $term->taxonomy, [ "description" => $value ] );
+				} else {
+					$tsf[ $tsf_key ] = $value;
+					update_term_meta( $term->term_id, $tsf_tax, $tsf );
+				}
+			} elseif ( "short_description" === $field ) {
+				wp_update_post( [ "ID" => $id, "post_excerpt" => $value ] );
+			} else {
+				update_post_meta( $id, $meta_key, $value );
+			}
+			$written++;
+		}
+
+		if ( ( $seeded[ $field ] ?? null ) !== $value ) {
+			$seeded[ $field ] = $value;
+			$term
+				? update_term_meta( $term->term_id, "_agentic_seo_seeded", $seeded )
+				: update_post_meta( $id, "_agentic_seo_seeded", $seeded );
+		}
+	}
+
+	printf( "   wrote %d SEO value(s)\n", $written );
+'
 
 echo "✔ Site ready → http://localhost:8888"

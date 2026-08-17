@@ -134,7 +134,11 @@ user's written prompt, and a pasted reference screenshot into one set of
 
 ## Stack (what's pre-installed, all free)
 - **WooCommerce** (official, free) — ecommerce engine
-- **Yoast SEO** (free version) — SEO meta, sitemaps, schema
+- **The SEO Framework** (free) — SEO meta, sitemaps, schema. Chosen over
+  Yoast because it auto-generates titles/descriptions from existing content
+  (Yoast free generates nothing, so products and archives shipped with no
+  meta description at all), carries no admin ads or upsell nags, and emits
+  less schema to reconcile against WooCommerce's own
 - **WP Mail SMTP** (free) — WordPress's default `wp_mail()` gets spam-filtered
   by most hosts; order confirmation emails silently never arrive without this
 - **UpdraftPlus** (free) — backups. Schedule/retention are set in code (see
@@ -142,12 +146,111 @@ user's written prompt, and a pasted reference screenshot into one set of
 - Custom theme: `theme/agentic-theme` — block theme (FSE), no page builder
 - Custom plugin: `agentic-blocks` — custom block library
 
-WooCommerce, Yoast, WP Mail SMTP, and UpdraftPlus are all installed by slug
-from wordpress.org by `scripts/setup-site.sh`, which `.wp-env.json` runs
+WooCommerce, The SEO Framework, WP Mail SMTP, and UpdraftPlus are all
+installed by slug from wordpress.org by `scripts/setup-site.sh`, which `.wp-env.json` runs
 automatically via `lifecycleScripts.afterStart`. Do **not** also list them as
 zip URLs in `.wp-env.json` — zip sources unpack into folders named after the
 zip (`woocommerce.latest-stable`), which collides with the slug-named copy and
 produces a `Cannot redeclare WC()` fatal.
+
+### SEO and structured data — three deliberate pieces of code
+The SEO plugin does most of it, but three gaps are closed in the theme's
+`functions.php` because no free plugin closes them for a WooCommerce store:
+
+1. **One `BreadcrumbList` per URL.** WooCommerce emits its own on the shop
+   archive, every product category and every product, on top of whatever the
+   SEO plugin emits — and the two do not necessarily agree (under Yoast they
+   said "Home > Shop > Product" and "Home > Cleansers > Product" on the same
+   page). WooCommerce's copy is dropped via
+   `woocommerce_structured_data_breadcrumblist`, guarded on an SEO plugin
+   actually being active so uninstalling one doesn't leave the store with no
+   breadcrumb schema at all.
+2. **The product's category, put back into the trail.** Dropping WooCommerce's
+   breadcrumb cost a level of detail, so `the_seo_framework_breadcrumb_list`
+   splices the deepest assigned `product_cat` (plus its ancestors) in ahead of
+   the product. Term selection mirrors `WC_Breadcrumb::add_crumbs_single()` on
+   purpose — matching Woo's rule keeps the schema agreeing with the breadcrumb
+   Woo itself would render.
+3. **Category archives in the XML sitemap.** The SEO Framework's free sitemap
+   covers post types only; taxonomy archives are absent from it entirely.
+   `the_seo_framework_sitemap_additional_urls` adds every non-empty
+   `product_cat` *and* `category`. Empty terms stay out, because TSF noindexes
+   an empty archive by itself — submitting one would spend crawl budget on a
+   page that answers "don't index me". TSF caches the sitemap, so after editing
+   this filter run `wp-env run cli wp transient delete --all` before trusting
+   what `/sitemap.xml` shows.
+
+Titles and descriptions are otherwise **not** configured per page: TSF
+generates both from existing content, which is most of why it was chosen over
+Yoast. Step 14 of `setup-site.sh` writes the exceptions — the cases where
+generation has nothing good to work with — and is the single place all of that
+copy lives:
+
+- **No content to generate from.** The container pages (front page, Journal,
+  About Us, Shop) have deliberately empty `post_content` because they render
+  from `templates/*.html`, so each gets an explicit `_genesis_description`.
+- **A one-word page title.** "Shop", "Cart" and "Checkout" stay under TSF's
+  25-character floor even after it appends " - <blogname>", so each gets a
+  `_genesis_title`. That sets only `<title>`/`og:title` — never the H1, the
+  menu label or the breadcrumb.
+- **A generated value outside TSF's length guidelines** (title 35–65, ideally;
+  description 80–160): the sample products' short descriptions — WooCommerce's
+  excerpt field is what TSF builds a product description from, so that copy
+  lives in step 14 and *not* in step 11's `seed_product` calls, which pass an
+  empty string on purpose — and the one sample article whose headline brands
+  out one character over the limit.
+- **Product category SEO descriptions.** The three populated categories keep
+  their short term description (it is the visible one-line tagline under the
+  category heading) and get longer copy in TSF's own term meta, which only
+  search engines see.
+
+Step 14 never clobbers an owner's edit: it records what it wrote in an
+`_agentic_seo_seeded` post/term meta map and only writes a value that is empty,
+still identical to that record, or identical to one of the `legacy:` lines in
+the same document (which exist so a store seeded by an older version of the
+script gets repaired once).
+
+Length is not the only thing TSF grades. It also flags a description for
+**repeated words** — more than one word used twice, or any word used four
+times, turns the badge orange. A draft of the checkout description said "your"
+three times and was flagged for exactly that.
+
+**Every title (T) and description (D) badge across posts, pages, products and
+the populated categories is green.** What remains non-green is only the
+indexing/following/archiving trio (I/F/A), on two sets of pages, and in both
+cases the grey is the bar reporting the truth — don't "fix" it:
+
+- Cart, Checkout, My account: `noindex` on purpose. F and A go orange purely
+  *because* of that ("the page may not be indexed, this may also discourage
+  link following"), so the only way to green is making cart/checkout/account
+  indexable — bad SEO, and something this boilerplate deliberately does not do.
+  Their titles and descriptions are set anyway, since the SEO Bar grades them
+  regardless and og:description falls back to the same value.
+- Privacy Policy, Terms of Use, Refund and Returns Policy: drafts, because the
+  real legal copy is the owner's to write (step 10). "Page is invisible" is
+  accurate, and publishing placeholder legal text to clear a badge would be
+  worse than the badge. The dashboard checklist's **Legal pages** item is how
+  the owner finds out these are still unpublished; the badges go green by
+  themselves once real copy is written and published.
+- Eye Care, Accessories, Uncategorized product categories: empty, so TSF
+  noindexes them ("No posts are attached to this term"). They exist only so
+  `collection-list` and `product-subcategories` have real archives to link to.
+
+Generating the bar outside wp-admin gives **wrong answers for terms** —
+`SEOBar\Builder::generate_bar( [ 'id' => …, 'tax' => … ] )` in `wp eval`
+reports every term as noindex with an empty description, including populated
+ones the live page proves are fine. Read the real column instead (log in and
+fetch `wp-admin/edit-tags.php?taxonomy=product_cat&post_type=product`), or
+just use `seo-check.py`.
+
+Re-audit with `./scripts/seo-check.py`, which fetches every page type and exits
+non-zero if any invariant breaks: every non-`noindex` page has a description;
+no schema entity appears twice; exactly one `BreadcrumbList` per URL; every
+indexable page's title and description are inside TSF's tolerated length range
+(values merely outside its *ideal* range print as warnings, since that is what
+turns the SEO Bar orange); and the pages that are supposed to be `noindex`
+still are. Treat a non-zero exit as a failing check, same as the Lighthouse
+gate.
 
 **Analytics/ad pixels (GA4, Meta Pixel) are deliberately not a plugin** — two
 script tags plus one purchase-conversion event isn't enough surface area to
@@ -210,6 +313,7 @@ scripts/
   new-block.sh        <- scaffold a new section
   new-template.sh     <- scaffold a new template (header/footer pre-wired)
   lighthouse-check.sh <- performance gate
+  seo-check.py        <- metadata/schema gate (descriptions, duplicate schema)
 ```
 
 ### Template coverage
@@ -368,20 +472,33 @@ no separate build step. Run it manually after editing any `index.js`.
   first.
 
 ## Verification workflow (after writing/editing code — not for building)
-Screenshot and Lighthouse checks are **opt-in, not automatic**. Once a
-block/template change is done, ask the user whether they want a visual check
-and/or a Lighthouse run before moving on — don't run either by default
-unless their own request already implied it (e.g. "build X and show me a
-screenshot"). This keeps the agent from burning a screenshot + a ~15s
-Lighthouse run after every single small edit when the user is mid-iteration
-and would rather batch verification at the end.
+**All checks — Playwright screenshots, Lighthouse, `seo-check.py` — are
+fully manual and opt-in.** After writing/editing a file, just report what
+changed and stop there. Do **not** run a check, and do **not** ask whether
+the user wants one — asking after every edit is itself the slowdown this
+rule exists to prevent. Only run a check when the user's message explicitly
+calls for it (by name, or a closing clause like "...and then verify it" /
+"...and run all checks after"). This applies even to `seo-check.py`, which
+is fast enough to seem harmless to run proactively — don't; the user asks
+when they want it.
 
-1. `wp-env run cli wp plugin activate agentic-blocks` (only if not already active)
-2. If the user wants a visual check: see the `playwright-verify` skill
+Trigger phrases → what runs:
+
+| Say this (or similar) | What runs |
+|---|---|
+| "screenshot this" / "show me how it looks" / "verify visually" | `playwright-verify` skill |
+| "check lighthouse" / "run lighthouse" / "check performance" | `lighthouse-optimize` skill → `./scripts/lighthouse-check.sh` |
+| "check SEO" / "run seo check" | `./scripts/seo-check.py` |
+| "run all checks" / "do all verification" / "verify everything" | all three below, in order |
+
+1. `wp-env run cli wp plugin activate agentic-blocks` (only if not already
+   active — this is a dependency step required for the block to render at
+   all, not a verification check, so it's fine to run without being asked)
+2. Visual check → `playwright-verify` skill
    (`.claude/skills/playwright-verify/`) — screenshot via Playwright MCP,
    purely to confirm the code renders as intended, never to build content.
-3. If the user wants a performance check: see the `lighthouse-optimize`
-   skill (`.claude/skills/lighthouse-optimize/`) —
+3. Performance check → `lighthouse-optimize` skill
+   (`.claude/skills/lighthouse-optimize/`) —
    `./scripts/lighthouse-check.sh <path> [min-score] [categories]`, which
    exits non-zero if any category is below threshold (default 90). Treat a
    non-zero exit as a failing check, not a suggestion.
@@ -389,7 +506,10 @@ and would rather batch verification at the end.
      SEO score is legitimately low. Audit those without the seo category:
      `./scripts/lighthouse-check.sh /cart/ 90 performance,accessibility,best-practices`
      Do not try to make them indexable.
-4. Fix issues by editing the source files again — never by adjusting
+4. SEO/schema check → `./scripts/seo-check.py`. Most relevant after
+   anything that touches metadata, schema, templates that render
+   product/category content, or `setup-site.sh` — but still only when asked.
+5. Fix issues by editing the source files again — never by adjusting
    settings through the UI
 
 ## Skills
@@ -397,14 +517,17 @@ Recurring workflows for this boilerplate are written up as Claude Code
 skills under `.claude/skills/`, each self-contained and grounded in this
 repo's actual code (not generic advice):
 
-| Skill | For |
-|---|---|
-| `playwright-verify` | Screenshotting a page/template/block to confirm it renders as intended — see "Verification workflow" above for when to invoke it |
-| `lighthouse-optimize` | Running the Lighthouse gate and fixing the specific LCP/render-blocking/caching failure modes that actually recur in this codebase |
-| `image-to-webp` | Converting a sourced or generated PNG/JPG into WebP, sized/cropped to the target block's aspect ratio, before it goes into `assets/images/` |
-| `responsive-design` | The breakpoints, fluid-type, and aspect-ratio conventions each block already follows |
-| `apply-brand-input` | Turning a written brand prompt, a reference screenshot, and/or `../system-design/` into actual `theme.json`/block-attribute edits |
-| `ai-image-prompts` | Writing an AI image-generation prompt matched to a block's aspect ratio and the current design language, including how to handle a user-supplied image-gen API key without it touching git or chat output |
+| Skill | For | Manual-only check? |
+|---|---|---|
+| `playwright-verify` | Screenshotting a page/template/block to confirm it renders as intended — see "Verification workflow" above for when to invoke it | Yes — run only when asked |
+| `lighthouse-optimize` | Running the Lighthouse gate and fixing the specific LCP/render-blocking/caching failure modes that actually recur in this codebase | Yes — run only when asked |
+| `image-to-webp` | Converting a sourced or generated PNG/JPG into WebP, sized/cropped to the target block's aspect ratio, before it goes into `assets/images/` | No — a build step, not a check |
+| `responsive-design` | The breakpoints, fluid-type, and aspect-ratio conventions each block already follows | No — reference doc, not a check |
+| `apply-brand-input` | Turning a written brand prompt, a reference screenshot, and/or `../system-design/` into actual `theme.json`/block-attribute edits | No — a build step, not a check |
+| `ai-image-prompts` | Writing an AI image-generation prompt matched to a block's aspect ratio and the current design language, including how to handle a user-supplied image-gen API key without it touching git or chat output | No — a build step, not a check |
+
+`./scripts/seo-check.py` (a script, not a skill — see "Verification
+workflow" above) is also manual-only: run it only when asked.
 
 ## Site setup lives in code too
 `scripts/setup-site.sh` is the code-first equivalent of the WooCommerce
@@ -418,7 +541,7 @@ wp-admin, add a `wp option update` line to that script instead.
 `theme/agentic-theme/inc/setup-checklist.php` adds a widget to the top of
 wp-admin's Home/Dashboard screen that self-checks every item in the
 "Owner-editable in wp-admin" list below (payment gateway, SMTP, backups,
-shipping, tax, Yoast representation, sample content, domain/SSL) and links
+shipping, tax, site representation, sample content, legal pages, domain/SSL) and links
 straight to the relevant settings screen. This is how a clone's owner finds
 out what's left to configure without reading this file first — keep the two
 in sync: a new owner-only setup step belongs in **both** places.
@@ -428,10 +551,13 @@ These are the store owner's job, not the agent's, and editing them in wp-admin
 is **not** a violation of the code-first rule — they are content or external
 credentials, not layout:
 - Product catalogue, prices, images, and descriptions
-- Page copy for About / policy pages
+- Page copy for About / policy pages — and **publishing** the three legal pages
+  (privacy, terms, refunds), which `setup-site.sh` deliberately leaves as
+  drafts holding placeholder text until real copy is reviewed
 - Payment gateway credentials (Stripe/PayPal API keys)
 - Live shipping-carrier accounts and real tax/nexus configuration
-- Yoast site-representation + social profile URLs
+- Site representation (organization vs person) + social profile URLs, under
+  SEO → Settings
 - Domain, SSL, and production host settings
 - WP Mail SMTP mailer + credentials (Settings → WP Mail SMTP) — installed and
   activated by `setup-site.sh`, but *which* SMTP provider and its API
@@ -458,9 +584,10 @@ credentials, not layout:
 
 ## Cloning this for a new store
 1. `git clone` this repo into a new folder, rename it
-2. `wp-env start` — WooCommerce + Yoast SEO + theme + blocks activate automatically
+2. `wp-env start` — WooCommerce + The SEO Framework + theme + blocks
+   activate automatically
 3. Edit `theme.json` for the new brand's colors/fonts
 4. Add/adjust blocks under `agentic-blocks/blocks/` for anything store-specific
 5. Everything else (product pages, cart, checkout, SEO metadata, sitemaps)
-   is already wired up via WooCommerce + Yoast, using their normal WordPress
-   data model — no rebuilding those parts per project
+   is already wired up via WooCommerce + The SEO Framework, using their
+   normal WordPress data model — no rebuilding those parts per project

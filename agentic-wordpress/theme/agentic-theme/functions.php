@@ -161,6 +161,16 @@ add_action(
  * Sleek-style token set in theme.json. Re-point their class names at our
  * tokens — see assets/css/woocommerce.css — loaded only on the pages that
  * actually render that markup, so it costs nothing elsewhere.
+ *
+ * `is_product()` is in that list for the "You may also like" grid at the
+ * bottom of single-product.html: it is a woocommerce/product-collection,
+ * i.e. the exact same `.wc-block-product-template` card markup the archives
+ * use, so it needs the same card CSS. Without it the cards render unstyled
+ * *and* the second gallery photo — which the
+ * render_block_woocommerce/product-image filter below injects on every
+ * product loop, archive or not — has nothing to absolutely-position and
+ * hide it, so it stacks under the primary photo instead of crossfading in
+ * on hover. Leaving it out is what caused exactly that bug once.
  */
 add_action(
 	'wp_enqueue_scripts',
@@ -169,7 +179,7 @@ add_action(
 			return; // WooCommerce inactive.
 		}
 
-		if ( is_cart() || is_checkout() || is_account_page() || is_shop() || is_product_taxonomy() ) {
+		if ( is_cart() || is_checkout() || is_account_page() || is_shop() || is_product_taxonomy() || is_product() ) {
 			$path = get_theme_file_path( 'assets/css/woocommerce.css' );
 			wp_enqueue_style(
 				'agentic-woocommerce-overrides',
@@ -664,3 +674,210 @@ function agentic_nav_drawer_social_links() {
 
 	return '<ul class="wp-block-social-links has-small-icon-size has-icon-color is-style-logos-only agentic-nav-drawer__social">' . $items . '</ul>';
 }
+
+/**
+ * Structured data: one BreadcrumbList per URL, not two.
+ *
+ * WooCommerce emits its own JSON-LD `BreadcrumbList` on the shop archive,
+ * every product category, and every product page — independently of whatever
+ * SEO plugin is installed, which emits one too. Both land on the same URL, and
+ * they do not necessarily agree: on this store, under Yoast, one said
+ * "Home > Shop > Gentle Gel Cleanser" while WooCommerce said
+ * "Home > Cleansers > Gentle Gel Cleanser". Two contradictory trails for one
+ * page is worse than a plain duplicate — it hands a crawler a conflict to
+ * resolve rather than a fact.
+ *
+ * The SEO plugin's copy is the one kept, for a structural reason rather than a
+ * preference: it lives inside that plugin's own graph and is referenced by its
+ * `WebPage` node's `breadcrumb` property. Dropping it would leave a dangling
+ * reference, whereas WooCommerce's is a standalone node nothing else points at,
+ * so removing it costs nothing.
+ *
+ * Guarded on an SEO plugin actually being active, so removing the plugin
+ * doesn't silently leave the store with no breadcrumb schema at all. The list
+ * covers the plugins this boilerplate is realistically cloned with; a store
+ * running something else keeps both, which is the safe direction to fail.
+ */
+add_filter(
+	'woocommerce_structured_data_breadcrumblist',
+	function ( $markup ) {
+		$seo_plugin_active = defined( 'WPSEO_VERSION' )                 // Yoast SEO
+			|| defined( 'THE_SEO_FRAMEWORK_VERSION' )                   // The SEO Framework
+			|| defined( 'SEOPRESS_VERSION' )                            // SEOPress
+			|| defined( 'RANK_MATH_VERSION' );                          // Rank Math
+
+		return $seo_plugin_active ? [] : $markup;
+	}
+);
+
+/**
+ * Put the product's category back into the breadcrumb trail.
+ *
+ * Consequence of the de-duplication above: WooCommerce's BreadcrumbList was
+ * the category-aware one ("Home > Cleansers > Gentle Gel Cleanser"), and
+ * dropping it left The SEO Framework's flatter trail
+ * ("Home > Shop > Gentle Gel Cleanser") as the only one. Removing the
+ * duplicate should not have cost the store a level of taxonomy detail, so it
+ * is added back here — one trail, and the more useful one.
+ *
+ * Term selection deliberately mirrors WooCommerce's own
+ * `WC_Breadcrumb::add_crumbs_single()`: order by `parent DESC` and take the
+ * first, which yields the deepest assigned category rather than an arbitrary
+ * one, then walk its ancestors so a nested category renders its full path.
+ * Matching Woo's rule means the schema trail agrees with the breadcrumb
+ * WooCommerce would render on the page, instead of inventing a second opinion.
+ *
+ * @param array[] $list Breadcrumb items, each `[ 'url' => string, 'name' => string ]`.
+ * @return array[]
+ */
+add_filter(
+	'the_seo_framework_breadcrumb_list',
+	function ( $list ) {
+		if ( ! function_exists( 'is_product' ) || ! is_product() || count( $list ) < 2 ) {
+			return $list;
+		}
+
+		$terms = wc_get_product_terms(
+			get_queried_object_id(),
+			'product_cat',
+			[
+				'orderby' => 'parent',
+				'order'   => 'DESC',
+			]
+		);
+		if ( empty( $terms ) || ! $terms[0] instanceof WP_Term ) {
+			return $list;
+		}
+
+		// Ancestors come back deepest-first; the trail needs them outermost-first.
+		$crumb_terms = array_reverse( get_ancestors( $terms[0]->term_id, 'product_cat' ) );
+		$crumb_terms[] = $terms[0]->term_id;
+
+		$category_crumbs = [];
+		foreach ( $crumb_terms as $term_id ) {
+			$term = get_term( $term_id, 'product_cat' );
+			if ( ! $term instanceof WP_Term ) {
+				continue;
+			}
+			$link = get_term_link( $term );
+			if ( is_wp_error( $link ) ) {
+				continue;
+			}
+			$category_crumbs[] = [
+				'url'  => $link,
+				'name' => $term->name,
+			];
+		}
+
+		if ( ! $category_crumbs ) {
+			return $list;
+		}
+
+		// Splice in ahead of the product itself, which is always the last crumb.
+		$product_crumb = array_pop( $list );
+		return array_merge( $list, $category_crumbs, [ $product_crumb ] );
+	}
+);
+
+/**
+ * Product and post categories in the XML sitemap.
+ *
+ * The SEO Framework's free sitemap covers post types only — taxonomy archives
+ * are simply absent from it. For a blog that is a defensible default; for a
+ * store it is not, because `/product-category/*` archives are real landing
+ * pages (they are indexable, they carry their own meta description from the
+ * term description, and they are what a category link in the nav points at).
+ * Yoast free did include taxonomy sitemaps, so this is the one capability that
+ * had to be re-added in code when the boilerplate moved to TSF.
+ *
+ * `category` is listed for the same reason: the Journal's own category archives
+ * are indexable pages TSF leaves out of the sitemap, which left the store with
+ * indexable URLs a crawler could only reach by following links.
+ *
+ * Only terms that actually have posts are listed: TSF noindexes an empty
+ * archive by itself ("No posts are attached to this term"), so submitting one
+ * would be asking a crawler to spend budget fetching a page that tells it not
+ * to index the page. Terms hidden from the catalogue (WooCommerce's per-term
+ * display setting) are left out for the same reason.
+ *
+ * @param array $urls Custom URLs keyed by absolute URL, each `[ 'lastmod' => string ]`.
+ * @return array
+ */
+add_filter(
+	'the_seo_framework_sitemap_additional_urls',
+	function ( $urls ) {
+		foreach ( [ 'product_cat', 'category' ] as $taxonomy ) {
+			if ( ! taxonomy_exists( $taxonomy ) ) {
+				continue;
+			}
+
+			$terms = get_terms(
+				[
+					'taxonomy'   => $taxonomy,
+					'hide_empty' => true,
+				]
+			);
+			if ( is_wp_error( $terms ) ) {
+				continue;
+			}
+
+			foreach ( $terms as $term ) {
+				$link = get_term_link( $term );
+				if ( is_wp_error( $link ) ) {
+					continue;
+				}
+				$urls[ $link ] = [ 'lastmod' => '' ];
+			}
+		}
+
+		return $urls;
+	}
+);
+
+/**
+ * One Organization entity across the page, not two.
+ *
+ * The SEO Framework describes the store once, as the `WebSite`'s publisher.
+ * WooCommerce describes it again, independently, as `offers.seller` on the
+ * Product node — same name, same URL, in a separate `<script>` with no `@id`
+ * on it. Nothing errors, but a crawler is handed two unlinked Organization
+ * nodes for one real-world entity and has to guess they are the same store.
+ *
+ * Giving WooCommerce's seller the `@id` the SEO plugin already minted merges
+ * them into one entity. The value comes from TSF's own public entity API
+ * rather than from a reconstructed URL fragment (that fragment is an internal
+ * format, and guessing it would break silently the day it changes) and rather
+ * than from capturing TSF's `the_seo_framework_schema_graph_data` filter:
+ * despite TSF's script appearing first in the HTML, WooCommerce generates its
+ * product data *before* TSF builds its graph, so a capture-then-reuse approach
+ * reads an empty value every time. Verified — that ordering is the opposite of
+ * what the markup order suggests.
+ *
+ * Guarded on the class existing, so swapping the SEO plugin leaves today's
+ * two-node output rather than a fatal.
+ */
+add_filter(
+	'woocommerce_structured_data_product',
+	function ( $markup ) {
+		if ( ! class_exists( '\The_SEO_Framework\Meta\Schema\Entities\Organization' ) ) {
+			return $markup;
+		}
+		if ( empty( $markup['offers'] ) || ! is_array( $markup['offers'] ) ) {
+			return $markup;
+		}
+
+		$org_id = \The_SEO_Framework\Meta\Schema\Entities\Organization::get_id();
+		if ( ! $org_id ) {
+			return $markup;
+		}
+
+		foreach ( $markup['offers'] as &$offer ) {
+			if ( isset( $offer['seller'] ) && is_array( $offer['seller'] ) ) {
+				$offer['seller']['@id'] = $org_id;
+			}
+		}
+		unset( $offer );
+
+		return $markup;
+	}
+);

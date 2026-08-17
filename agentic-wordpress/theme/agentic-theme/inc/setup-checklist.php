@@ -116,21 +116,28 @@ function agentic_get_setup_checklist_items() {
 		'link_label'  => '',
 	];
 
-	// --- Yoast site representation + social profiles ---------------------
-	// `company_or_person` defaults to 'company' out of the box even when
-	// nothing has actually been filled in — the real signal that a human set
-	// this is a non-empty name for whichever type is selected.
-	$wpseo_titles = get_option( 'wpseo_titles', [] );
-	$is_person    = 'person' === ( $wpseo_titles['company_or_person'] ?? '' );
-	$has_rep      = ! empty( $wpseo_titles[ $is_person ? 'person_name' : 'company_name' ] ?? '' );
+	// --- Site representation (knowledge graph) + social profiles ---------
+	// The SEO Framework stores these in its single `autodescription-site-
+	// settings` option. `knowledge_type` defaults to 'organization' out of the
+	// box even when nothing has actually been filled in — the real signal that
+	// a human set this is a non-empty name for whichever type is selected.
+	$tsf_settings = get_option( 'autodescription-site-settings', [] );
+	$is_person    = 'person' === ( $tsf_settings['knowledge_type'] ?? '' );
+	$has_rep      = ! empty( $tsf_settings['knowledge_name'] ?? '' );
 	$items[]      = [
-		'label'       => __( 'Yoast site representation', 'agentic' ),
+		'label'       => __( 'Site representation', 'agentic' ),
 		'status'      => $has_rep ? 'done' : 'pending',
 		'description' => $has_rep
-			? __( 'Site representation and social profile URLs are set.', 'agentic' )
-			: __( 'Not set — this feeds the Organization/Person schema Google reads. Set it under Yoast SEO → Settings → Site representation.', 'agentic' ),
-		'link'        => admin_url( 'admin.php?page=wpseo_dashboard' ),
-		'link_label'  => __( 'Configure Yoast SEO', 'agentic' ),
+			? sprintf(
+				/* translators: %s: "person" or "organization" */
+				__( 'Set — this site represents a %s, with its social profile URLs.', 'agentic' ),
+				$is_person ? __( 'person', 'agentic' ) : __( 'organization', 'agentic' )
+			)
+			: __( 'Not set — this feeds the Organization/Person schema Google reads. Set it under SEO → Settings → Schema.', 'agentic' ),
+		'link'        => admin_url(
+			'admin.php?page=' . ( defined( 'THE_SEO_FRAMEWORK_SITE_OPTIONS_SLUG' ) ? THE_SEO_FRAMEWORK_SITE_OPTIONS_SLUG : 'theseoframework-settings' )
+		),
+		'link_label'  => __( 'Configure SEO settings', 'agentic' ),
 	];
 
 	// --- Shipping ----------------------------------------------------------
@@ -202,6 +209,33 @@ function agentic_get_setup_checklist_items() {
 			: __( 'No placeholder products remain.', 'agentic' ),
 		'link'        => admin_url( 'edit.php?post_type=product' ),
 		'link_label'  => __( 'View products', 'agentic' ),
+	];
+
+	// --- Legal pages -----------------------------------------------------
+	// setup-site.sh (step 10) creates these as DRAFTS on purpose: real,
+	// reviewed legal copy is the owner's to write. Until they are published,
+	// The SEO Framework's SEO Bar reports all three as "Page is invisible" —
+	// accurate, and the only way to clear it is to publish them, which is the
+	// owner's call and not something the setup script should do for them.
+	$legal_drafts = [];
+	foreach ( [ 'privacy-policy', 'terms-of-use', 'refund_returns' ] as $slug ) {
+		$page = get_page_by_path( $slug, OBJECT, 'page' );
+		if ( $page && 'publish' !== $page->post_status ) {
+			$legal_drafts[] = $page->post_title;
+		}
+	}
+	$items[] = [
+		'label'       => __( 'Legal pages', 'agentic' ),
+		'status'      => $legal_drafts ? 'pending' : 'done',
+		'description' => $legal_drafts
+			? sprintf(
+				/* translators: %s: comma-separated list of unpublished legal page titles */
+				__( 'Still unpublished: %s. Replace the placeholder copy with real, reviewed text and publish before launch.', 'agentic' ),
+				implode( ', ', $legal_drafts )
+			)
+			: __( 'Privacy, terms and refund pages are published.', 'agentic' ),
+		'link'        => admin_url( 'edit.php?post_type=page&post_status=draft' ),
+		'link_label'  => __( 'View draft pages', 'agentic' ),
 	];
 
 	// --- Domain & SSL ----------------------------------------------------

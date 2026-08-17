@@ -57,7 +57,7 @@ long, ship fewer items from it — never the same items built by clicking.
 A repository that can be cloned and, with **one command** (`wp-env start`),
 produces a fully working WooCommerce storefront:
 
-- WooCommerce + Yoast SEO installed, activated, and sanely configured
+- WooCommerce + The SEO Framework installed, activated, and sanely configured
 - A custom block theme with full template coverage — no PHP fallbacks
 - A library of minimal custom blocks covering what a typical store needs
 - No page builder, no premium plugins, no bloat
@@ -72,7 +72,7 @@ produces a fully working WooCommerce storefront:
 | Area | State |
 |---|---|
 | `wp-env start` | Works from a destroyed env with no `node_modules`; single command |
-| `scripts/setup-site.sh` | Idempotent; builds blocks, installs WC + Yoast + WP Mail SMTP + UpdraftPlus, permalinks, disables Coming Soon, seeds 4 products |
+| `scripts/setup-site.sh` | Idempotent; builds blocks, installs WC + The SEO Framework + WP Mail SMTP + UpdraftPlus, permalinks, disables Coming Soon, seeds 4 products |
 | Analytics/pixels | GA4 + Meta Pixel — code, not a plugin, in `functions.php`; empty `AGENTIC_GA4_ID`/`AGENTIC_META_PIXEL_ID` constants until the owner sets them; purchase event on `woocommerce_thankyou`, double-fire-guarded via order meta |
 | Block build | `webpack.config.js`, one entry per block → `build/<block>/index.js` + `index.asset.php` |
 | Design tokens | `theme.json` — Dawn-like palette, fluid type scale, spacing scale, button/link styles |
@@ -200,38 +200,106 @@ Screenshot each one.
 **Goal:** correct metadata, schema, and sitemaps for **product** URLs, not
 just posts and pages.
 
-Known state from the audit (verify, don't assume it still holds):
-- Yoast free emits `WebPage` / `BreadcrumbList` / `WebSite` graphs.
-- **Product schema comes from WooCommerce core, not Yoast free.** Yoast's
-  Product schema lives in the paid WooCommerce SEO addon, which this
-  boilerplate will not use. So confirm WooCommerce's `Product` JSON-LD is
-  present, valid, and not duplicated by anything else.
-- `product-sitemap.xml` only appears once at least one product exists.
+**Status: done.** The SEO plugin is **The SEO Framework** (`autodescription`),
+not Yoast — swapped during this phase. Findings and what shipped:
 
-Tasks:
-1. Confirm `Product` JSON-LD has `name`, `offers.price`, `offers.priceCurrency`,
-   `offers.availability`, and `image` populated on a real product.
-2. Ensure exactly one `BreadcrumbList` — the audit saw one from Yoast and one
-   from WooCommerce. Deduplicate.
-3. Add canonical/OG/Twitter checks for product URLs.
-4. Set Yoast title/meta templates for products and product archives in code
-   via `wp option update wpseo_titles ...` in `setup-site.sh`.
-5. Confirm `noindex-product` and `noindex-ptarchive-product` stay `false`.
-6. Ensure `robots.txt` does not disallow product URLs.
+- **Every indexable page has a `<meta name="description">`.** Under Yoast free
+  this was true only of the front page and About Us: Yoast free auto-generates
+  nothing, so every product, every product category, the shop archive and the
+  Journal shipped with no description tag at all. TSF generates one from the
+  content that is already there, which removes the whole class of problem
+  rather than patching it per page.
+- **Exactly one `BreadcrumbList` per URL.** WooCommerce emits its own on the
+  shop archive, every product category and every product, independently of the
+  SEO plugin — and under Yoast the two trails actively *disagreed*
+  ("Home > Shop > Product" vs "Home > Cleansers > Product"). WooCommerce's copy
+  is now dropped by a filter in the theme's `functions.php`, guarded on an SEO
+  plugin actually being active.
+- **The category is back in the trail.** Dropping WooCommerce's breadcrumb cost
+  a level of taxonomy detail, so `the_seo_framework_breadcrumb_list` re-inserts
+  the product's deepest category (and its ancestors), using WooCommerce's own
+  term-selection rule so the schema agrees with what Woo would render.
+- **Product schema still comes from WooCommerce core**, and is not duplicated
+  by TSF — verified on a real product: one `Product` node with `name`,
+  `offers.price`, `offers.priceCurrency`, `offers.availability` and `image`.
+- **Product categories are in the sitemap.** TSF's free sitemap covers post
+  types only; taxonomy archives are simply absent. Yoast free did include them,
+  so `the_seo_framework_sitemap_additional_urls` in `functions.php` adds every
+  non-empty `product_cat`. This is the one capability that had to be re-added
+  in code as part of the swap.
+- The four "container" pages whose `post_content` is deliberately empty (front
+  page, Journal, About Us, WooCommerce's Shop page) have nothing for any plugin
+  to generate from, so they get an explicit `_genesis_description` written by
+  `setup-site.sh` step 14.
+- Core's published "Sample Page" was indexable and in the sitemap on every
+  fresh clone — now trashed by `setup-site.sh` step 10.
+- Cart, checkout, my-account, search and 404 are `noindex` and carry no
+  description, which is correct and deliberate.
 
-**Done when:**
+Verify with:
 ```bash
-curl -s http://localhost:8888/sitemap_index.xml | grep -q product-sitemap && echo OK
-curl -s http://localhost:8888/product-sitemap.xml | grep -c '<loc>'   # >= product count
-```
-```bash
+curl -s http://localhost:8888/sitemap.xml | grep -c '<loc>'
 # exactly one Product node and exactly one BreadcrumbList across the page
-curl -s http://localhost:8888/product/sample-product/ \
-  | grep -o '"@type":"Product"' | wc -l      # must be 1
-curl -s http://localhost:8888/product/sample-product/ \
-  | grep -o '"@type":"BreadcrumbList"' | wc -l   # must be 1
+curl -s http://localhost:8888/product/gentle-gel-cleanser/ \
+  | grep -o '"@type":"Product"' | wc -l          # must be 1
+curl -s http://localhost:8888/product/gentle-gel-cleanser/ \
+  | grep -o '"BreadcrumbList"' | wc -l           # must be 1
 ```
-And SEO category ≥ 90 in `./scripts/lighthouse-check.sh /product/sample-product/`.
+
+**Follow-up round (2026-08-17) — clearing wp-admin's SEO Bar.** Having *a*
+description everywhere turned out not to mean having a *usable* one: TSF's own
+SEO Bar column (TG/DG/I/F/A/R in every post list) was orange or red on 14 rows.
+Read out of the real admin screens rather than guessed at, the causes were all
+length, not wiring:
+
+- **Every sample product's meta description was far too short** (37–50
+  characters against TSF's 45 floor and 80 ideal), because WooCommerce's short
+  description — the field TSF generates a product description from — was a
+  single clause. Rewritten to 109–118 characters, which also improves the shop
+  cards. The copy now lives in step 14 and step 11's `seed_product` calls pass
+  an empty short description, so it exists in exactly one place.
+- **The front page description was the site tagline** (30 characters — the old
+  step 14 reused `blogdescription` as "the owner's own sentence"). Replaced with
+  real copy; Journal and Shop were likewise below the 80-character ideal.
+- **`Shop` and `Cart` titles were under TSF's 25-character floor** even after
+  branding. Shop, Journal, About Us, Cart, Checkout and My account now get an
+  explicit `_genesis_title`, which changes only `<title>`/`og:title`.
+- **The Journal's `category` archive had no description at all and was not in
+  the sitemap** — indexable, but reachable only by following links. The
+  `Skincare` term got a real description, and
+  `the_seo_framework_sitemap_additional_urls` now adds non-empty `category`
+  terms alongside `product_cat`.
+- Step 14 grew a don't-clobber rule (an `_agentic_seo_seeded` record plus
+  `legacy:` lines for values older versions of the script wrote) so it repairs
+  existing stores exactly once and then respects any owner edit. Re-running it
+  reports `wrote 0 SEO value(s)`.
+- `seo-check.py` now gates title/description length against TSF's own
+  guidelines and asserts that the pages meant to be `noindex` still are.
+- Second pass over the Pages screen specifically: cart/checkout/my-account got
+  descriptions too (the bar grades them even though they are `noindex`, and the
+  value is what og:description falls back to), and Privacy Policy / Terms of Use
+  got SEO titles — both were one character under TSF's 35-character floor once
+  branded. TSF also grades **repeated words**: the first checkout description
+  said "your" three times and went orange for it.
+- Added a **Legal pages** item to the dashboard setup checklist. The three legal
+  pages are drafts on purpose, so their I/F/A badges read "Page is invisible"
+  forever; the honest fix is telling the owner they are unpublished, not
+  publishing placeholder legal copy to clear a badge.
+
+Result: all 8 articles, all 4 products and all four container pages read CLEAN
+in the real SEO Bar. What is still grey is correct and documented in CLAUDE.md —
+the three `noindex` WooCommerce pages, the three legal drafts, and the empty
+product categories TSF noindexes itself.
+
+Two things worth not re-learning:
+
+- **Generating the SEO Bar in `wp eval` lies about terms.** Outside wp-admin
+  `SEOBar\Builder::generate_bar( [ 'id' => …, 'tax' => … ] )` reports every
+  term as noindex with an empty description, populated ones included, and even
+  answers with the *page* builder's wording. Live HTML and the real
+  `edit-tags.php` column both disagreed with it. Read those instead.
+- **TSF caches `/sitemap.xml`.** A change to the additional-URLs filter shows
+  up only after `wp-env run cli wp transient delete --all`.
 
 ---
 
@@ -385,7 +453,7 @@ this project.
    ```
    Must print `0`.
 6. ~~Document the owner-only manual steps (payment keys, live shipping/tax,
-   Yoast social profiles, domain/SSL) in `README.md` as an explicit
+   site representation + social profiles, domain/SSL) in `README.md` as an explicit
    pre-launch checklist.~~ Done — see README's "Pre-launch checklist", now
    also self-checked live in wp-admin by the Dashboard "Store setup
    checklist" widget (`inc/setup-checklist.php`).
@@ -455,14 +523,15 @@ to catch) — none of them showed up in code review:
   black button on a black background (the light-text override only touched
   the heading/subheading, not the CTA) — invisible until an actual dark
   single-slide banner was screenshotted.
-- Yoast's homepage meta description needs a `_yoast_wpseo_metadesc` **post
-  meta** field on the front-page post, not the `metadesc-home-wpseo` key in
-  the `wpseo_titles` **option** — that option only applies when the blog
-  index itself is the homepage. Confirmed by testing both directly; only the
-  post-meta version rendered a `<meta name="description">` tag. This gap
-  pre-dates the Sleek work (front-page.html never puts real content in
-  `post_content` for Yoast to derive a description from) but only started
-  failing Lighthouse's SEO gate once this pass ran a full audit.
+- The homepage meta description has to be **post meta** on the front-page
+  post, not a plugin-wide "homepage" setting — those settings only apply when
+  the blog index itself is the homepage, which it is not here. Confirmed by
+  testing both ways; only the post-meta version rendered a
+  `<meta name="description">` tag. This gap pre-dates the Sleek work
+  (front-page.html never puts real content in `post_content` for a plugin to
+  derive a description from) but only started failing Lighthouse's SEO gate
+  once this pass ran a full audit. Now handled for all four container pages in
+  `setup-site.sh` step 14.
 
 Lighthouse on `/` after all fixes: performance 91, accessibility 96,
 best-practices 100, seo 100 (accessibility isn't 100 because of the

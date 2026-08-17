@@ -32,7 +32,9 @@ is committed source, read and written directly.
   templating beyond a menu-slug-to-`ref` resolver; see below)
 - **WooCommerce** (free, official) — product catalogue, cart, checkout,
   orders
-- **Yoast SEO** (free tier) — meta, sitemaps, schema
+- **The SEO Framework** (free) — meta, sitemaps, schema. Auto-generates
+  titles and descriptions from existing content, so pages are not shipped
+  without a `<meta name="description">` by default
 - **WP Mail SMTP** (free) — WordPress's default `wp_mail()` is spam-filtered
   by most hosts; without this, order confirmation emails silently vanish
 - **UpdraftPlus** (free) — scheduled backups; remote storage destination is
@@ -245,9 +247,9 @@ repo's actual code:
 - A remote backup destination under Settings → UpdraftPlus Backups.
 - `AGENTIC_GA4_ID` / `AGENTIC_META_PIXEL_ID` as `wp-config.php` constants,
   if you want analytics/ad pixels — neither fires until set.
-- Payment gateway credentials, live shipping/tax accounts, Yoast social
-  profile URLs, domain/SSL — full list in `CLAUDE.md`'s "Owner-editable in
-  wp-admin" section.
+- Payment gateway credentials, live shipping/tax accounts, site
+  representation + social profile URLs, domain/SSL — full list in
+  `CLAUDE.md`'s "Owner-editable in wp-admin" section.
 - Delete the seeded sample products before launch.
 
 ## Start developing with Claude
