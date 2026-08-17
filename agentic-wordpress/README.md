@@ -192,7 +192,7 @@ correctly has no favicon yet rather than a placeholder mark.
 ```bash
 npm -g install @wordpress/env   # once per machine
 git clone <this-repo-url> my-new-store
-cd my-new-store
+cd my-new-store/agentic-wordpress   # this file's own folder — .wp-env.json lives here, not at the clone root
 wp-env start
 ```
 `wp-env start` runs `scripts/setup-site.sh`, which builds the block bundles,
@@ -366,7 +366,7 @@ repo's actual code:
 ## Start developing with Claude
 
 ```bash
-cd my-new-store
+cd my-new-store/agentic-wordpress
 claude
 ```
 Claude Code reads `CLAUDE.md` automatically. Example first prompt:
@@ -379,10 +379,10 @@ screenshot and a lighthouse check afterward.
 
 ## Cloning for a new project
 
-`git clone` this repo under a new name, `wp-env start`, then point Claude at
-`system-design/` (once populated with the new brand's material) and ask it
-to apply the brand — it edits `theme.json` and the relevant blocks, never
-wp-admin.
+`git clone` this repo under a new name, `cd` into its `agentic-wordpress/`
+folder, `wp-env start`, then point Claude at `system-design/` (one level
+up — once populated with the new brand's material) and ask it to apply the
+brand — it edits `theme.json` and the relevant blocks, never wp-admin.
 
 ## License
 

@@ -28,6 +28,7 @@ cloneable starting point that:
 ```
 agentic-wordpress/    the boilerplate itself — theme, blocks, scripts, docs
 system-design/        brand-input folder + a worked reference example
+.github/              CI workflows (parked — see "Deploying and syncing to a VPS")
 ```
 
 - **`agentic-wordpress/`** is the actual product: a WordPress block theme

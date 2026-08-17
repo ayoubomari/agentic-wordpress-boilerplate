@@ -738,8 +738,9 @@ correctness rules — do not treat them as one:
 
 ## Cloning this for a new store
 1. `git clone` this repo into a new folder, rename it
-2. `wp-env start` — WooCommerce + The SEO Framework + theme + blocks
-   activate automatically
+2. `cd` into its `agentic-wordpress/` folder — `.wp-env.json` lives there,
+   not at the clone root — then `wp-env start`: WooCommerce + The SEO
+   Framework + theme + blocks activate automatically
 3. Edit `theme.json` for the new brand's colors/fonts
 4. Add/adjust blocks under `agentic-blocks/blocks/` for anything store-specific
 5. Everything else (product pages, cart, checkout, SEO metadata, sitemaps)
