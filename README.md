@@ -114,13 +114,15 @@ cp .env.example .env   # fill in VPS_HOST, VPS_REMOTE_PATH, VPS_SSH_KEY
 machine.
 
 ### CI (GitHub Actions) — written, deliberately not live yet
-`agentic-wordpress/.github/workflows-disabled/deploy.yml` and
-`sync-products.yml` wrap the two scripts above for CI, but sit in
-`workflows-disabled/`, not `workflows/` — GitHub only auto-detects and
-triggers workflows literally inside `.github/workflows/`, so they're inert
-until moved:
+`.github/workflows-disabled/deploy.yml` and `sync-products.yml` wrap the
+two scripts above for CI. They live at **this repo's root** (`.github/`
+must sit next to this README, not inside `agentic-wordpress/`, since
+that's the only place GitHub Actions looks for workflows at all) but sit
+in `workflows-disabled/`, not `workflows/`, so they're inert until moved —
+their `run:` steps already `cd` into `agentic-wordpress/` internally
+(via each job's `working-directory` default) to reach `scripts/deploy.sh`
+etc., since the actual product is one level below this file:
 ```bash
-cd agentic-wordpress
 mkdir -p .github/workflows
 mv .github/workflows-disabled/*.yml .github/workflows/
 git add .github/workflows .github/workflows-disabled

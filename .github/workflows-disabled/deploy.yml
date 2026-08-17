@@ -29,6 +29,11 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # The actual product (scripts/, docker-compose.yml) lives in
+    # agentic-wordpress/, one level below this repo's root.
+    defaults:
+      run:
+        working-directory: agentic-wordpress
     steps:
       - uses: actions/checkout@v4
 

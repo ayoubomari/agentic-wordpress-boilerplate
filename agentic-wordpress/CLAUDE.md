@@ -685,13 +685,14 @@ correctness rules — do not treat them as one:
    `CLAUDE.md`) — one-way `local → VPS`, and it's already solved: `git push`
    locally, `scripts/deploy.sh` on the VPS side (`git pull` + rebuild block
    bundles — PHP/template changes need no restart, since docker-compose.yml
-   bind-mounts them directly). `.github/workflows-disabled/deploy.yml`
-   would run it automatically on every push to `main` once `VPS_HOST`/
-   `VPS_SSH_KEY` repository secrets are set — parked in `workflows-
-   disabled/`, not `workflows/`, until then, since GitHub only triggers
-   what's literally inside `.github/workflows/`. See that workflow's own
-   header, and "Deploying and syncing to a VPS" in the top-level README.md
-   for the exact command to enable it.
+   bind-mounts them directly). `../.github/workflows-disabled/deploy.yml`
+   (at this repo's actual root, one level up — the only place GitHub
+   Actions looks) would run it automatically on every push to `main` once
+   `VPS_HOST`/`VPS_SSH_KEY` repository secrets are set — parked in
+   `workflows-disabled/`, not `workflows/`, until then, since GitHub only
+   triggers what's literally inside `.github/workflows/`. See that
+   workflow's own header, and "Deploying and syncing to a VPS" in the
+   top-level README.md for the exact command to enable it.
    Deliberately does **not** run `setup-site.sh` — see point 2 below and
    the "Site setup lives in code too" section above for why that script
    still isn't safe to point at a live store as-is.

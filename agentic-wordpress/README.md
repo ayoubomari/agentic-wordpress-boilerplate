@@ -247,11 +247,14 @@ the next section for setting a default.
 2. Otherwise `VPS_HOST` / `VPS_REMOTE_PATH` / `VPS_SSH_KEY` from `.env`
    (`cp .env.example .env` and fill it in — gitignored, never commit it).
 3. In CI, the same variable names come from repository secrets instead —
-   `.github/workflows-disabled/deploy.yml` (would auto-run on push to
+   `../.github/workflows-disabled/deploy.yml` (would auto-run on push to
    `main`) and `sync-products.yml` (manual trigger only, typed confirmation
    required — see its header for why `pull` isn't offered there: it exists
    to load real data into *your own* local wp-env, which a throwaway CI
-   runner doesn't have).
+   runner doesn't have). `.github/` lives at **this repo's root**, one
+   level up from this file — GitHub Actions never looks anywhere else —
+   which is also why each workflow's job sets `agentic-wordpress` as its
+   `working-directory` before calling into `scripts/`.
 
 Both workflows live in `workflows-disabled/`, not `workflows/` — GitHub
 only triggers what's literally inside `.github/workflows/`, so they're
