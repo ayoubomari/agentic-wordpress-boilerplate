@@ -1,0 +1,217 @@
+.agentic-contact-form {
+	display: grid;
+	grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+	align-items: stretch;
+	gap: 0;
+	background: var(--wp--preset--color--sand);
+	border-radius: var(--agentic-radius-panel);
+	overflow: hidden;
+}
+
+.agentic-contact-form__media {
+	position: relative;
+}
+
+.agentic-contact-form__media img,
+.agentic-contact-form__placeholder {
+	display: block;
+	width: 100%;
+	height: 100%;
+	aspect-ratio: 4 / 5;
+	object-fit: cover;
+	background: var(--wp--preset--color--subtle);
+}
+
+/* Caption overlay (location name + address) — a scrim rather than a solid
+   panel so it works over any photo without knowing its exact tones. */
+.agentic-contact-form__location {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	padding: var(--wp--preset--spacing--60) var(--wp--preset--spacing--40) var(--wp--preset--spacing--40);
+	background: linear-gradient(to top, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0));
+	color: #fff;
+}
+
+.agentic-contact-form__location-name {
+	margin: 0 0 0.25rem;
+	font-weight: 700;
+	font-size: var(--wp--preset--font-size--large);
+}
+
+.agentic-contact-form__location-address {
+	margin: 0;
+	font-size: var(--wp--preset--font-size--small);
+	opacity: 0.9;
+}
+
+.agentic-contact-form__content {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	padding: var(--wp--preset--spacing--60);
+}
+
+.agentic-contact-form__heading {
+	margin: 0 0 var(--wp--preset--spacing--20);
+	font-size: var(--wp--preset--font-size--xx-large);
+	line-height: 1.1;
+}
+
+/* --muted only clears ~3.9:1 against the sand panel background — fails
+   WCAG AA's 4.5:1 for normal text (same issue image-with-text's promo-panel
+   variant documents) — use --contrast for text on this panel instead. */
+.agentic-contact-form__description {
+	margin: 0 0 var(--wp--preset--spacing--40);
+	color: var(--wp--preset--color--contrast);
+}
+
+.agentic-contact-form__notice {
+	margin: 0 0 var(--wp--preset--spacing--30);
+	font-size: var(--wp--preset--font-size--small);
+}
+
+.agentic-contact-form__notice--error {
+	color: var(--wp--preset--color--sale);
+}
+
+.agentic-contact-form__row {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: var(--wp--preset--spacing--30);
+}
+
+.agentic-contact-form__field {
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+	margin-bottom: var(--wp--preset--spacing--30);
+}
+
+.agentic-contact-form__field label {
+	font-size: var(--wp--preset--font-size--small);
+	font-weight: 500;
+}
+
+.agentic-contact-form__field input,
+.agentic-contact-form__field textarea {
+	width: 100%;
+	box-sizing: border-box;
+	padding: 0.85rem 1.1rem;
+	font: inherit;
+	font-size: var(--wp--preset--font-size--small);
+	color: var(--wp--preset--color--contrast);
+	background: var(--wp--preset--color--base);
+	border: 1px solid var(--wp--preset--color--border);
+	border-radius: var(--agentic-radius-card);
+}
+
+.agentic-contact-form__field textarea {
+	min-height: 8rem;
+	resize: vertical;
+}
+
+.agentic-contact-form__field input:focus-visible,
+.agentic-contact-form__field textarea:focus-visible {
+	outline: 2px solid var(--wp--preset--color--contrast);
+	outline-offset: 1px;
+}
+
+/* The global button element (theme.json `styles.elements.button:hover`)
+   inverts fill->outline on hover, which is the site's default but is
+   deliberately overridden on a filled CTA that sits on its own colored/
+   photo surface — see hero-banner's has-image CTA and newsletter-signup's
+   submit button, both of which keep the solid fill and scale up instead.
+   This button matches that same standard rather than the global default,
+   plus a one-shot diagonal light sweep (a glass/holographic "shine") on
+   top — purely decorative pseudo-elements, so the button's own box size
+   never changes and surrounding layout never shifts. */
+.agentic-contact-form__button {
+	position: relative;
+	align-self: flex-start;
+	overflow: hidden;
+	transition: transform 0.2s ease;
+}
+
+.agentic-contact-form__button-label {
+	position: relative;
+	z-index: 1;
+}
+
+.agentic-contact-form__button::after {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: -75%;
+	width: 45%;
+	height: 100%;
+	background: linear-gradient(
+		75deg,
+		transparent,
+		rgba(255, 255, 255, 0.22),
+		transparent
+	);
+	transform: skewX(-20deg);
+	pointer-events: none;
+}
+
+.agentic-contact-form__content .agentic-contact-form__button:hover {
+	transform: scale(1.05);
+	background: var(--wp--preset--color--contrast);
+	color: var(--wp--preset--color--base);
+	border-color: var(--wp--preset--color--contrast);
+}
+
+.agentic-contact-form__button:hover::after {
+	animation: agentic-contact-form-shine 0.35s ease-out;
+}
+
+@keyframes agentic-contact-form-shine {
+	from {
+		left: -75%;
+	}
+	to {
+		left: 130%;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.agentic-contact-form__button {
+		transition: none;
+	}
+
+	.agentic-contact-form__button:hover::after {
+		animation: none;
+	}
+}
+
+/* Honeypot: off-screen (not display:none/hidden — some bots skip fields
+   hidden that way) but visually and semantically absent for real visitors. */
+.agentic-contact-form__hp {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	white-space: nowrap;
+}
+
+@media (max-width: 780px) {
+	.agentic-contact-form {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.agentic-contact-form__media img,
+	.agentic-contact-form__placeholder {
+		aspect-ratio: 4 / 3;
+	}
+
+	.agentic-contact-form__row {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.agentic-contact-form__content {
+		padding: var(--wp--preset--spacing--50) var(--wp--preset--spacing--40);
+	}
+}

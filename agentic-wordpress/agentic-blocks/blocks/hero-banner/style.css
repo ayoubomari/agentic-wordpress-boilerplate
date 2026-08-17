@@ -16,6 +16,14 @@
 	border-radius: var(--agentic-radius-panel);
 }
 
+/* Opt-out for this one instance only (templates/page-about-us.html sets
+   className:"agentic-hero-banner--no-slide-radius" on its hero-banner
+   block) — every other hero-banner usage, e.g. front-page.html, keeps the
+   default rounded panel corners above. */
+.agentic-hero-banner--no-slide-radius .agentic-hero-banner__slide {
+	border-radius: 0;
+}
+
 /* A fixed spacing token reads fine on mobile but leaves text sitting almost
    flush against the slide edge on a wide desktop hero — inset it
    proportionally to the slide's own width instead, once there's room for it

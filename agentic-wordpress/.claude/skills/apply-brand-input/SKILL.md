@@ -66,6 +66,16 @@ inline style.
   "Section library") before reaching for a new attribute or a new block.
 - Real photography/imagery the brand supplies → run it through the
   `image-to-webp` skill before saving it into `assets/images/`.
+- A logo/wordmark from `identity/` → save a square (≥512×512), PNG (not
+  WebP — favicons need broader old-browser/OS support than WebP guarantees)
+  version to `theme/agentic-theme/assets/images/brand/site-icon.png`. Step 14
+  of `setup-site.sh` picks this up automatically on the next `wp-env start`
+  and wires it into WordPress's Site Icon (favicon everywhere), The SEO
+  Framework's sitewide social-share fallback image, and its Organization
+  schema logo — see that step's own comment for the mechanics. It only runs
+  once (skips once `site_icon` is set), so replacing the logo later needs
+  either `wp option update site_icon 0` before the next run, or setting it
+  directly in Settings → General → Site Icon at that point.
 
 ## Verify
 

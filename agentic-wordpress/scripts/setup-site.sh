@@ -14,7 +14,7 @@ cd "$(dirname "$0")/.."
 # as empty and fails.
 wp() { wp-env run cli wp "$@"; }
 
-echo "→ [1/14] Building block editor scripts"
+echo "→ [1/15] Building block editor scripts"
 # block.json points editorScript at build/<block>/index.js, so the bundle must
 # exist before the plugin is activated or blocks register without editor UI.
 if [ -d agentic-blocks/blocks ]; then
@@ -24,7 +24,7 @@ if [ -d agentic-blocks/blocks ]; then
   ( cd agentic-blocks && npm run build --silent )
 fi
 
-echo "→ [2/14] Installing WooCommerce + The SEO Framework (free, from wordpress.org)"
+echo "→ [2/15] Installing WooCommerce + The SEO Framework (free, from wordpress.org)"
 # Installed by slug via WP-CLI rather than as .wp-env.json zip URLs: zip
 # sources land in folders named after the zip (woocommerce.latest-stable),
 # which leaks into asset URLs and collides with a slug-named second copy.
@@ -45,7 +45,7 @@ echo "→ [2/14] Installing WooCommerce + The SEO Framework (free, from wordpres
 #     site behaviour in the database instead of in files.
 wp plugin install woocommerce autodescription --activate
 
-echo "→ [3/14] Installing essential add-ons (free, from wordpress.org)"
+echo "→ [3/15] Installing essential add-ons (free, from wordpress.org)"
 # Two things WooCommerce doesn't handle on its own, both free and both things
 # an actual store cannot skip:
 #   - wp-mail-smtp: WordPress's default wp_mail() gets spam-filtered by most
@@ -66,18 +66,18 @@ wp option update updraft_interval_db 'daily'
 wp option update updraft_retain '7'
 wp option update updraft_retain_db '7'
 
-echo "→ [4/14] Activating theme + agentic-blocks"
+echo "→ [4/15] Activating theme + agentic-blocks"
 wp theme activate agentic-theme
 wp plugin activate agentic-blocks
 
-echo "→ [5/14] Completing WooCommerce installation"
+echo "→ [5/15] Completing WooCommerce installation"
 # WooCommerce defers part of its installer to the first request after
 # activation, and that deferred run writes its own defaults. Forcing it to
 # finish synchronously here means the settings written below actually stick
 # instead of being silently overwritten a moment later.
 wp eval 'if ( class_exists( "WC_Install" ) ) { WC_Install::install(); }'
 
-echo "→ [6/14] Permalinks"
+echo "→ [6/15] Permalinks"
 # Flat /%postname%/ — the sane structure for products; the WP default
 # day-and-name buries /shop/ URLs under a date path.
 wp rewrite structure '/%postname%/' --hard
@@ -114,7 +114,7 @@ wp eval '
 	);
 '
 
-echo "→ [7/14] Store defaults"
+echo "→ [7/15] Store defaults"
 wp option update blogdescription 'A code-first WooCommerce store'
 wp option update woocommerce_store_country 'US:CA'
 wp option update woocommerce_currency 'USD'
@@ -122,7 +122,7 @@ wp option update woocommerce_currency 'USD'
 # otherwise force clicking through the UI before the store works.
 wp option update woocommerce_onboarding_profile '{"skipped":true}' --format=json
 
-echo "→ [8/14] Front page + Journal"
+echo "→ [8/15] Front page + Journal"
 # The storefront must be a static page, not the post feed. Blog posts live at
 # /journal/ instead.
 #
@@ -156,15 +156,17 @@ wp option update page_for_posts "$JOURNAL_ID"
 # other piece of SEO metadata, rather than here — see the note there on why
 # empty-content pages are the only ones that need one written by hand.
 
-echo "→ [9/14] About Us page"
+echo "→ [9/15] About Us + Contact pages"
 # Same container-page pattern as Home/Journal above: the page record exists
-# only so WordPress has something to route /about-us/ to. The actual content
-# lives in templates/page-about-us.html, resolved automatically by WordPress's
+# only so WordPress has something to route /about-us/ (or /contact/) to. The
+# actual content lives in templates/page-about-us.html and
+# templates/page-contact.html, resolved automatically by WordPress's
 # block-template hierarchy from the page's slug — no manual "Template" picker
 # needed, and re-running this never touches an owner's edits to the page.
 ensure_page 'about-us' 'About Us' > /dev/null
+ensure_page 'contact' 'Contact' > /dev/null
 
-echo "→ [10/14] Legal pages"
+echo "→ [10/15] Legal pages"
 # WordPress core auto-creates a "Privacy Policy" page (draft, at
 # /privacy-policy/) on every fresh install, pre-filled with its own
 # section-by-section suggested text — there is no equivalent core default for
@@ -390,7 +392,7 @@ if [ "$( wp eval 'echo ( ( $p = get_page_by_path( "sample-page", OBJECT, "page" 
   echo "   trashed core's default 'Sample Page'"
 fi
 
-echo "→ [11/14] Seeding sample products (so templates are verifiable)"
+echo "→ [11/15] Seeding sample products (so templates are verifiable)"
 # Four, not one: a single product leaves the product grid and the "related
 # products" collection with nothing to show, which hides real template bugs.
 # Spread across three of the five categories (not one catch-all) so
@@ -544,7 +546,7 @@ else
   echo "   products already exist — skipping"
 fi
 
-echo "→ [12/14] Seeding Journal posts (so agentic/latest-posts has real content)"
+echo "→ [12/15] Seeding Journal posts (so agentic/latest-posts has real content)"
 # WordPress core seeds a "Hello world!" sample post on every fresh install —
 # harmless on its own, but it would sit in the Journal archive and
 # occasionally surface in agentic/latest-posts' "3 most recent" query
@@ -628,7 +630,7 @@ else
   echo "   posts already exist — skipping"
 fi
 
-echo "→ [13/14] Disabling WooCommerce Coming Soon mode"
+echo "→ [13/15] Disabling WooCommerce Coming Soon mode"
 # WooCommerce 9.1+ ships this ON. Left alone it replaces the entire storefront
 # with a "Great things are on the horizon" splash for logged-out visitors, so
 # templates cannot be verified and nothing is indexable.
@@ -646,7 +648,55 @@ if [ "$COMING_SOON" != "no" ]; then
   exit 1
 fi
 
-echo "→ [14/14] SEO titles + meta descriptions"
+echo "→ [14/15] Site icon + social share image"
+# Wires a real logo into WordPress's Site Icon (favicon everywhere — browser
+# tab, bookmarks, apple-touch-icon) and The SEO Framework's sitewide social
+# fallback image + Organization schema logo, IF the brand pipeline has
+# actually produced one at this path — see "Brand inputs" in CLAUDE.md and
+# the apply-brand-input skill, which is what's expected to put a file here.
+# Never invented in this script: an unbranded clone (true by default) has no
+# file here, so this step is a no-op and the site simply has no favicon/
+# fallback social image yet, same "don't invent a brand" rule as everywhere
+# else brand assets are involved.
+#
+# Without a site-wide fallback, og:image/twitter:image are only ever present
+# on pages with a natural featured image of their own (products) — the front
+# page, shop archive, Journal, About Us, and every category archive share
+# their real title/description but no image when linked on social media.
+# PNG, not WebP: favicons need broad old-browser/OS support the image-to-webp
+# skill's format doesn't guarantee, so that skill doesn't apply to this file.
+#
+# Only runs once (guarded on site_icon still being unset) — re-importing the
+# same file on every `wp-env start` would otherwise grow the media library by
+# one attachment per run. Replacing the logo later is `wp option update
+# site_icon 0` (or delete the old attachment) before the next run, or just
+# setting a new one directly in Settings → General → Site Icon at that point,
+# which is legitimate owner-editable content like everything else in that
+# settings screen.
+# Two spellings of the same file: the `[ -f ]` test below runs on the HOST
+# (this whole script does, per the `cd`/`wp()` wrapper at the top), so it
+# needs the host-relative path; `wp media import` runs inside the container
+# via that wrapper, so it needs the container's wp-content-rooted path.
+LOGO_PATH="wp-content/themes/agentic-theme/assets/images/brand/site-icon.png"
+if [ -f "theme/agentic-theme/assets/images/brand/site-icon.png" ] && [ "$( wp option get site_icon | tr -d '\r\n' )" = "0" ]; then
+  LOGO_ID="$( wp media import "$LOGO_PATH" --title='Site icon' --porcelain )"
+  wp option update site_icon "$LOGO_ID"
+  wp eval "
+    \$id  = $LOGO_ID;
+    \$url = wp_get_attachment_image_url( \$id, 'full' );
+    \$settings = get_option( 'autodescription-site-settings', [] );
+    \$settings['social_image_fb_id']  = \$id;
+    \$settings['social_image_fb_url'] = \$url;
+    \$settings['knowledge_logo_id']   = \$id;
+    \$settings['knowledge_logo_url']  = \$url;
+    update_option( 'autodescription-site-settings', \$settings );
+  "
+  echo "   wired $LOGO_PATH as site icon + social/schema image"
+else
+  echo "   no $LOGO_PATH yet — skipping (see apply-brand-input skill)"
+fi
+
+echo "→ [15/15] SEO titles + meta descriptions"
 # The SEO Framework auto-generates a title and a meta description for anything
 # with real content underneath it, so the Journal's posts and the populated
 # product categories need nothing written here — that is most of why it was
@@ -657,10 +707,10 @@ echo "→ [14/14] SEO titles + meta descriptions"
 # lists) flags each of them orange or red until they are fixed here:
 #
 #  1. A page whose post_content is deliberately EMPTY. Every "container" page
-#     in this boilerplate is one: the front page, the Journal, About Us and
-#     WooCommerce's Shop page all render from templates/*.html rather than from
-#     the database (see "Homepage and Journal" in CLAUDE.md), so there is
-#     nothing to generate a description *from*.
+#     in this boilerplate is one: the front page, the Journal, About Us,
+#     Contact, and WooCommerce's Shop page all render from templates/*.html
+#     rather than from the database (see "Homepage and Journal" in CLAUDE.md),
+#     so there is nothing to generate a description *from*.
 #  2. A page whose title is one short word. TSF brands every title
 #     ("Shop - Store Name"), and "Shop", "Cart", "Checkout", "Privacy Policy"
 #     and "Terms of Use" are all still under its 35-character floor even
@@ -725,6 +775,8 @@ option:woocommerce_myaccount_page_id|seo_title|Your Account and Order History
 option:woocommerce_myaccount_page_id|seo_description|Sign in to view your orders, track deliveries, and manage your addresses and account details.
 page:about-us|seo_title|Our Story and How We Formulate
 page:about-us|seo_description|Learn about our story, how we formulate, and why we make skincare for sensitive skin.
+page:contact|seo_title|Get in Touch With Our Team
+page:contact|seo_description|Questions about an order, a product, or anything else? Send a message using the form below and our team will respond soon.
 page:privacy-policy|seo_title|Privacy Policy and Data Practices
 page:terms-of-use|seo_title|Terms of Use and Store Conditions
 post:behind-every-formula-how-we-choose-ingredients|seo_title|How We Choose Our Ingredients

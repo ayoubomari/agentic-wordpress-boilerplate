@@ -226,8 +226,9 @@ add_action(
  *    tile grid and the WooCommerce product-collection grid (see the
  *    render_block_woocommerce/product-collection filter below, which is
  *    what puts `agentic-reveal-item` on WooCommerce's own product cards)
- *  - the About Us page (templates/page-about-us.html): the same stacked-
- *    section layout as the front page, just a different set of blocks
+ *  - the About Us and Contact pages (templates/page-about-us.html,
+ *    templates/page-contact.html): the same stacked-section layout as the
+ *    front page, just a different set of blocks
  *  - the Journal listing (home.html) and single posts: the post grid and
  *    agentic/latest-posts' "Related Posts" both need the same card-grid
  *    treatment (see the render_block_core/post-template filter below,
@@ -239,7 +240,7 @@ add_action(
 	function () {
 		$is_shop_page = function_exists( 'is_shop' ) && ( is_shop() || is_product_taxonomy() );
 		$is_journal    = is_home() || is_singular( 'post' );
-		if ( ! is_front_page() && ! $is_shop_page && ! is_page( 'about-us' ) && ! $is_journal ) {
+		if ( ! is_front_page() && ! $is_shop_page && ! is_page( 'about-us' ) && ! is_page( 'contact' ) && ! $is_journal ) {
 			return;
 		}
 
@@ -1037,6 +1038,189 @@ add_action(
 		}
 		header( 'Content-Type: text/plain; charset=utf-8' );
 		echo agentic_generate_llms_txt(); // phpcs:ignore WordPress.Security.EscapeOutput -- plain text, not HTML.
+		exit;
+	}
+);
+
+/**
+ * /product-feed.xml — a Google Merchant Center product feed (RSS 2.0 +
+ * the `g:` namespace), the format Google's own documentation says AI Mode,
+ * AI Overviews, and the Gemini app all ground their shopping answers in —
+ * the actual mechanism for "products showing up in an AI chat," as opposed
+ * to /llms.txt above, which real-world crawl data shows AI bots mostly
+ * don't even fetch. Unlike OpenAI's ChatGPT product-discovery feed or
+ * Perplexity's Merchant Program, Merchant Center needs no checkout
+ * integration and isn't part of any beta agentic-commerce protocol — it
+ * predates all of that by over a decade — so it's the one piece of that
+ * research this boilerplate builds now. Registering the feed URL in a (free)
+ * Merchant Center account is the owner's step, same as the REST keys and
+ * Stripe/PayPal credentials elsewhere in this file's Owner-editable list.
+ *
+ * Generated live from real WooCommerce data on every request, same
+ * reasoning as /llms.txt: no regeneration step to remember as products
+ * change. Simple and variable products only — grouped/external products
+ * aren't real purchasable line items in the same sense and are left out
+ * rather than emitting a feed entry Merchant Center would reject anyway.
+ *
+ * Google requires EITHER a valid gtin OR an mpn+brand pair per item, and an
+ * explicit `identifier_exists: no` when a product genuinely has none of
+ * those — omitting the flag on an identifier-less item gets it disapproved
+ * outright rather than merely down-ranked. `get_sku()` covers the mpn case
+ * for every seeded sample product (see the SKU note in "SEO and structured
+ * data" above); a real store's GTINs, once entered, are picked up
+ * automatically since both read the same WooCommerce product data.
+ */
+if ( ! function_exists( 'agentic_product_feed_category_path' ) ) {
+	function agentic_product_feed_category_path( $product_id ) {
+		$terms = wc_get_product_terms(
+			$product_id,
+			'product_cat',
+			[
+				'orderby' => 'parent',
+				'order'   => 'DESC',
+			]
+		);
+		if ( empty( $terms ) || ! $terms[0] instanceof WP_Term ) {
+			return '';
+		}
+
+		$ancestor_ids = array_reverse( get_ancestors( $terms[0]->term_id, 'product_cat' ) );
+		$names        = [];
+		foreach ( $ancestor_ids as $term_id ) {
+			$term = get_term( $term_id, 'product_cat' );
+			if ( $term instanceof WP_Term ) {
+				$names[] = $term->name;
+			}
+		}
+		$names[] = $terms[0]->name;
+
+		return implode( ' > ', $names );
+	}
+}
+
+if ( ! function_exists( 'agentic_product_feed_item_xml' ) ) {
+	function agentic_product_feed_item_xml( $product, $parent_id = 0 ) {
+		$currency = get_woocommerce_currency();
+		$price    = $product->get_regular_price();
+		if ( '' === $price ) {
+			return '';
+		}
+
+		$gtin = $product->get_global_unique_id();
+		$mpn  = $product->get_sku();
+
+		$xml  = "\t<item>\n";
+		$xml .= "\t\t<g:id>" . esc_xml( (string) $product->get_id() ) . "</g:id>\n";
+		if ( $parent_id ) {
+			$xml .= "\t\t<g:item_group_id>" . esc_xml( (string) $parent_id ) . "</g:item_group_id>\n";
+		}
+		$xml .= "\t\t<title>" . esc_xml( $product->get_name() ) . "</title>\n";
+		$xml .= "\t\t<description>" . esc_xml( wp_strip_all_tags( $product->get_description() ? $product->get_description() : $product->get_short_description() ) ) . "</description>\n";
+		$xml .= "\t\t<link>" . esc_url( get_permalink( $parent_id ? $parent_id : $product->get_id() ) ) . "</link>\n";
+
+		$image_id = $product->get_image_id() ? $product->get_image_id() : ( $parent_id ? wc_get_product( $parent_id )->get_image_id() : 0 );
+		if ( $image_id ) {
+			$xml .= "\t\t<g:image_link>" . esc_url( wp_get_attachment_image_url( $image_id, 'full' ) ) . "</g:image_link>\n";
+		}
+
+		$xml .= "\t\t<g:availability>" . ( $product->is_in_stock() ? 'in stock' : 'out of stock' ) . "</g:availability>\n";
+		$xml .= "\t\t<g:price>" . esc_xml( number_format( (float) $price, 2, '.', '' ) . ' ' . $currency ) . "</g:price>\n";
+		if ( $product->is_on_sale() && '' !== $product->get_sale_price() ) {
+			$xml .= "\t\t<g:sale_price>" . esc_xml( number_format( (float) $product->get_sale_price(), 2, '.', '' ) . ' ' . $currency ) . "</g:sale_price>\n";
+		}
+		$xml .= "\t\t<g:condition>new</g:condition>\n";
+		$xml .= "\t\t<g:brand>" . esc_xml( wp_strip_all_tags( get_bloginfo( 'name' ) ) ) . "</g:brand>\n";
+
+		if ( $gtin ) {
+			$xml .= "\t\t<g:gtin>" . esc_xml( $gtin ) . "</g:gtin>\n";
+		} elseif ( $mpn ) {
+			$xml .= "\t\t<g:mpn>" . esc_xml( $mpn ) . "</g:mpn>\n";
+		} else {
+			$xml .= "\t\t<g:identifier_exists>no</g:identifier_exists>\n";
+		}
+
+		$category_path = agentic_product_feed_category_path( $parent_id ? $parent_id : $product->get_id() );
+		if ( $category_path ) {
+			$xml .= "\t\t<g:product_type>" . esc_xml( $category_path ) . "</g:product_type>\n";
+		}
+
+		$xml .= "\t</item>\n";
+		return $xml;
+	}
+}
+
+if ( ! function_exists( 'agentic_generate_product_feed_xml' ) ) {
+	function agentic_generate_product_feed_xml() {
+		$products = wc_get_products(
+			[
+				'status' => 'publish',
+				'type'   => [ 'simple', 'variable' ],
+				'limit'  => -1,
+			]
+		);
+
+		$items = '';
+		foreach ( $products as $product ) {
+			if ( ! $product->is_visible() ) {
+				continue;
+			}
+
+			if ( $product->is_type( 'variable' ) ) {
+				foreach ( $product->get_children() as $variation_id ) {
+					$variation = wc_get_product( $variation_id );
+					if ( $variation && $variation->is_purchasable() ) {
+						$items .= agentic_product_feed_item_xml( $variation, $product->get_id() );
+					}
+				}
+				continue;
+			}
+
+			$items .= agentic_product_feed_item_xml( $product );
+		}
+
+		$xml  = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+		$xml .= "<rss version=\"2.0\" xmlns:g=\"http://base.google.com/ns/1.0\">\n";
+		$xml .= "<channel>\n";
+		$xml .= '<title>' . esc_xml( wp_strip_all_tags( get_bloginfo( 'name' ) ) ) . "</title>\n";
+		$xml .= '<link>' . esc_url( home_url( '/' ) ) . "</link>\n";
+		$xml .= '<description>' . esc_xml( wp_strip_all_tags( get_bloginfo( 'description' ) ) ) . "</description>\n";
+		$xml .= $items;
+		$xml .= "</channel>\n</rss>\n";
+
+		return $xml;
+	}
+}
+
+add_action(
+	'init',
+	function () {
+		add_rewrite_rule( '^product-feed\.xml$', 'index.php?agentic_product_feed=1', 'top' );
+	}
+);
+
+add_filter(
+	'query_vars',
+	function ( $vars ) {
+		$vars[] = 'agentic_product_feed';
+		return $vars;
+	}
+);
+
+add_filter(
+	'redirect_canonical',
+	function ( $redirect_url ) {
+		return get_query_var( 'agentic_product_feed' ) ? false : $redirect_url;
+	}
+);
+
+add_action(
+	'template_redirect',
+	function () {
+		if ( ! get_query_var( 'agentic_product_feed' ) ) {
+			return;
+		}
+		header( 'Content-Type: application/xml; charset=utf-8' );
+		echo agentic_generate_product_feed_xml(); // phpcs:ignore WordPress.Security.EscapeOutput -- pre-escaped via esc_xml()/esc_url() per field above.
 		exit;
 	}
 );

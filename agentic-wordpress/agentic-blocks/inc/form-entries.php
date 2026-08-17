@@ -10,13 +10,13 @@
  * notification to the site admin (delivered via WP Mail SMTP once the owner
  * configures it — see the "Email deliverability" checklist item).
  *
- * Deliberately not a forms plugin: the only real form in this boilerplate is
- * the newsletter block, and a full forms plugin (entries UI, spam filtering,
- * conditional logic, its own DB tables) is a lot of surface area to pull in
- * for "store an email + notify admin" — same call as the GA4/Meta pixel
- * section in functions.php. `agentic_record_form_entry()` below is written
- * as a small reusable API so a future contact-form (or similar) block can
- * call the same storage without duplicating this layer.
+ * Deliberately not a forms plugin: a full forms plugin (entries UI, spam
+ * filtering, conditional logic, its own DB tables) is a lot of surface area
+ * to pull in for "store a submission + notify admin" — same call as the
+ * GA4/Meta pixel section in functions.php. `agentic_record_form_entry()`
+ * below is a small reusable API for newsletter-signup's single-field case;
+ * contact-form has more fields (name/phone/message) and its own storage,
+ * further down this file, that writes to the same CPT directly.
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -47,7 +47,10 @@ add_action(
 				'show_in_rest'    => false,
 				'menu_icon'       => 'dashicons-email-alt',
 				'menu_position'   => 26,
-				'supports'        => [ 'title' ],
+				// 'editor' holds a contact-form message body (post_content)
+				// so the store owner can actually read it in wp-admin, not
+				// just see that a submission happened.
+				'supports'        => [ 'title', 'editor' ],
 				'capability_type' => 'post',
 				'map_meta_cap'    => true,
 				'capabilities'    => [ 'create_posts' => 'do_not_allow' ],
@@ -59,12 +62,17 @@ add_action(
 add_filter(
 	'manage_agentic_form_entry_posts_columns',
 	function ( $columns ) {
-		$new           = [];
-		$new['cb']     = $columns['cb'];
-		$new['title']  = __( 'Email', 'agentic' );
-		$new['agentic_form_type'] = __( 'Form', 'agentic' );
-		$new['agentic_form_page'] = __( 'Page', 'agentic' );
-		$new['date']   = $columns['date'];
+		$new                       = [];
+		$new['cb']                 = $columns['cb'];
+		// Title now holds a contact submitter's name (falls back to their
+		// email when no name was given) rather than always being the email
+		// address, so the email gets its own explicit column too.
+		$new['title']              = __( 'Name', 'agentic' );
+		$new['agentic_form_type']  = __( 'Form', 'agentic' );
+		$new['agentic_form_email'] = __( 'Email', 'agentic' );
+		$new['agentic_form_phone'] = __( 'Phone', 'agentic' );
+		$new['agentic_form_page']  = __( 'Page', 'agentic' );
+		$new['date']               = $columns['date'];
 		return $new;
 	}
 );
@@ -74,6 +82,16 @@ add_action(
 	function ( $column, $post_id ) {
 		if ( 'agentic_form_type' === $column ) {
 			echo esc_html( ucfirst( (string) get_post_meta( $post_id, '_agentic_form_type', true ) ) );
+			return;
+		}
+
+		if ( 'agentic_form_email' === $column ) {
+			echo esc_html( (string) get_post_meta( $post_id, '_agentic_form_email', true ) );
+			return;
+		}
+
+		if ( 'agentic_form_phone' === $column ) {
+			echo esc_html( (string) get_post_meta( $post_id, '_agentic_form_phone', true ) );
 			return;
 		}
 
@@ -205,6 +223,91 @@ if ( ! function_exists( 'agentic_handle_newsletter_signup' ) ) {
 					/* translators: 1: email address, 2: page URL, 3: date */
 					__( "A visitor subscribed to your newsletter.\n\nEmail: %1\$s\nPage: %2\$s\nDate: %3\$s", 'agentic' ),
 					$email,
+					$page ? $page : home_url( '/' ),
+					current_time( 'mysql' )
+				)
+			);
+		}
+
+		wp_safe_redirect( add_query_arg( array_merge( $redirect_args, [ 'agentic_form' => 'success' ] ), $redirect ) );
+		exit;
+	}
+}
+
+/**
+ * Handles the contact-form block's form when it has no third-party `action`
+ * configured (agentic-blocks/blocks/contact-form/render.php). Registered
+ * for both logged-in and logged-out submitters since this is a public-
+ * facing form.
+ *
+ * Doesn't reuse agentic_record_form_entry(): that helper dedupes by
+ * (type, email) on purpose, which is correct for a newsletter signup (one
+ * subscription per address) but wrong here — a second contact message from
+ * the same visitor is new content, not a duplicate, so it always gets its
+ * own entry.
+ */
+add_action( 'admin_post_nopriv_agentic_contact_form', 'agentic_handle_contact_form' );
+add_action( 'admin_post_agentic_contact_form', 'agentic_handle_contact_form' );
+
+if ( ! function_exists( 'agentic_handle_contact_form' ) ) {
+	function agentic_handle_contact_form() {
+		$redirect = wp_get_referer() ? wp_get_referer() : home_url( '/' );
+		$redirect = remove_query_arg( [ 'agentic_form', 'agentic_form_instance' ], $redirect );
+
+		$instance      = isset( $_POST['agentic_form_instance'] ) ? sanitize_key( wp_unslash( $_POST['agentic_form_instance'] ) ) : '';
+		$redirect_args = [ 'agentic_form_instance' => $instance ];
+
+		// Honeypot — same convention as agentic_handle_newsletter_signup().
+		if ( ! empty( $_POST['agentic_hp_website'] ) ) {
+			wp_safe_redirect( add_query_arg( array_merge( $redirect_args, [ 'agentic_form' => 'success' ] ), $redirect ) );
+			exit;
+		}
+
+		$nonce_ok = isset( $_POST['agentic_contact_nonce'] )
+			&& wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['agentic_contact_nonce'] ) ), 'agentic_contact_form' );
+
+		$email = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
+
+		if ( ! $nonce_ok || ! is_email( $email ) ) {
+			wp_safe_redirect( add_query_arg( array_merge( $redirect_args, [ 'agentic_form' => 'error' ] ), $redirect ) );
+			exit;
+		}
+
+		$name    = isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '';
+		$phone   = isset( $_POST['phone'] ) ? sanitize_text_field( wp_unslash( $_POST['phone'] ) ) : '';
+		$message = isset( $_POST['message'] ) ? sanitize_textarea_field( wp_unslash( $_POST['message'] ) ) : '';
+		$page    = isset( $_POST['agentic_form_page'] ) ? esc_url_raw( wp_unslash( $_POST['agentic_form_page'] ) ) : '';
+
+		$post_id = wp_insert_post(
+			[
+				'post_type'    => 'agentic_form_entry',
+				'post_title'   => $name ? $name : $email,
+				'post_content' => $message,
+				'post_status'  => 'publish',
+			],
+			true
+		);
+
+		if ( ! is_wp_error( $post_id ) ) {
+			update_post_meta( $post_id, '_agentic_form_email', $email );
+			update_post_meta( $post_id, '_agentic_form_type', 'contact' );
+			update_post_meta( $post_id, '_agentic_form_page', $page );
+			update_post_meta( $post_id, '_agentic_form_phone', $phone );
+
+			wp_mail(
+				get_option( 'admin_email' ),
+				sprintf(
+					/* translators: %s: site name */
+					__( 'New contact form message — %s', 'agentic' ),
+					get_bloginfo( 'name' )
+				),
+				sprintf(
+					/* translators: 1: name, 2: email, 3: phone, 4: message, 5: page URL, 6: date */
+					__( "New contact form submission.\n\nName: %1\$s\nEmail: %2\$s\nPhone: %3\$s\n\nMessage:\n%4\$s\n\nPage: %5\$s\nDate: %6\$s", 'agentic' ),
+					$name ? $name : '—',
+					$email,
+					$phone ? $phone : '—',
+					$message,
 					$page ? $page : home_url( '/' ),
 					current_time( 'mysql' )
 				)

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "agentic/contact-form",
+  "title": "Contact Form",
+  "category": "agentic",
+  "icon": "email-alt",
+  "description": "Two-column \"Get in touch\" panel: a location photo (with an optional name/address caption overlaid bottom-left) on one side, a name/email/phone/message form on the other. Leave `action` empty to store submissions in-house and email the admin (see agentic-blocks/inc/form-entries.php), same convention as newsletter-signup; point it at a real inbox/service endpoint to bypass that.",
+  "attributes": {
+    "heading": { "type": "string", "default": "Get in Touch" },
+    "description": { "type": "string", "default": "" },
+    "imageUrl": { "type": "string", "default": "" },
+    "imageAlt": { "type": "string", "default": "" },
+    "locationName": { "type": "string", "default": "" },
+    "locationAddress": { "type": "string", "default": "" },
+    "buttonText": { "type": "string", "default": "Send Message" },
+    "action": { "type": "string", "default": "" }
+  },
+  "supports": { "align": ["wide", "full"], "spacing": { "margin": true, "padding": true } },
+  "render": "file:./render.php",
+  "style": "file:./style.css"
+}

@@ -1,0 +1,20 @@
+<!-- wp:template-part {"slug":"header","tagName":"header"} /-->
+
+<!-- wp:group {"tagName":"main","layout":{"type":"constrained"},"style":{"spacing":{"padding":{"top":"var:preset|spacing|50","bottom":"var:preset|spacing|60"}}}} -->
+<main class="wp-block-group" style="padding-top:var(--wp--preset--spacing--50);padding-bottom:var(--wp--preset--spacing--60)">
+
+  <!-- This is a single fixed page, not a dynamic archive/product — same
+       convention as the hardcoded nav menus in parts/header.html and
+       parts/footer.html — so the breadcrumb is written directly rather
+       than wired to WooCommerce's dynamic breadcrumb block, which only
+       has trail logic for shop/product/category routes. -->
+  <!-- wp:paragraph {"fontSize":"small","textColor":"muted"} -->
+  <p class="has-muted-color has-text-color has-small-font-size"><a href="/">Home</a> &gt; Contact</p>
+  <!-- /wp:paragraph -->
+
+  <!-- wp:agentic/contact-form {"align":"wide","style":{"spacing":{"margin":{"top":"var:preset|spacing|40"}}},"heading":"Get in Touch","description":"Questions about an order, an ingredient, or anything else? Send us a message and our team will get back to you within 1–2 business days.","imageUrl":"/wp-content/themes/agentic-theme/assets/images/contact/studio.webp","imageAlt":"Blush-pink retail studio counter with skincare display shelving and soft natural light","locationName":"Our Studio","locationAddress":"128 Bloom Street, Portland, OR 97205"} /-->
+
+</main>
+<!-- /wp:group -->
+
+<!-- wp:template-part {"slug":"footer","tagName":"footer"} /-->

@@ -172,7 +172,12 @@ tokens into `theme.json`, layout into `parts/*.html`, fonts copied into
 `theme/agentic-theme/assets/fonts/` (WordPress can only serve fonts from
 inside the theme). With the folder empty, the theme keeps its current
 Shopify-"Sleek"-inspired defaults (warm blush/terracotta palette, pill
-buttons, bold rounded-sans headings) rather than inventing a new direction.
+buttons, bold rounded-sans headings) rather than inventing a new direction —
+same rule for a logo: dropping one at
+`theme/agentic-theme/assets/images/brand/site-icon.png` (square, ≥512×512,
+PNG) makes `setup-site.sh` wire it into the favicon and the sitewide social
+fallback image on the next `wp-env start`; with no file there, the site
+correctly has no favicon yet rather than a placeholder mark.
 
 ## Requirements
 
@@ -225,6 +230,27 @@ export WC_CONSUMER_SECRET=cs_xxxxxxxx
 Leave them unset to skip it entirely — the rest of `.mcp.json` (Playwright)
 is unaffected either way.
 
+## AI shopping visibility
+
+Two endpoints in `functions.php`, both generated live from real WooCommerce
+data on every request (no static file to regenerate as the catalog changes):
+
+- `/robots.txt` — explicit allow/disallow rules for named AI user-agents
+  (GPTBot, ClaudeBot, PerplexityBot, …): catalog open, cart/checkout/account
+  closed.
+- `/llms.txt` — a short, curated summary for AI agents, per the
+  [llms.txt](https://llmstxt.org/) convention. Worth knowing: real crawl data
+  suggests most AI bots don't actually fetch this file — it's a cheap
+  courtesy, not the thing that gets a product into a chat answer.
+- `/product-feed.xml` — a Google Merchant Center product feed (RSS 2.0 +
+  `g:` namespace). This is the one that matters: Google's own docs say AI
+  Mode, AI Overviews, and Gemini all ground their shopping answers in the
+  Merchant Center feed. No checkout integration needed, and unlike OpenAI's
+  ChatGPT product-discovery feed or Perplexity's Merchant Program, it isn't
+  bundled under any beta agentic-commerce protocol. Register the feed URL in
+  a free Merchant Center account to turn it on (see the pre-launch checklist
+  below).
+
 ## Verification workflow
 
 Screenshot and Lighthouse checks are opt-in — Claude asks before running
@@ -274,6 +300,8 @@ repo's actual code:
 - Payment gateway credentials, live shipping/tax accounts, site
   representation + social profile URLs, domain/SSL — full list in
   `CLAUDE.md`'s "Owner-editable in wp-admin" section.
+- Register `/product-feed.xml` in a Google Merchant Center account (see "AI
+  shopping visibility" above) and give each real product a GTIN.
 - Delete the seeded sample products before launch.
 
 ## Start developing with Claude

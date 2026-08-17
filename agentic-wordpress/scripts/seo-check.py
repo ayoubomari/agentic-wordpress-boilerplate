@@ -65,6 +65,7 @@ PATHS = [
     ("single post", None, False),  # resolved below
     ("post category", "/category/skincare/", False),
     ("about us", "/about-us/", False),
+    ("contact", "/contact/", False),
     ("cart", "/cart/", True),
     ("checkout", "/checkout/", True),
     ("my account", "/my-account/", True),
