@@ -80,13 +80,13 @@ per-block or per-template override.
 
 ## Block/section library
 
-`agentic-blocks/blocks/` currently has 22 sections: `hero-banner`,
+`agentic-blocks/blocks/` currently has 23 sections: `hero-banner`,
 `featured-collection`, `image-with-text`, `multicolumn`, `testimonials`,
 `faq-accordion`, `newsletter-signup`, `collection-list`, `rich-text`,
 `logo-list`, `video-section`, `countdown-banner`, `product-badge`,
 `announcement-bar`, `cta-cards`, `search-drawer`, `payment-badges`,
 `photo-marquee`, `photo-statement`, `shop-the-set`, `product-subcategories`,
-`latest-posts`.
+`latest-posts`, `contact-form`.
 
 Each is scaffolded with `./scripts/new-block.sh <slug>` (`--with-js` if it
 needs editor controls) and follows `hero-banner` as the reference pattern:
@@ -144,9 +144,10 @@ footer template parts — WooCommerce is never allowed to fall back to its
 own PHP templates:
 
 `front-page` (homepage), `home` (Journal blog list), `index`, `single`,
-`page`, `page-full-width`, `archive`, `search`, `404`, `archive-product`
-(shop), `single-product`, `taxonomy-product_cat`, `taxonomy-product_tag`,
-`page-cart`, `page-checkout`, `page-my-account`, `order-confirmation`.
+`page`, `page-about-us`, `page-contact`, `page-full-width`, `archive`,
+`search`, `404`, `archive-product` (shop), `single-product`,
+`taxonomy-product_cat`, `taxonomy-product_tag`, `page-cart`,
+`page-checkout`, `page-my-account`, `order-confirmation`.
 
 The homepage and Journal are static pages (`page_on_front`/
 `page_for_posts`, set by `setup-site.sh`) whose *content* is entirely in
@@ -198,13 +199,68 @@ wp-env start
 installs/activates all four plugins, activates the theme and
 `agentic-blocks`, sets permalinks, routes `/` to the static homepage and
 `/journal/` to the post feed, disables the WooCommerce Coming-Soon splash,
-and seeds one sample product. No wp-admin clicking required.
+and seeds four sample products across three categories. No wp-admin
+clicking required.
 
 Visit:
 - Storefront: http://localhost:8888
 - Shop: http://localhost:8888/shop/
 - Journal: http://localhost:8888/journal/
 - Admin: http://localhost:8888/wp-admin (`admin` / `password`)
+
+## Optional: docker-compose for VPS demo hosting
+
+`docker-compose.yml` at the repo root is an alternative to `wp-env` for
+hosting a running clone somewhere other than a local dev machine (a plain
+VPS demo, for instance) — `wp-env` itself is dev-only tooling. Same
+bind-mounts as `wp-env` (`theme/agentic-theme`, `agentic-blocks`), same port
+(`8888`), plus a `wpcli` service for running WP-CLI commands:
+```bash
+DB_PASSWORD=... DB_ROOT_PASSWORD=... docker compose up -d
+docker compose run --rm wpcli <command>   # e.g. core install, plugin list
+```
+It does not run `setup-site.sh` itself — that script currently hardcodes
+`wp-env run cli` and can't yet target the `wpcli` service directly; run the
+equivalent WP-CLI commands manually via `docker compose run --rm wpcli ...`
+until it's made backend-agnostic.
+
+## Optional: product/category sync between local and a VPS
+
+`scripts/sync-products.sh pull [user@host]` pulls the live WooCommerce
+catalog (products, categories, images) from a VPS running the
+docker-compose setup above down into local wp-env, so you're developing
+against real data instead of the four seeded placeholders. Matches by SKU,
+safe to re-run. `push` (local → VPS) exists for a one-time initial catalog
+migration before a store goes live and requires `--force` — see the
+script's own header comment, and "Deployment & environment sync" in
+`CLAUDE.md` for the full policy on what does and doesn't sync between
+environments (code via git, catalog via this script, orders/customers
+never bidirectionally). `user@host` is optional on the command line — see
+the next section for setting a default.
+
+## Optional: automated deploy + sync via GitHub Actions
+
+`scripts/deploy.sh` (code → VPS: `git pull` + rebuild JS bundles) and
+`scripts/sync-products.sh` both resolve their VPS target the same way, via
+`scripts/lib/ssh-target.sh`:
+1. An explicit host passed as a CLI argument, if given.
+2. Otherwise `VPS_HOST` / `VPS_REMOTE_PATH` / `VPS_SSH_KEY` from `.env`
+   (`cp .env.example .env` and fill it in — gitignored, never commit it).
+3. In CI, the same variable names come from repository secrets instead —
+   `.github/workflows-disabled/deploy.yml` (would auto-run on push to
+   `main`) and `sync-products.yml` (manual trigger only, typed confirmation
+   required — see its header for why `pull` isn't offered there: it exists
+   to load real data into *your own* local wp-env, which a throwaway CI
+   runner doesn't have).
+
+Both workflows live in `workflows-disabled/`, not `workflows/` — GitHub
+only triggers what's literally inside `.github/workflows/`, so they're
+inert until you `mv` them over. See "CI (GitHub Actions) — written,
+deliberately not live yet" in the top-level `README.md` for the exact
+command and the repository secrets (`VPS_SSH_KEY`, `VPS_HOST`,
+`VPS_REMOTE_PATH`) both need first. Once enabled, they still fail fast on
+an explicit "secrets are not configured yet" check rather than doing
+nothing silently if a secret's missing.
 
 ## Optional: read-only WooCommerce MCP server
 

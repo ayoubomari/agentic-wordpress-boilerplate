@@ -1,0 +1,56 @@
+name: Deploy
+
+# PARKED — this file sits in .github/workflows-disabled/, not
+# .github/workflows/, so GitHub does not detect or trigger it yet. Move it
+# (and sync-products.yml) into .github/workflows/ once there's a real VPS
+# and the secrets below are set — see "CI (GitHub Actions)" in the
+# top-level README.md for the exact command.
+#
+# Deploys code (theme, blocks, scripts) to the VPS on every push to main —
+# see scripts/deploy.sh, which this workflow just wraps with CI-specific
+# SSH bootstrapping (key + host-key trust). Runs the same way manually via
+# the Actions tab ("Run workflow") if you want to redeploy without a push.
+#
+# Needs two repository secrets before this can do anything real (Settings
+# -> Secrets and variables -> Actions):
+#   VPS_SSH_KEY       Private key content (the whole PEM file, not a path)
+#                      for a user on the VPS with pull/docker access.
+#   VPS_HOST           e.g. deploy@store.example.com
+#   VPS_REMOTE_PATH     Optional — where this repo lives on the VPS.
+#                      Defaults to ~/agentic-wordpress if unset.
+# Until VPS_SSH_KEY/VPS_HOST are set, this workflow fails on the "Check
+# secrets are configured" step below — expected, not a bug.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check secrets are configured
+        run: |
+          if [ -z "${{ secrets.VPS_HOST }}" ] || [ -z "${{ secrets.VPS_SSH_KEY }}" ]; then
+            echo "::error::VPS_HOST and/or VPS_SSH_KEY repository secrets are not set yet — see this workflow's header comment. Nothing to deploy to until they are."
+            exit 1
+          fi
+
+      - name: Load deploy SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+
+      - name: Trust the VPS host key
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "$(echo '${{ secrets.VPS_HOST }}' | sed 's/^[^@]*@//')" >> ~/.ssh/known_hosts
+
+      - name: Deploy
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_REMOTE_PATH: ${{ secrets.VPS_REMOTE_PATH }}
+        run: ./scripts/deploy.sh

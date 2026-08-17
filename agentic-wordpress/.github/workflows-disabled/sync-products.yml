@@ -1,0 +1,75 @@
+name: Sync Products (push to VPS)
+
+# PARKED — this file sits in .github/workflows-disabled/, not
+# .github/workflows/, so GitHub does not detect or trigger it yet (it's
+# manual-dispatch-only anyway, so this mainly just keeps it out of the
+# Actions tab until it's actually usable). Move it (and deploy.yml) into
+# .github/workflows/ once ready — see "CI (GitHub Actions)" in the
+# top-level README.md.
+#
+# Manually-triggered only — never on push/PR. This runs
+# `scripts/sync-products.sh push --force`: local catalog -> VPS, overwriting
+# matching SKUs on the target. That's a real, destructive write against a
+# live store's data, appropriate only for a one-time pre-launch catalog
+# migration (see scripts/sync-products.sh's own header and "Deployment &
+# environment sync" in CLAUDE.md) — never wire this to run automatically.
+#
+# There is deliberately no "pull" job here: pull's whole point is loading
+# real data into a developer's own local wp-env to develop against, which a
+# throwaway CI runner doesn't have — pull is meant to be run locally
+# (`./scripts/sync-products.sh pull`), not from CI.
+#
+# Needs the same repository secrets as deploy.yml (VPS_SSH_KEY, VPS_HOST,
+# optionally VPS_REMOTE_PATH) — see that workflow's header for details.
+# Until they're set, this fails on "Check secrets are configured" below —
+# expected, not a bug.
+#
+# Note this job pushes from *this CI runner's checkout*, not your own
+# machine's local wp-env — running it only makes sense once there's a
+# meaningful local product catalog committed/seeded for it to export, which
+# isn't how this boilerplate's sample data works today (setup-site.sh seeds
+# wp-env's database directly, not a file this workflow could read).
+# Reserved for once that gap is closed; safe to leave unused until then.
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "push" to confirm — this overwrites matching product SKUs on the live VPS.'
+        required: true
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check confirmation
+        run: |
+          if [ "${{ inputs.confirm }}" != "push" ]; then
+            echo "::error::Type exactly 'push' in the confirm field to run this — see workflow header."
+            exit 1
+          fi
+
+      - name: Check secrets are configured
+        run: |
+          if [ -z "${{ secrets.VPS_HOST }}" ] || [ -z "${{ secrets.VPS_SSH_KEY }}" ]; then
+            echo "::error::VPS_HOST and/or VPS_SSH_KEY repository secrets are not set yet — see this workflow's header comment."
+            exit 1
+          fi
+
+      - name: Load deploy SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+
+      - name: Trust the VPS host key
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "$(echo '${{ secrets.VPS_HOST }}' | sed 's/^[^@]*@//')" >> ~/.ssh/known_hosts
+
+      - name: Push product catalog to VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_REMOTE_PATH: ${{ secrets.VPS_REMOTE_PATH }}
+        run: ./scripts/sync-products.sh push --force

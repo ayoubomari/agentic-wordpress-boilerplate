@@ -16,7 +16,7 @@ PDFs, licensed fonts, and product copy should not ship inside it.
 | `fonts/` | Font files (`.woff2` preferred) **plus their licence files** |
 | `styles/` | Colour specs, type scales, spacing rules, swatches, reference CSS |
 | `copy/` | Real text — taglines, about copy, product descriptions, legal pages |
-| `references/` | Screenshots of layouts to match (e.g. Shopify Dawn), inspiration |
+| `references/` | Screenshots of layouts to match (e.g. Shopify Sleek), inspiration |
 | `exports/` | Anything the agent generates from the above (extracted palettes, etc.) |
 
 ## How the agent uses it
