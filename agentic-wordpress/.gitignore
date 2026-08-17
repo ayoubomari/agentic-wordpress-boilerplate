@@ -8,3 +8,6 @@ lighthouse-report.json
 .playwright-mcp/
 *.png
 .claude/settings.local.json
+__pycache__/
+*.pyc
+.DS_Store

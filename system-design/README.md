@@ -44,7 +44,12 @@ commit it into the published boilerplate. Prefer:
 
 ## Current status
 
-Empty. Until real brand material is added, the theme uses a neutral,
-Dawn-like default: system font stack, near-black on white, single accent
-colour. Adding files here is what makes a clone stop looking like the
-baseline and start looking like a specific brand.
+No real brand input has been added yet — `identity/`, `styles/`, `copy/`,
+and `references/` are all empty. `agentic-wordpress-sleek-reference.md` and
+`exports/demo-design-system-prompt.md` are not brand input; they're a
+worked reference example (the boilerplate's own current Sleek-style
+blush/terracotta demo theme, documented so a clone can see what a
+finished design-system doc looks like before writing a real one). Until
+real brand input lands in the folders above, a clone keeps that same Sleek
+demo styling. Adding files there is what makes a clone stop looking like
+the demo and start looking like a specific brand.

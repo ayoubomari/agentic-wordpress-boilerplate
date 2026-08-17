@@ -324,3 +324,7 @@ screenshot and a lighthouse check afterward.
 `system-design/` (once populated with the new brand's material) and ask it
 to apply the brand — it edits `theme.json` and the relevant blocks, never
 wp-admin.
+
+## License
+
+MIT — see [`LICENSE`](../LICENSE). Fork it, rebrand it, ship it.
