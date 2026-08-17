@@ -201,6 +201,30 @@ Visit:
 - Journal: http://localhost:8888/journal/
 - Admin: http://localhost:8888/wp-admin (`admin` / `password`)
 
+## Optional: read-only WooCommerce MCP server
+
+`.mcp.json` also declares a `woocommerce` MCP server
+([`@wppoland/woocommerce-mcp`](https://github.com/wppoland/woocommerce-mcp)) —
+lets Claude *inspect* live store state (orders, stock, products) mid-session
+without a wp-admin detour. It's read-only ("never creates, edits, or deletes
+anything in the store") and opt-in: without credentials it just fails to
+connect, same as any other MCP server would, and nothing else in the session
+is affected. It does not change the CORE RULE — content and layout are still
+only ever written as files; this is purely a way to *read* what a running
+store looks like.
+
+To enable it, generate a **Read**-only WooCommerce REST API key (WooCommerce
+→ Settings → Advanced → REST API in wp-admin — credential generation is
+owner work, same category as the Stripe/PayPal keys in the pre-launch
+checklist below, not a CORE RULE exception) and export it before starting
+Claude Code:
+```bash
+export WC_CONSUMER_KEY=ck_xxxxxxxx
+export WC_CONSUMER_SECRET=cs_xxxxxxxx
+```
+Leave them unset to skip it entirely — the rest of `.mcp.json` (Playwright)
+is unaffected either way.
+
 ## Verification workflow
 
 Screenshot and Lighthouse checks are opt-in — Claude asks before running

@@ -204,6 +204,14 @@ copy lives:
   category heading) and get longer copy in TSF's own term meta, which only
   search engines see.
 
+Step 11's seeded products also get a placeholder SKU each (`RNO-001`,
+`RQP-002`, …) but deliberately no GTIN/UPC/EAN — WooCommerce already wires
+that field (`global_unique_id`) straight into Product schema's `gtin`
+property (`WC_Structured_Data::generate_product_data()`) and into any
+GTIN-keyed feed, so unlike a made-up internal SKU, a fabricated one would be
+actively wrong. It's real inventory data, so it belongs in "Owner-editable in
+wp-admin" below, same as price.
+
 Step 14 never clobbers an owner's edit: it records what it wrote in an
 `_agentic_seo_seeded` post/term meta map and only writes a value that is empty,
 still identical to that record, or identical to one of the `legacy:` lines in
@@ -278,6 +286,40 @@ against bots) instead of your ESP, which stores the entry and emails
 being configured (see the "Email deliverability" setup-checklist item). Set
 `action` to a real ESP endpoint (Mailchimp, Klaviyo, Buttondown …) to bypass
 this entirely and post straight there instead, same as before.
+
+**AI-crawler access (robots.txt) and `/llms.txt` are the same call again** —
+two small, store-agnostic text endpoints, not a "AI SEO" plugin. Both live in
+`functions.php`, next to the breadcrumb/sitemap fixes above:
+- A `robots_txt` filter (priority 20, after The SEO Framework's own
+  priority-10 callback, which replaces `$output` outright rather than
+  appending) adds explicit allow/disallow rules for named AI user-agents
+  (GPTBot, ClaudeBot, PerplexityBot, …) — catalog open, `/cart/`,
+  `/checkout/`, `/my-account/` closed, same three paths already `noindex`
+  for search engines.
+- `/llms.txt` is a real rewrite endpoint (`init` + `query_vars` +
+  `template_redirect`, mirroring how WordPress core itself serves
+  `/robots.txt`), not a static file — its category list is built from
+  `get_terms( 'product_cat' )` on every request. Add or remove a product
+  category and this file reflects it immediately; there is no regeneration
+  step to remember, unlike a file `setup-site.sh` would write once. It
+  deliberately does not enumerate individual products — the sitemap and
+  WooCommerce's own public Store API (`/wp-json/wc/store/v1/products`,
+  linked from the file itself) already cover that, and llmstxt.org's own
+  convention is a short curated index, not a catalog dump.
+
+**Block markup is hand-authored for the same reason AI-generated Gutenberg
+content is a known failure mode elsewhere in the WordPress ecosystem.** A
+block's saved form is a serialized tree wrapped in HTML-comment delimiters
+(`<!-- wp:core/paragraph {...} -->`) that a model generating post content at
+runtime has to reproduce exactly — get one delimiter or attribute wrong and
+WordPress either falls back to the classic editor or drops the block
+entirely, a problem real enough that third-party tools exist purely to
+validate AI-generated block markup before it's saved. This boilerplate never
+has that failure mode because it was never going to hit it: `render.php`
+files are written directly, by hand, from real PHP + attribute arrays — the
+agent is authoring the block's implementation once, not generating its saved
+markup on every request. See "CORE RULE" above; this is *why* that rule
+avoids a documented, ongoing pain point rather than a stylistic preference.
 
 The `theme/agentic-theme` and `agentic-blocks` folders are bind-mounted from
 this repo, so editing them on disk edits the live site instantly.
@@ -550,7 +592,13 @@ in sync: a new owner-only setup step belongs in **both** places.
 These are the store owner's job, not the agent's, and editing them in wp-admin
 is **not** a violation of the code-first rule — they are content or external
 credentials, not layout:
-- Product catalogue, prices, images, and descriptions
+- Product catalogue, prices, images, and descriptions — including each
+  product's GTIN/UPC/EAN/ISBN (Product data → Inventory tab,
+  `global_unique_id`) once real inventory exists. It's a real, globally-
+  issued number WooCommerce already feeds into Product schema's `gtin`
+  property and into any GTIN-keyed feed, so it belongs here with the rest of
+  the real catalog data rather than being invented by a seed script — see
+  the SKU/GTIN note in "SEO and structured data" above
 - Page copy for About / policy pages — and **publishing** the three legal pages
   (privacy, terms, refunds), which `setup-site.sh` deliberately leaves as
   drafts holding placeholder text until real copy is reviewed
@@ -568,6 +616,11 @@ credentials, not layout:
   does not protect against losing that server. Set one before launch
 - `AGENTIC_GA4_ID` / `AGENTIC_META_PIXEL_ID` — set as `wp-config.php`
   constants (not edited into `functions.php`), see the Stack section above
+- WooCommerce REST API keys (WooCommerce → Settings → Advanced → REST API,
+  **Read** permission only) for the optional `woocommerce` MCP server in
+  `.mcp.json` — exported as `WC_CONSUMER_KEY`/`WC_CONSUMER_SECRET` shell env
+  vars, never committed. See "Optional: read-only WooCommerce MCP server" in
+  README.md
 
 ## Do NOT
 - Do not turn navigation menus back into owner-editable `wp_navigation`

@@ -451,7 +451,7 @@ if [ "$(wp post list --post_type=product --format=count | tr -d '\r')" = "0" ]; 
     'wp-content/themes/agentic-theme/assets/images/collections/accessories.webp' > /dev/null
 
   seed_product() {
-    local name="$1" slug="$2" category_id="$3" regular_price="$4" sale_price="$5" description="$6" short_description="$7" stock_quantity="${8:-}" image="${9:-}" image2="${10:-}"
+    local name="$1" slug="$2" category_id="$3" regular_price="$4" sale_price="$5" description="$6" short_description="$7" stock_quantity="${8:-}" image="${9:-}" image2="${10:-}" sku="${11:-}"
     local args=(
       wp wc product create
       --name="$name"
@@ -464,6 +464,9 @@ if [ "$(wp post list --post_type=product --format=count | tr -d '\r')" = "0" ]; 
       --status=publish
       --user=admin
     )
+    if [ -n "$sku" ]; then
+      args+=(--sku="$sku")
+    fi
     if [ -n "$sale_price" ]; then
       args+=(--sale_price="$sale_price")
     fi
@@ -503,26 +506,40 @@ if [ "$(wp post list --post_type=product --format=count | tr -d '\r')" = "0" ]; 
   # description from, so the copy for it lives with the rest of this script's
   # SEO copy in step 14 (which also repairs stores seeded before that step
   # existed) rather than being written in two places that can drift apart.
+  #
+  # Each also gets a placeholder SKU (a made-up internal code, harmless to
+  # invent) but deliberately NOT a GTIN/UPC/EAN — that field
+  # (WooCommerce's own "GTIN, UPC, EAN, or ISBN" input on the product's
+  # Inventory tab, `global_unique_id`) is a real, globally-issued number
+  # WooCommerce already feeds straight into Product schema's `gtin` property
+  # (see WC_Structured_Data::generate_product_data()) and into any GTIN-keyed
+  # feed (Google Merchant, agentic-commerce catalogs). A fabricated one would
+  # be actively wrong, unlike a placeholder SKU — it belongs with the rest of
+  # the real catalog data in the "Owner-editable in wp-admin" list below.
   seed_product 'Rejuvenating Night Oil' 'rejuvenating-night-oil' "$TREATMENTS_CAT_ID" '79.00' '' \
     'A nourishing night oil formulated with rosehip and squalane to replenish skin while you sleep. Placeholder product — delete before launch.' \
     '' '' \
     'wp-content/themes/agentic-theme/assets/images/products/rejuvenating-night-oil.webp' \
-    'wp-content/themes/agentic-theme/assets/images/products/rejuvenating-night-oil-2.webp'
+    'wp-content/themes/agentic-theme/assets/images/products/rejuvenating-night-oil-2.webp' \
+    'RNO-001'
   seed_product 'Rose Quartz Facial Polish' 'rose-quartz-facial-polish' "$TREATMENTS_CAT_ID" '79.00' '59.00' \
     'A gentle exfoliating polish with fine rose quartz powder to reveal smoother, brighter skin. Placeholder product — delete before launch.' \
     '' '' \
     'wp-content/themes/agentic-theme/assets/images/products/rose-quartz-facial-polish.webp' \
-    'wp-content/themes/agentic-theme/assets/images/products/rose-quartz-facial-polish-2.webp'
+    'wp-content/themes/agentic-theme/assets/images/products/rose-quartz-facial-polish-2.webp' \
+    'RQP-002'
   seed_product 'Hydrating Body Serum' 'hydrating-body-serum' "$MOISTURIZERS_CAT_ID" '79.00' '' \
     'A lightweight, fast-absorbing serum that locks in moisture for up to 24 hours. Placeholder product — delete before launch.' \
     '' '2' \
     'wp-content/themes/agentic-theme/assets/images/products/hydrating-body-serum.webp' \
-    'wp-content/themes/agentic-theme/assets/images/products/hydrating-body-serum-2.webp'
+    'wp-content/themes/agentic-theme/assets/images/products/hydrating-body-serum-2.webp' \
+    'HBS-003'
   seed_product 'Gentle Gel Cleanser' 'gentle-gel-cleanser' "$CLEANSERS_CAT_ID" '39.00' '29.00' \
     'A soap-free gel cleanser that lifts away impurities without stripping the skin. Placeholder product — delete before launch.' \
     '' '' \
     'wp-content/themes/agentic-theme/assets/images/products/gentle-gel-cleanser.webp' \
-    'wp-content/themes/agentic-theme/assets/images/products/gentle-gel-cleanser-2.webp'
+    'wp-content/themes/agentic-theme/assets/images/products/gentle-gel-cleanser-2.webp' \
+    'GGC-004'
 else
   echo "   products already exist — skipping"
 fi

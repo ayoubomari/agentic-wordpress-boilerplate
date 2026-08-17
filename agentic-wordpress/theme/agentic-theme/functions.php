@@ -881,3 +881,162 @@ add_filter(
 		return $markup;
 	}
 );
+
+/**
+ * AI-crawler access: robots.txt rules + a dynamic /llms.txt.
+ *
+ * "Agentic commerce" — ChatGPT/Claude/Perplexity-style agents browsing and
+ * citing a store on a shopper's behalf — reads two files neither WooCommerce
+ * nor The SEO Framework produces: explicit allow/disallow rules for AI
+ * user-agents (distinct from search-engine crawlers, and not all of them
+ * respect a page's noindex meta as reliably), and llms.txt, an emerging
+ * convention (https://llmstxt.org/) for a short, structured "here's what
+ * this site is and how to read it" file separate from a human-facing
+ * sitemap. Neither is core WordPress or WooCommerce territory, so — same
+ * call as the breadcrumb/sitemap gaps above — it's closed here in code
+ * rather than by adding a plugin for two small files.
+ *
+ * Priority 20: TSF's own `robots_txt` callback (priority 10) *replaces*
+ * $output outright rather than appending to it ("This method completely
+ * hijacks default output" — inc/classes/robotstxt/main.class.php), so this
+ * has to run after it to add to TSF's version instead of being overwritten
+ * by it.
+ *
+ * Guarded on $public (WordPress's own "discourage search engines" setting,
+ * Settings → Reading): a site that has asked not to be indexed shouldn't be
+ * inviting AI crawlers either.
+ */
+add_filter(
+	'robots_txt',
+	function ( $output, $public ) {
+		if ( ! $public ) {
+			return $output;
+		}
+
+		$ai_user_agents = [
+			'GPTBot',        // OpenAI — training/browsing crawler
+			'OAI-SearchBot', // OpenAI — ChatGPT search
+			'ChatGPT-User',  // OpenAI — live "browse" actions inside a chat
+			'ClaudeBot',     // Anthropic — training/browsing crawler
+			'anthropic-ai',  // Anthropic — Claude's own fetches
+			'PerplexityBot', // Perplexity — search/answer crawler
+			'Google-Extended', // Google — Gemini/AI Overviews training signal
+		];
+
+		$output .= "\n# AI assistants / shopping agents — catalog is open, checkout is not.\n";
+		foreach ( $ai_user_agents as $agent ) {
+			$output .= "User-agent: {$agent}\n";
+			$output .= "Allow: /\n";
+			$output .= "Disallow: /cart/\n";
+			$output .= "Disallow: /checkout/\n";
+			$output .= "Disallow: /my-account/\n";
+		}
+		$output .= "\n# Structured summary of this store for AI agents:\n";
+		$output .= '# ' . home_url( '/llms.txt' ) . "\n";
+
+		return $output;
+	},
+	20,
+	2
+);
+
+/**
+ * /llms.txt — generated fresh on every request from live WooCommerce data
+ * (categories, page URLs), not written once by setup-site.sh and left to go
+ * stale. Add a product category next month and it appears here next month
+ * too, with no regeneration step to remember. Deliberately does NOT
+ * enumerate every product the way the XML sitemap does — llmstxt.org's own
+ * guidance is a concise, curated index, not an exhaustive dump — so
+ * per-product data is left to the two machine-readable links at the bottom
+ * (sitemap + WooCommerce's public Store API) instead.
+ */
+if ( ! function_exists( 'agentic_generate_llms_txt' ) ) {
+	function agentic_generate_llms_txt() {
+		$site    = wp_strip_all_tags( get_bloginfo( 'name' ) );
+		$tagline = wp_strip_all_tags( get_bloginfo( 'description' ) );
+
+		$lines   = [];
+		$lines[] = '# ' . $site;
+		$lines[] = '';
+		if ( $tagline ) {
+			$lines[] = '> ' . $tagline;
+			$lines[] = '';
+		}
+		$lines[] = 'A WooCommerce store. This file is a structured summary for AI assistants and shopping agents, per the llms.txt convention (https://llmstxt.org/) — browse and cite what is listed below; cart, checkout, and account pages are intentionally excluded (see robots.txt) and offer no purchasable action to an automated agent.';
+		$lines[] = '';
+
+		$lines[] = '## Store';
+		$shop_page_id = function_exists( 'wc_get_page_id' ) ? wc_get_page_id( 'shop' ) : 0;
+		if ( $shop_page_id > 0 ) {
+			$lines[] = '- [Shop](' . get_permalink( $shop_page_id ) . '): Full product catalog.';
+		}
+		$journal_page_id = (int) get_option( 'page_for_posts' );
+		if ( $journal_page_id > 0 ) {
+			$lines[] = '- [Journal](' . get_permalink( $journal_page_id ) . '): Articles and guides.';
+		}
+		$lines[] = '';
+
+		$categories = get_terms(
+			[
+				'taxonomy'   => 'product_cat',
+				'hide_empty' => true,
+			]
+		);
+		if ( ! is_wp_error( $categories ) && $categories ) {
+			$lines[] = '## Product categories';
+			foreach ( $categories as $term ) {
+				$link = get_term_link( $term );
+				if ( is_wp_error( $link ) ) {
+					continue;
+				}
+				$description = wp_strip_all_tags( $term->description );
+				$lines[]      = '- [' . $term->name . '](' . $link . ')' . ( $description ? ': ' . $description : '' );
+			}
+			$lines[] = '';
+		}
+
+		$lines[] = '## Machine-readable data';
+		$lines[] = '- [XML sitemap](' . home_url( '/sitemap.xml' ) . '): every product, category, and post.';
+		$lines[] = '- [Live product catalog, JSON](' . home_url( '/wp-json/wc/store/v1/products' ) . '): WooCommerce\'s public Store API — current prices, stock, and images, no auth required.';
+
+		return implode( "\n", $lines ) . "\n";
+	}
+}
+
+add_action(
+	'init',
+	function () {
+		add_rewrite_rule( '^llms\.txt$', 'index.php?agentic_llms_txt=1', 'top' );
+	}
+);
+
+add_filter(
+	'query_vars',
+	function ( $vars ) {
+		$vars[] = 'agentic_llms_txt';
+		return $vars;
+	}
+);
+
+// Without this, WordPress's canonical redirect 301s /llms.txt to /llms.txt/
+// before template_redirect ever runs — core exempts its own /robots.txt and
+// /favicon.ico from that redirect the same way, this just extends the same
+// exemption to this endpoint.
+add_filter(
+	'redirect_canonical',
+	function ( $redirect_url ) {
+		return get_query_var( 'agentic_llms_txt' ) ? false : $redirect_url;
+	}
+);
+
+add_action(
+	'template_redirect',
+	function () {
+		if ( ! get_query_var( 'agentic_llms_txt' ) ) {
+			return;
+		}
+		header( 'Content-Type: text/plain; charset=utf-8' );
+		echo agentic_generate_llms_txt(); // phpcs:ignore WordPress.Security.EscapeOutput -- plain text, not HTML.
+		exit;
+	}
+);

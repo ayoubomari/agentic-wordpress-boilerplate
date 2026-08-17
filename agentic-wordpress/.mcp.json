@@ -8,6 +8,19 @@
         "@playwright/mcp@latest"
       ],
       "env": {}
+    },
+    "woocommerce": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@wppoland/woocommerce-mcp"
+      ],
+      "env": {
+        "WP_URL": "http://localhost:8888",
+        "WC_CONSUMER_KEY": "${WC_CONSUMER_KEY}",
+        "WC_CONSUMER_SECRET": "${WC_CONSUMER_SECRET}"
+      }
     }
   }
 }
