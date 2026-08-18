@@ -107,7 +107,13 @@ $panel_id = wp_unique_id( 'agentic-search-drawer-' );
 						<li class="agentic-search-drawer__product">
 							<a class="agentic-search-drawer__product-link" href="<?php echo esc_url( get_permalink( $product->get_id() ) ); ?>">
 								<span class="agentic-search-drawer__product-media">
-									<?php echo wp_kses_post( $product->get_image( 'woocommerce_thumbnail' ) ); ?>
+									<?php
+									// 'woocommerce_gallery_thumbnail' (100px, cropped square) —
+									// this list item renders at 56px, so the default
+									// 'woocommerce_thumbnail' (300px) was ~89% wasted bytes on
+									// every drawer open.
+									echo wp_kses_post( $product->get_image( 'woocommerce_gallery_thumbnail' ) );
+									?>
 								</span>
 								<span class="agentic-search-drawer__product-info">
 									<span class="agentic-search-drawer__product-name"><?php echo esc_html( $product->get_name() ); ?></span>

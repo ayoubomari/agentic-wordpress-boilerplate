@@ -5,13 +5,14 @@
   "title": "FAQ Accordion",
   "category": "agentic",
   "icon": "editor-help",
-  "description": "Expandable question/answer list. Uses native <details> — no JavaScript. Set introHeading/introText/imageUrl for a 2-column layout with a portrait image beside the eyebrow, heading, and accordion.",
+  "description": "Expandable question/answer list. Uses native <details> — no JavaScript. Set introHeading/introText/imageUrl for a 2-column layout with a portrait image beside the eyebrow, heading, and accordion. `imageUrlMobile` is optional — a smaller derivative of `imageUrl` served via `srcset` below the block's 780px stack breakpoint, since this is a static theme asset (not a media-library attachment) with no automatic WordPress srcset of its own; omit it and the block renders exactly as before, one file at every width.",
   "attributes": {
     "heading": { "type": "string", "default": "Frequently asked questions" },
     "eyebrow": { "type": "string", "default": "" },
     "introHeading": { "type": "string", "default": "" },
     "introText": { "type": "string", "default": "" },
     "imageUrl": { "type": "string", "default": "" },
+    "imageUrlMobile": { "type": "string", "default": "" },
     "ctaText": { "type": "string", "default": "" },
     "ctaUrl": { "type": "string", "default": "" },
     "items": {

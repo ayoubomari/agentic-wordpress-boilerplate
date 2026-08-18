@@ -349,6 +349,27 @@ add_filter(
 			++$journal_call_count;
 		}
 		$is_journal_hero = is_home() && 1 === $journal_call_count;
+		// Same counter, opposite branch: every post-featured-image on
+		// is_home() *after* the hero is one of the 3-column grid's own
+		// thumbnails.
+		$is_journal_card = is_home() && $journal_call_count > 1;
+
+		if ( $is_journal_card ) {
+			// Core prints `sizes="auto, (max-width: 1448px) 100vw, 1448px"`
+			// (i.e. "assume near-full-viewport-width") on every image
+			// regardless of actual layout — it has no idea this one sits in
+			// a 3-column grid. The browser then picks the largest 1448px
+			// srcset candidate instead of the ~300-600px one that already
+			// exists and actually fits, wasting real bytes on every card on
+			// every visit (flagged by Lighthouse's uses-responsive-images).
+			// Real value, mirroring journal.css's own 620px/960px
+			// breakpoints for this grid.
+			$block_content = preg_replace(
+				'/sizes="[^"]*"/',
+				'sizes="(max-width: 620px) 100vw, (max-width: 960px) 48vw, 32vw"',
+				$block_content
+			);
+		}
 
 		if ( ! $is_single_hero && ! $is_journal_hero ) {
 			return $block_content;
@@ -389,9 +410,15 @@ add_filter(
 			return $block_content;
 		}
 
+		// 'medium' (300px), not 'woocommerce_single' (600px) — this card
+		// never renders wider than ~330px even on a 3-column desktop grid,
+		// down to ~175px on mobile, so 600px was roughly 75% wasted bytes
+		// (see the sizes-attribute fix below for the primary photo, which
+		// has the same root cause: nothing in this loop needs more than the
+		// 'medium' size WordPress already generates for every upload).
 		$hover_image = wp_get_attachment_image(
 			$gallery_ids[0],
-			'woocommerce_single',
+			'medium',
 			false,
 			[
 				'class' => 'agentic-product-card__media-hover',
@@ -402,9 +429,23 @@ add_filter(
 		// Inserted right before WC's own (always-present) inner-container
 		// div, so it lands inside the same <a> as the primary photo and can
 		// be absolutely positioned over it with no markup restructuring.
-		return str_replace(
+		$block_content = str_replace(
 			'<div class="wc-block-components-product-image__inner-container">',
 			wp_kses_post( $hover_image ) . '<div class="wc-block-components-product-image__inner-container">',
+			$block_content
+		);
+
+		// The primary photo (WooCommerce core's own markup, not ours) ships
+		// a `srcset` with a 300w candidate that would fit this ~175-330px
+		// card perfectly, but its `sizes` attribute claims the image fills
+		// up to 100vw — so the browser's own responsive-image selection
+		// picks the 1024w candidate instead, ~75% wasted bytes on every
+		// product card on every archive page. There's no block attribute to
+		// correct this, so it's a targeted string replace like the hover
+		// image above, not a WooCommerce core edit.
+		return str_replace(
+			'sizes="auto, (max-width: 1024px) 100vw, 1024px"',
+			'sizes="(max-width: 480px) 45vw, (max-width: 780px) 30vw, 300px"',
 			$block_content
 		);
 	},
@@ -564,6 +605,56 @@ add_action(
 			}
 			setAgenticHeaderHeight();
 			window.addEventListener( 'resize', setAgenticHeaderHeight );
+		} )();
+		</script>
+		<?php
+	}
+);
+
+/**
+ * The mini-cart drawer (wp:woocommerce/mini-cart, every page via
+ * parts/header.html) is a WooCommerce Interactivity API component: it toggles
+ * aria-hidden/aria-modal on itself when closed, but never disables its own
+ * focusable descendants (the close button, "Start shopping" link, line-item
+ * controls) — so a keyboard user can still Tab into a drawer that's
+ * off-screen and announced as hidden. That's a real WCAG 4.1.2 violation on
+ * every template, not something fixable in this theme's own markup since the
+ * drawer is WooCommerce core's own render output. Mirroring aria-hidden onto
+ * the native `inert` attribute is the standard fix — inert removes the whole
+ * subtree from focus/AT without touching WooCommerce's own CSS transitions,
+ * and is a no-op (attribute simply ignored) in the very few browsers that
+ * don't support it yet, so there's no regression risk either way.
+ */
+add_action(
+	'wp_footer',
+	function () {
+		if ( ! function_exists( 'is_cart' ) ) {
+			return; // WooCommerce inactive.
+		}
+		?>
+		<script>
+		( function () {
+			// Watches document.body (not a captured node reference) with
+			// subtree+childList: the Interactivity API's own hydration pass
+			// can replace the drawer element outright rather than patching it
+			// in place, which would silently detach a MutationObserver bound
+			// directly to the original node.
+			function syncInert() {
+				document.querySelectorAll( '.wc-block-mini-cart__drawer' ).forEach( function ( drawer ) {
+					if ( drawer.getAttribute( 'aria-hidden' ) === 'true' ) {
+						drawer.setAttribute( 'inert', '' );
+					} else {
+						drawer.removeAttribute( 'inert' );
+					}
+				} );
+			}
+			syncInert();
+			new MutationObserver( syncInert ).observe( document.body, {
+				attributes: true,
+				attributeFilter: [ 'aria-hidden' ],
+				subtree: true,
+				childList: true,
+			} );
 		} )();
 		</script>
 		<?php

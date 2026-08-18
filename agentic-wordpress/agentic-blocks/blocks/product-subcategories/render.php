@@ -71,7 +71,13 @@ $columns = max( 2, min( 6, (int) ( $attributes['columns'] ?? 5 ) ) );
 		<?php foreach ( $terms as $index => $term ) : ?>
 			<?php
 			$thumbnail_id = get_term_meta( $term->term_id, 'thumbnail_id', true );
-			$image        = $thumbnail_id ? wp_get_attachment_image_url( (int) $thumbnail_id, 'medium_large' ) : '';
+			// 'medium' (300px), not 'medium_large' (768px) — this tile never
+			// renders wider than ~260px even in a 5-column desktop grid, and
+			// as small as ~174px on mobile (the LCP element on /shop/'s
+			// mobile Lighthouse audit), so 768px was ~84% wasted bytes with
+			// no responsive srcset in this theme's architecture to size it
+			// down automatically (see the responsive-design skill).
+			$image        = $thumbnail_id ? wp_get_attachment_image_url( (int) $thumbnail_id, 'medium' ) : '';
 
 			if ( ! $image ) {
 				$category_product_ids = get_posts(
@@ -90,7 +96,7 @@ $columns = max( 2, min( 6, (int) ( $attributes['columns'] ?? 5 ) ) );
 					]
 				);
 				foreach ( $category_product_ids as $product_id ) {
-					$product_image = get_the_post_thumbnail_url( $product_id, 'medium_large' );
+					$product_image = get_the_post_thumbnail_url( $product_id, 'medium' );
 					if ( $product_image ) {
 						$image = $product_image;
 						break;

@@ -166,6 +166,13 @@ table.shop_table,
 
 /* ---------- My Account (classic shortcode markup) ---------- */
 
+/* WooCommerce's own password-field "show/hide" toggle ships at 22x22px —
+   2px under the WCAG 2.5.8 / Lighthouse target-size minimum of 24x24. */
+.show-password-input {
+	width: 24px;
+	height: 24px;
+}
+
 .woocommerce-MyAccount-navigation ul {
 	list-style: none;
 	margin: 0;
@@ -521,10 +528,49 @@ body:not(.single-product) .wp-block-breadcrumbs .woocommerce-breadcrumb {
 
 /* ---------- Single product ---------- */
 
+/* Gallery thumbnail nav — WooCommerce's bundled FlexSlider builds
+   <ol class="flex-control-nav"> client-side (after the main gallery is
+   already painted) and each cloned <li><img> sets its own width/height from
+   naturalWidth/naturalHeight on load. No default WooCommerce stylesheet
+   styles this list on a block theme, so with no CSS pinning the thumbnail
+   box size, that post-load resize is a real, measured layout shift (flagged
+   on every single-product page). Fixing it in JS would mean patching
+   WooCommerce's own bundled script; fixing the box size in CSS instead makes
+   the onload resize invisible regardless of when the JS runs. */
+.woocommerce-product-gallery .flex-control-nav {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	list-style: none;
+	margin: 0.75rem 0 0;
+	padding: 0;
+}
+
+.woocommerce-product-gallery .flex-control-nav li {
+	width: 64px;
+	height: 64px;
+	flex: 0 0 auto;
+}
+
+.woocommerce-product-gallery .flex-control-nav img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	border-radius: var(--agentic-radius-card);
+	cursor: pointer;
+}
+
 /* WooCommerce's own "Sale!" circle on the gallery, which it positions at
    roughly the top edge of the image — the same corner single-product.html
    puts agentic/product-badge in, so the two overlap. Drop it below that
-   badge row instead. */
+   badge row instead. Also repoint its color at the theme's own --sale
+   token: WooCommerce's default badge background (an olive/mustard, not one
+   of our tokens) only clears a 3.41:1 contrast ratio against white text,
+   below WCAG AA's 4.5:1 — the archive grids' own agentic-product-badge--sale
+   already uses this same token safely, so it's a proven contrast pair. */
 .woocommerce .wp-block-woocommerce-product-image-gallery span.onsale {
 	top: 2.5rem;
+	background: var(--wp--preset--color--sale) !important;
+	color: var(--wp--preset--color--base) !important;
 }

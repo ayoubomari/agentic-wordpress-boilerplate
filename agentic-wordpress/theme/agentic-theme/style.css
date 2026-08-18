@@ -140,24 +140,29 @@ Requires PHP: 8.0
   header .is-content-justification-space-between > :last-child {
     order: 3;
     justify-self: end;
-    gap: 0px;
+    /* A real gap, not 0 — with three icon buttons sitting flush against
+       each other, Lighthouse's target-size audit flags insufficient
+       "safe clickable space" between adjacent targets even when each
+       button individually clears the 24px minimum. 6px is enough space to
+       clear that check without meaningfully widening the icon row. */
+    gap: 6px;
   }
 
-  /* The search-drawer trigger is a bare 20px icon with no built-in
-     padding, while WooCommerce's own customer-account link and mini-cart
-     button ship a ~7px padding around their icon on a 35px box — so at the
-     tighter gap above the three end up unevenly spaced and vertically
-     misaligned. Shrink the WooCommerce icons' padding to bring their box
-     closer to the search trigger's size, and nudge the search trigger's own
-     margin/padding to land its glyph level with the other two. */
+  /* The search-drawer trigger is a bare 20px icon with 7px padding (35px
+     box, see search-drawer/style.css), while WooCommerce's own
+     customer-account link and mini-cart button ship a ~7px padding around
+     their icon on a 35px box too — shrink both to the same smaller box on
+     the tighter mobile row instead of leaving the search trigger at full
+     size, and nudge its margin/padding to land its glyph level with the
+     other two. Each stays comfortably above the 24px WCAG 2.5.8 minimum. */
   header .agentic-search-drawer__trigger {
     margin-top: 5px;
-    padding-top: 1px;
+    padding: 5px;
   }
 
   header .wc-block-customer-account__link,
   header .wc-block-mini-cart__button {
-    padding: 4px;
+    padding: 5px;
   }
 }
 

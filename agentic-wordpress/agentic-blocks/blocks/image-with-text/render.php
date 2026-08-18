@@ -14,8 +14,9 @@
 $eyebrow    = $attributes['eyebrow'] ?? '';
 $heading    = $attributes['heading'] ?? '';
 $text       = $attributes['text'] ?? '';
-$image_url  = $attributes['imageUrl'] ?? '';
-$image_alt  = $attributes['imageAlt'] ?? '';
+$image_url        = $attributes['imageUrl'] ?? '';
+$image_url_mobile = $attributes['imageUrlMobile'] ?? '';
+$image_alt        = $attributes['imageAlt'] ?? '';
 $position   = 'right' === ( $attributes['imagePosition'] ?? 'left' ) ? 'right' : 'left';
 $image_style = 'inset' === ( $attributes['imageStyle'] ?? 'full' ) ? 'inset' : 'full';
 $bg_color   = trim( (string) ( $attributes['backgroundColor'] ?? '' ) );
@@ -37,7 +38,17 @@ if ( '' !== $bg_color ) {
 	<?php echo $style ? 'style="' . esc_attr( $style ) . '"' : ''; ?>>
 	<div class="agentic-image-with-text__media agentic-reveal-item">
 		<?php if ( $image_url ) : ?>
-			<img src="<?php echo esc_url( $image_url ); ?>" alt="<?php echo esc_attr( $image_alt ); ?>" loading="lazy" decoding="async" />
+			<?php /* sizes mirrors this block's own 780px stack breakpoint and 50/50 desktop column split. */ ?>
+			<img
+				src="<?php echo esc_url( $image_url ); ?>"
+				<?php if ( $image_url_mobile ) : ?>
+					srcset="<?php echo esc_url( $image_url_mobile ); ?> 800w, <?php echo esc_url( $image_url ); ?> 1448w"
+					sizes="(max-width: 780px) 100vw, 45vw"
+				<?php endif; ?>
+				alt="<?php echo esc_attr( $image_alt ); ?>"
+				loading="lazy"
+				decoding="async"
+			/>
 		<?php else : ?>
 			<span class="agentic-image-with-text__placeholder" aria-hidden="true"></span>
 		<?php endif; ?>

@@ -17,6 +17,7 @@
 $heading          = $attributes['heading'] ?? '';
 $description      = $attributes['description'] ?? '';
 $image_url        = $attributes['imageUrl'] ?? '';
+$image_url_mobile = $attributes['imageUrlMobile'] ?? '';
 $image_alt        = $attributes['imageAlt'] ?? '';
 $location_name    = $attributes['locationName'] ?? '';
 $location_address = $attributes['locationAddress'] ?? '';
@@ -41,8 +42,17 @@ $status            = $is_this_instance && isset( $_GET['agentic_form'] )
 	<?php // Same mode-1 item-stagger reveal as image-with-text's media/content halves — see assets/js/scroll-reveal.js. Above the fold here, so scroll-reveal.js gives it the fast load-fade rather than an indefinite scroll-gated wait. ?>
 	<div class="agentic-contact-form__media agentic-reveal-item">
 		<?php if ( $image_url ) : ?>
-			<?php /* Always the page's primary above-the-fold visual (this block sits right after the breadcrumb) — fetchpriority hint instead of loading="lazy", same treatment as product-subcategories' first tile. */ ?>
-			<img src="<?php echo esc_url( $image_url ); ?>" alt="<?php echo esc_attr( $image_alt ); ?>" fetchpriority="high" decoding="async" />
+			<?php /* Always the page's primary above-the-fold visual (this block sits right after the breadcrumb) — fetchpriority hint instead of loading="lazy", same treatment as product-subcategories' first tile. `sizes` mirrors style.css's own 780px stack breakpoint and the block's 5fr/11 image-column share above it. */ ?>
+			<img
+				src="<?php echo esc_url( $image_url ); ?>"
+				<?php if ( $image_url_mobile ) : ?>
+					srcset="<?php echo esc_url( $image_url_mobile ); ?> 800w, <?php echo esc_url( $image_url ); ?> 1200w"
+					sizes="(max-width: 780px) 100vw, 45vw"
+				<?php endif; ?>
+				alt="<?php echo esc_attr( $image_alt ); ?>"
+				fetchpriority="high"
+				decoding="async"
+			/>
 		<?php else : ?>
 			<span class="agentic-contact-form__placeholder" aria-hidden="true"></span>
 		<?php endif; ?>

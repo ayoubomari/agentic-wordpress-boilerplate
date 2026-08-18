@@ -104,6 +104,8 @@ wp eval '
 			"  ExpiresByType image/webp \"access plus 1 year\"",
 			"  ExpiresByType image/svg+xml \"access plus 1 year\"",
 			"  ExpiresByType image/x-icon \"access plus 1 year\"",
+			"  ExpiresByType video/mp4 \"access plus 1 year\"",
+			"  ExpiresByType video/webm \"access plus 1 year\"",
 			"  ExpiresByType font/woff \"access plus 1 year\"",
 			"  ExpiresByType font/woff2 \"access plus 1 year\"",
 			"  ExpiresByType text/css \"access plus 1 year\"",

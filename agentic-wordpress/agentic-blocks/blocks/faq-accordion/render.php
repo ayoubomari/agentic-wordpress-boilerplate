@@ -24,7 +24,8 @@ $items        = is_array( $attributes['items'] ?? null ) ? $attributes['items'] 
 $eyebrow       = $attributes['eyebrow'] ?? '';
 $intro_heading = $attributes['introHeading'] ?? '';
 $intro_text    = $attributes['introText'] ?? '';
-$image_url     = $attributes['imageUrl'] ?? '';
+$image_url        = $attributes['imageUrl'] ?? '';
+$image_url_mobile = $attributes['imageUrlMobile'] ?? '';
 $cta_text      = $attributes['ctaText'] ?? '';
 $cta_url       = $attributes['ctaUrl'] ?? '';
 $has_intro     = (bool) ( $intro_heading || $intro_text || $image_url );
@@ -38,7 +39,17 @@ $group_name = wp_unique_id( 'agentic-faq-accordion-' );
 <section <?php echo agentic_section_classes( 'faq-accordion', $has_intro ? [ 'agentic-faq-accordion--with-intro' ] : [] ); ?>>
 	<?php if ( $has_intro && $image_url ) : ?>
 		<div class="agentic-faq-accordion__intro-media">
-			<img src="<?php echo esc_url( $image_url ); ?>" alt="" loading="lazy" decoding="async" />
+			<?php /* sizes mirrors this block's own 780px stack breakpoint and 1fr/2.4fr image-column share above it. */ ?>
+			<img
+				src="<?php echo esc_url( $image_url ); ?>"
+				<?php if ( $image_url_mobile ) : ?>
+					srcset="<?php echo esc_url( $image_url_mobile ); ?> 750w, <?php echo esc_url( $image_url ); ?> 1086w"
+					sizes="(max-width: 780px) 100vw, 42vw"
+				<?php endif; ?>
+				alt=""
+				loading="lazy"
+				decoding="async"
+			/>
 		</div>
 	<?php endif; ?>
 
